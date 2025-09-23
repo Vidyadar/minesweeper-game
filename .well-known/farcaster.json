@@ -1,4 +1,3 @@
-
 {
   "name": "Minesweeper",
   "description": "A simple Minesweeper mini app for Farcaster.",
@@ -9,6 +8,10 @@
     "image": "https://minesweeper-game-pearl.vercel.app/icon.png"
   },
   "permissions": [],
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "accountAssociation": {
+    "header": "eyJmaWQiOjUxMDg3MCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEJFNkRCY2MzMTVEMTc1OTQ1NjI0ODY5M2JDQjlEOWNmOTUyRjNhMTIifQ",
+    "payload": "eyJkb21haW4iOiJtaW5lc3dlZXBlci1nYW1lLXBlYXJsLnZlcmNlbC5hcHAifQ",
+    "signature": "MHg3NTk4ZmRmZmNhMTRjN2Y2YTkwNWZjZDQ2Mjk2ZjRiMjFhZjk2NTQ4MzI0ZTUxZDFmYmU2OTRmZGFhYzM4NmM5NzU4ODI5NWYwOTcwYzJmOWJkNTljMTY1MjM4OGI0YWIxYTNlMDQ4ODA3OGFiMDFlNDE5YjIwZjFkMTcxMDQwMTFj"
+  }
 }
-
