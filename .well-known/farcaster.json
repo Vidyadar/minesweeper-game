@@ -9,7 +9,7 @@
     "primaryCategory": "games",
     "tags": ["minesweeper", "game", "puzzle"],
     "description": "Play the classic Minesweeper game online. Choose difficulty levels, beat the clock, and enjoy a mobile-friendly experience.",
-    "subtitle": "Can you clear the minefield? 3 difficulty levels, mobile-friendly!",
+    "subtitle": "Minesweeper: Beat the clock",
     "imageUrl": "https://minesweeper-game-pearl.vercel.app/assets/preview.png"
   },
   "accountAssociation": {
