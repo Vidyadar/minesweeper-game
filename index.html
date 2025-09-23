@@ -317,7 +317,12 @@
                 padding: 8px 15px;
             }
         }
-    </style>
+        </style>
+        <script type="module">
+        import { sdk } from "https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/frame-sdk.js";
+        window.farcasterSdk = sdk;
+        </script>
+
 </head>
 <body>
     <div class="game-container">
