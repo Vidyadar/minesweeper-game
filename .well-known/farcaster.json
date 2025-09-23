@@ -1,15 +1,17 @@
 {
-  "name": "Minesweeper",
-  "description": "A simple Minesweeper mini app for Farcaster.",
-  "icon": "https://minesweeper-game-pearl.vercel.app/icon.png",
-  "url": "https://minesweeper-game-pearl.vercel.app",
-  "homeUrl": "https://minesweeper-game-pearl.vercel.app", 
-  "splash": {
-    "background_color": "#ffffff",
-    "image": "https://minesweeper-game-pearl.vercel.app/icon.png"
+  "miniapp": {
+    "version": "1",
+    "name": "Minesweeper Game",
+    "iconUrl": "https://minesweeper-game-pearl.vercel.app/assets/icon.png",
+    "homeUrl": "https://minesweeper-game-pearl.vercel.app/",
+    "splashImageUrl": "https://minesweeper-game-pearl.vercel.app/assets/splash.png",
+    "splashBackgroundColor": "#667eea",
+    "primaryCategory": "games",
+    "tags": ["minesweeper", "game", "puzzle"],
+    "description": "Play the classic Minesweeper game online. Choose difficulty levels, beat the clock, and enjoy a mobile-friendly experience.",
+    "subtitle": "Can you clear the minefield? 3 difficulty levels, mobile-friendly!",
+    "imageUrl": "https://minesweeper-game-pearl.vercel.app/assets/preview.png"
   },
-  "permissions": [],
-  "version": "1.0.0",
   "accountAssociation": {
     "header": "eyJmaWQiOjUxMDg3MCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEJFNkRCY2MzMTVEMTc1OTQ1NjI0ODY5M2JDQjlEOWNmOTUyRjNhMTIifQ",
     "payload": "eyJkb21haW4iOiJtaW5lc3dlZXBlci1nYW1lLXBlYXJsLnZlcmNlbC5hcHAifQ",
