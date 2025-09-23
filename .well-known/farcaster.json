@@ -1,6 +1,14 @@
+
 {
   "name": "Minesweeper",
-  "url": "https://minesweeper-game-pearl.vercel.app",
+  "description": "A simple Minesweeper mini app for Farcaster.",
   "icon": "https://minesweeper-game-pearl.vercel.app/icon.png",
-  "description": "A simple Minesweeper mini app for Farcaster"
+  "url": "https://minesweeper-game-pearl.vercel.app",
+  "splash": {
+    "background_color": "#ffffff",
+    "image": "https://minesweeper-game-pearl.vercel.app/icon.png"
+  },
+  "permissions": [],
+  "version": "1.0.0"
 }
+
