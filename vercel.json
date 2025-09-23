@@ -6,14 +6,14 @@
       "use": "@vercel/static"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/(.*)",
-      "headers": {
-        "X-Frame-Options": "ALLOWALL",
-        "Content-Security-Policy": "frame-ancestors *"
-      },
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors https://farcaster.com https://*.farcaster.com;" },
+        { "key": "Cache-Control", "value": "max-age=0, must-revalidate" }
+      ]
     }
   ]
 }
