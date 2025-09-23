@@ -34,6 +34,10 @@
     <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
     <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
     <meta name="author" content="vidhyadar" />
+     <script type="module">
+        import { sdk } from "https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/frame-sdk.js";
+        window.farcasterSdk = sdk;
+    </script>
     <style>
         * {
             margin: 0;
@@ -318,10 +322,7 @@
             }
         }
         </style>
-        <script type="module">
-        import { sdk } from "https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/frame-sdk.js";
-        window.farcasterSdk = sdk;
-        </script>
+       
 
 </head>
 <body>
@@ -805,6 +806,12 @@
         // Initialize the game when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             new Minesweeper();
+            
+            if (window.farcasterSdk &&
+                window.farcasterSdk.actions &&
+                typeof window.farcasterSdk.actions.ready === 'function') {
+              window.farcasterSdk.actions.ready();
+            }
         });
     </script>
 </body>
