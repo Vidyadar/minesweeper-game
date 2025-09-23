@@ -16,12 +16,7 @@
     <meta property="og:site_name" content="Minesweeper Game" />
     
     <!-- Farcaster Frame Meta Tags -->
-<meta property="fc:frame" content="vNext" />
-<meta property="fc:frame:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
-<meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-<meta property="fc:frame:button:1" content="🎮 Play Game" />
-<meta property="fc:frame:button:1:action" content="link" />
-<meta property="fc:frame:button:1:target" content="https://minesweeper-game-pearl.vercel.app/" />
+<meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
 
     
     <!-- Twitter Card Meta Tags -->
@@ -34,11 +29,10 @@
     <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
     <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
     <meta name="author" content="vidhyadar" />
-     <script src="https://unpkg.com/@farcaster/frame-sdk/dist/browser.js"></script>
-  <script>
-    // Expose sdk globally
-    window.farcasterSdk = window.FrameSDK;
-  </script>
+     <script type="module">
+      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+      window.farcasterSdk = sdk;
+    </script>
     <style>
         * {
             margin: 0;
@@ -809,13 +803,13 @@
             new Minesweeper();
             
             if (window.farcasterSdk &&
-          window.farcasterSdk.actions &&
-          typeof window.farcasterSdk.actions.ready === 'function') {
-        window.farcasterSdk.actions.ready();
-        console.log("✅ Farcaster ready() called");
-      } else {
-        console.error("❌ Farcaster SDK not available");
-      }
+              window.farcasterSdk.actions &&
+                typeof window.farcasterSdk.actions.ready === 'function') {
+              window.farcasterSdk.actions.ready();
+              console.log("✅ Mini App ready() called");
+            } else {
+              console.error("❌ Mini App SDK not available");
+            }
         });
     </script>
 </body>
