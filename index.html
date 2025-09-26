@@ -1,251 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minesweeper - Farcaster Game</title>
-
-<!-- Open Graph / Twitter / Farcaster meta tags remain the same as your original code -->
-
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/nft.storage/dist/bundle.esm.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script type="module">
-  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-  window.farcasterSdk = sdk;
-</script>
-
-<!-- CSS stays exactly the same as your original code -->
-<style>
-/* Paste all your CSS from original code here (no changes) */
-</style>
+  <meta charset="UTF-8">
+  <title>Minesweeper</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nft.storage/dist/bundle.esm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
-<button class="sound-toggle" id="sound-toggle">🔊</button>
-
-<div class="game-container">
-    <div class="game-header">
-        <h1 class="game-title">💣 Minesweeper</h1>
+  <div class="game-container">
+    <div class="controls">
+      <button id="reset-btn">😀</button>
+      <span id="timer">000</span>
+      <span id="mines-count">010</span>
     </div>
-
-    <div class="difficulty-buttons">
-        <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
-        <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
-        <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
+    <div id="minefield"></div>
+    <div class="share-buttons">
+      <button class="share-btn" id="share-result-btn">🏆 Share Result</button>
+      <button class="share-btn" id="mint-nft-btn" style="display:none;">🎨 Mint as NFT</button>
     </div>
+  </div>
 
-    <div class="game-stats">
-        <div class="stat">
-            <span>Mines</span>
-            <span class="stat-value" id="mines-count">10</span>
-        </div>
-        <div class="stat">
-            <span>Flags</span>
-            <span class="stat-value" id="flags-count">0</span>
-        </div>
-        <div class="stat">
-            <span>Time</span>
-            <span class="stat-value" id="timer">0</span>
-        </div>
-    </div>
+  <script>
+    // ---- Config ----
+    const NFT_STORAGE_KEY = "1144cc8a.332c392bfee740c9b6794dca1daf979a";
+    const CONTRACT_ADDRESS = "0xe998e76dA35333bCa55d5c8375E8E537Bfe7F819";
+    const CONTRACT_ABI = [
+      "function mint(address to, string memory tokenURI) external returns (uint256)",
+      "function nextTokenId() view returns (uint256)"
+    ];
 
-    <div class="game-controls">
-        <button class="btn" id="new-game">New Game</button>
-        <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
-    </div>
+    let provider, signer, nftContract, userAddress;
 
-    <div class="minefield" id="minefield"></div>
-    <div class="game-message" id="game-message"></div>
-
-    <div class="share-section">
-        <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
-        <div class="share-buttons">
-            <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
-            <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
-            <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
-        </div>
-    </div>
-
-    <div class="instructions">
-        <strong>How to play:</strong><br>
-        • Tap to reveal cells<br>
-        • Use Flag Mode to mark mines<br>
-        • Numbers show nearby mines<br>
-        • Find all mines to win!
-    </div>
-</div>
-
-<script type="module">
-class Minesweeper {
-    constructor() {
-        this.gameState = 'ready';
-        this.flagMode = false;
-        this.firstClick = true;
-        this.timer = 0;
-        this.timerInterval = null;
-        this.soundEnabled = true;
-
-        this.difficulties = {
-            easy: { rows: 9, cols: 9, mines: 10 },
-            medium: { rows: 12, cols: 12, mines: 20 },
-            hard: { rows: 15, cols: 15, mines: 35 }
-        };
-
-        this.currentDifficulty = 'easy';
-        this.config = this.difficulties.easy;
-
-        this.board = [];
-        this.revealed = [];
-        this.flagged = [];
-
-        this.createSounds();
-        this.initializeGame();
-        this.setupEventListeners();
+    async function connectWallet() {
+      if (!window.ethereum) throw new Error("Install MetaMask");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+      nftContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
     }
 
-    createSounds() {
-        this.audioContext = null;
-        this.audioInitialized = false;
-        try { this.audioContext = new (window.AudioContext || window.webkitAudioContext)(); } 
-        catch(e) { console.log('Web Audio API not supported'); }
+    async function uploadToNFTStorage(gameResult, imageBlob) {
+      const client = new NFTStorage({ token: NFT_STORAGE_KEY });
+
+      const metadata = await client.store({
+        name: `Minesweeper - ${gameResult.difficulty}`,
+        description: `I played Minesweeper and ${gameResult.win ? "won" : "lost"} in ${gameResult.time}s`,
+        image: new File([imageBlob], "result.png", { type: "image/png" }),
+        properties: gameResult
+      });
+
+      return metadata.url;
     }
 
-    initializeAudio() {
-        if (this.audioContext && this.audioContext.state === 'suspended') { this.audioContext.resume(); }
-        this.audioInitialized = true;
-    }
+    async function mintGameNFT(gameResult) {
+      try {
+        if (!signer) await connectWallet();
 
-    playSound(type) {
-        if (!this.soundEnabled || !this.audioContext) return;
-        if (!this.audioInitialized) { this.initializeAudio(); }
-
-        const osc = this.audioContext.createOscillator();
-        const gain = this.audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(this.audioContext.destination);
-
-        switch(type) {
-            case 'click':
-                osc.frequency.setValueAtTime(800, this.audioContext.currentTime);
-                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-                osc.start();
-                osc.stop(this.audioContext.currentTime + 0.1);
-                break;
-            case 'flag':
-                osc.frequency.setValueAtTime(1200, this.audioContext.currentTime);
-                gain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
-                osc.start();
-                osc.stop(this.audioContext.currentTime + 0.15);
-                break;
-            case 'mine':
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, this.audioContext.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.8);
-                gain.gain.setValueAtTime(0.4, this.audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
-                osc.start();
-                osc.stop(this.audioContext.currentTime + 0.8);
-                break;
-            case 'win':
-                const notes = [523, 659, 784, 1047];
-                notes.forEach((freq,i)=>{
-                    setTimeout(()=>{
-                        const o = this.audioContext.createOscillator();
-                        const g = this.audioContext.createGain();
-                        o.connect(g); g.connect(this.audioContext.destination);
-                        o.frequency.setValueAtTime(freq,this.audioContext.currentTime);
-                        g.gain.setValueAtTime(0.1,this.audioContext.currentTime);
-                        g.gain.exponentialRampToValueAtTime(0.01,this.audioContext.currentTime+0.3);
-                        o.start();
-                        o.stop(this.audioContext.currentTime+0.3);
-                    },i*150);
-                });
-                return;
-        }
-    }
-
-    initializeGame() {
-        this.gameState = 'ready';
-        this.firstClick = true;
-        this.timer = 0;
-        this.clearTimer();
-
-        const { rows, cols, mines } = this.config;
-        this.board = Array(rows).fill().map(() => Array(cols).fill(0));
-        this.revealed = Array(rows).fill().map(() => Array(cols).fill(false));
-        this.flagged = Array(rows).fill().map(() => Array(cols).fill(false));
-
-        this.updateStats();
-        this.createMinefield();
-        this.clearMessage();
-        document.getElementById('share-result-btn').style.display = 'none';
-        this.flagMode = false;
-        this.updateModeButton();
-    }
-
-    setupEventListeners() {
-        document.getElementById('new-game').addEventListener('click', () => this.initializeGame());
-        document.getElementById('toggle-mode').addEventListener('click', () => this.toggleMode());
-        document.querySelectorAll('.difficulty-btn').forEach(btn=>{
-            btn.addEventListener('click',(e)=>this.changeDifficulty(e.target.dataset.difficulty));
-        });
-        document.getElementById('sound-toggle').addEventListener('click', ()=>{
-            this.soundEnabled = !this.soundEnabled;
-            document.getElementById('sound-toggle').textContent = this.soundEnabled?'🔊':'🔇';
-        });
-        document.getElementById('share-warpcast').addEventListener('click', ()=>this.shareToWarpcast());
-        document.getElementById('share-general').addEventListener('click', ()=>this.copyGameLink());
-        document.getElementById('share-result-btn').addEventListener('click', async ()=>{
-            if(this.gameState==='playing'||this.gameState==='ready'){this.showShareResult('Finish the game first! 🎮','error');return;}
-            const doMint = confirm("Do you want to mint this game result as an NFT?");
-            if(!doMint){this.shareResult(); return;}
-            const result = {
-                difficulty:this.currentDifficulty,
-                time:this.timer,
-                win:this.gameState==='won'
-            };
-            await mintGameNFT(result);
-        });
-    }
-
-    // All Minesweeper game logic methods stay exactly the same:
-    // createMinefield, placeMines, revealCell, handleCellClick, updateCellDisplay,
-    // checkWinCondition, gameOver, revealMinesAndFalseFlags, showMessage, clearMessage,
-    // updateStats, startTimer, clearTimer, share methods, showShareResult
-
-    // Paste the exact game logic from your original code here without modification
-}
-  
-// ---- NFT CONFIG ----
-const NFT_STORAGE_KEY = "1144..."; // Replace with your key
-
-async function mintGameNFT(gameResult){
-    try{
-        const client = new NFTStorage({ token: NFT_STORAGE_KEY });
-        const minefield = document.getElementById('minefield');
+        // Capture the minefield as an image
+        const minefield = document.getElementById("minefield");
         const canvas = await html2canvas(minefield);
-        const blob = await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 
-        const metadata = await client.store({
-            name:`Minesweeper ${gameResult.win?'Victory':'Defeat'} - ${gameResult.difficulty}`,
-            description:`I ${gameResult.win?'won':'lost'} a Minesweeper game on ${gameResult.difficulty} in ${gameResult.time}s`,
-            image: new File([blob],"result.png",{type:"image/png"}),
-            properties: gameResult
-        });
-        alert(`NFT minted successfully!\nMetadata URL: ${metadata.url}`);
-    }catch(e){console.error(e); alert("NFT minting failed!");}
-}
+        // Upload to NFT.Storage
+        const tokenURI = await uploadToNFTStorage(gameResult, blob);
 
-// ---- Initialize the Game ----
-document.addEventListener('DOMContentLoaded', ()=>{
-    window.gameInstance = new Minesweeper();
-    if(window.farcasterSdk && window.farcasterSdk.actions && typeof window.farcasterSdk.actions.ready==='function'){
-        window.farcasterSdk.actions.ready();
-        console.log("Mini App ready ✅");
+        // Mint
+        const tx = await nftContract.mint(userAddress, tokenURI);
+        alert("Minting NFT... " + tx.hash);
+
+        await tx.wait();
+        alert("✅ Minted! View Metadata: " + tokenURI);
+      } catch (err) {
+        console.error(err);
+        alert("❌ Mint failed: " + err.message);
+      }
     }
-});
-</script>
+
+    // ---- Minesweeper Class (your full existing code goes here) ----
+    class Minesweeper {
+      constructor() {
+        this.rows = 9;
+        this.cols = 9;
+        this.mineCount = 10;
+        this.flags = 0;
+        this.gameState = "playing";
+        this.difficulty = "Easy";
+        this.elapsedTime = 0;
+        this.timer = null;
+        this.setupEventListeners();
+      }
+
+      setupEventListeners() {
+        document.getElementById("share-result-btn").addEventListener("click", async () => {
+          if (this.gameState === "playing") {
+            alert("Finish the game first!");
+            return;
+          }
+          const doMint = confirm("Do you want to mint this game as NFT?");
+          if (!doMint) {
+            alert("Shared normally!");
+            return;
+          }
+          const result = {
+            difficulty: this.difficulty,
+            time: this.elapsedTime,
+            win: this.gameState === "won"
+          };
+          await mintGameNFT(result);
+        });
+
+        document.getElementById("mint-nft-btn").addEventListener("click", async () => {
+          if (this.gameState === "playing") {
+            alert("Finish the game first!");
+            return;
+          }
+          const result = {
+            difficulty: this.difficulty,
+            time: this.elapsedTime,
+            win: this.gameState === "won"
+          };
+          await mintGameNFT(result);
+        });
+      }
+
+      gameOver(won) {
+        this.gameState = won ? "won" : "lost";
+        document.getElementById("mint-nft-btn").style.display = "inline-flex";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.gameInstance = new Minesweeper();
+    });
+  </script>
 </body>
 </html>
