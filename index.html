@@ -144,6 +144,29 @@
             font-weight: bold;
         }
 
+        /* Enhanced mode toggle button styling */
+        #toggle-mode {
+            position: relative;
+            overflow: hidden;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        #toggle-mode.dig-mode {
+            background: rgba(76, 175, 80, 0.8);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+
+        #toggle-mode.flag-mode {
+            background: rgba(244, 67, 54, 0.8);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.3);
+        }
+
+        #toggle-mode:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
         .minefield {
             display: grid;
             gap: 2px;
@@ -196,6 +219,25 @@
         .cell.mine {
             background: rgba(255, 0, 0, 0.8);
             color: white;
+            animation: explode 0.5s ease-out;
+        }
+
+        .cell.false-flag {
+            background: rgba(255, 69, 0, 0.9);
+            color: white;
+            animation: shake 0.5s ease-out;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
         }
 
         .cell.number-1 { color: #0066cc; }
@@ -291,6 +333,32 @@
             display: none;
         }
 
+        /* Sound toggle button */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
         @media (max-width: 480px) {
             .game-container {
                 padding: 15px;
@@ -315,12 +383,23 @@
                 font-size: 0.8rem;
                 padding: 8px 15px;
             }
+
+            .sound-toggle {
+                top: 10px;
+                right: 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
         }
         </style>
        
 
 </head>
 <body>
+    <!-- Sound toggle button -->
+    <button class="sound-toggle" id="sound-toggle">🔊</button>
+
     <div class="game-container">
         <div class="game-header">
             <h1 class="game-title">💣 Minesweeper</h1>
@@ -349,7 +428,7 @@
 
         <div class="game-controls">
             <button class="btn" id="new-game">New Game</button>
-            <button class="btn" id="toggle-mode">🚩 Flag Mode</button>
+            <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
         </div>
 
         <div class="minefield" id="minefield"></div>
@@ -388,6 +467,7 @@
                 this.firstClick = true;
                 this.timer = 0;
                 this.timerInterval = null;
+                this.soundEnabled = true;
                 
                 this.difficulties = {
                     easy: { rows: 9, cols: 9, mines: 10 },
@@ -402,8 +482,87 @@
                 this.revealed = [];
                 this.flagged = [];
                 
+                this.createSounds();
                 this.initializeGame();
                 this.setupEventListeners();
+            }
+            
+            createSounds() {
+                // Create audio context for sound effects
+                this.audioContext = null;
+                this.audioInitialized = false;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+            
+            initializeAudio() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                this.audioInitialized = true;
+            }
+            
+            playSound(type) {
+                if (!this.soundEnabled || !this.audioContext) return;
+                
+                // Initialize audio on first interaction
+                if (!this.audioInitialized) {
+                    this.initializeAudio();
+                }
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                switch (type) {
+                    case 'click':
+                        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.1);
+                        break;
+                    case 'flag':
+                        oscillator.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.15);
+                        break;
+                    case 'mine':
+                        // Enhanced explosion sound - more dramatic
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.8);
+                        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.8);
+                        console.log('Playing mine explosion sound!'); // Debug log
+                        break;
+                    case 'win':
+                        // Victory sound - ascending notes
+                        const notes = [523, 659, 784, 1047]; // C, E, G, C
+                        notes.forEach((freq, i) => {
+                            setTimeout(() => {
+                                const osc = this.audioContext.createOscillator();
+                                const gain = this.audioContext.createGain();
+                                osc.connect(gain);
+                                gain.connect(this.audioContext.destination);
+                                osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                                osc.start();
+                                osc.stop(this.audioContext.currentTime + 0.3);
+                            }, i * 150);
+                        });
+                        return; // Skip the default oscillator code
+                }
             }
             
             initializeGame() {
@@ -425,6 +584,10 @@
                 
                 // Hide share result button on new game
                 document.getElementById('share-result-btn').style.display = 'none';
+                
+                // Reset mode to dig mode
+                this.flagMode = false;
+                this.updateModeButton();
             }
             
             setupEventListeners() {
@@ -433,6 +596,12 @@
                 
                 document.querySelectorAll('.difficulty-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => this.changeDifficulty(e.target.dataset.difficulty));
+                });
+
+                // Sound toggle
+                document.getElementById('sound-toggle').addEventListener('click', () => {
+                    this.soundEnabled = !this.soundEnabled;
+                    document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
                 });
 
                 // Share functionality
@@ -453,8 +622,19 @@
             
             toggleMode() {
                 this.flagMode = !this.flagMode;
+                this.updateModeButton();
+                this.playSound('flag'); // Play sound when switching modes
+            }
+            
+            updateModeButton() {
                 const btn = document.getElementById('toggle-mode');
-                btn.textContent = this.flagMode ? '👆 Reveal Mode' : '🚩 Flag Mode';
+                if (this.flagMode) {
+                    btn.textContent = '🚩 Flag Mode';
+                    btn.className = 'btn flag-mode';
+                } else {
+                    btn.textContent = '👆 Reveal Mode';
+                    btn.className = 'btn dig-mode';
+                }
             }
             
             createMinefield() {
@@ -520,6 +700,11 @@
             handleCellClick(e) {
                 if (this.gameState === 'won' || this.gameState === 'lost') return;
                 
+                // Initialize audio on first user interaction
+                if (!this.audioInitialized) {
+                    this.initializeAudio();
+                }
+                
                 const row = parseInt(e.target.dataset.row);
                 const col = parseInt(e.target.dataset.col);
                 
@@ -534,6 +719,7 @@
                 if (this.revealed[row][col]) return;
                 
                 this.flagged[row][col] = !this.flagged[row][col];
+                this.playSound('flag'); // Play flag sound
                 this.updateCellDisplay(row, col);
                 this.updateStats();
             }
@@ -551,9 +737,18 @@
                 this.revealed[row][col] = true;
                 
                 if (this.board[row][col] === -1) {
-                    this.gameOver(false);
+                    // Play explosion sound immediately when mine is hit
+                    console.log('Mine hit! Playing explosion sound...');
+                    this.playSound('mine');
+                    this.updateCellDisplay(row, col);
+                    // Small delay to let the explosion sound start before game over
+                    setTimeout(() => {
+                        this.gameOver(false);
+                    }, 100);
                     return;
                 }
+                
+                this.playSound('click'); // Play click sound only for safe cells
                 
                 if (this.board[row][col] === 0) {
                     // Reveal adjacent cells for empty cells
@@ -575,12 +770,13 @@
             updateCellDisplay(row, col) {
                 const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                 
+                // Clear all special classes first
+                cell.classList.remove('flagged', 'mine', 'false-flag');
+                
                 if (this.flagged[row][col]) {
                     cell.textContent = '🚩';
                     cell.classList.add('flagged');
                 } else {
-                    cell.classList.remove('flagged');
-                    
                     if (this.revealed[row][col]) {
                         cell.classList.add('revealed');
                         
@@ -590,9 +786,12 @@
                         } else if (this.board[row][col] > 0) {
                             cell.textContent = this.board[row][col];
                             cell.classList.add(`number-${this.board[row][col]}`);
+                        } else {
+                            cell.textContent = '';
                         }
                     } else {
                         cell.textContent = '';
+                        cell.classList.remove('revealed');
                     }
                 }
             }
@@ -618,16 +817,12 @@
                 this.gameState = won ? 'won' : 'lost';
                 this.clearTimer();
                 
-                if (!won) {
-                    // Reveal all mines
-                    for (let row = 0; row < this.config.rows; row++) {
-                        for (let col = 0; col < this.config.cols; col++) {
-                            if (this.board[row][col] === -1) {
-                                this.revealed[row][col] = true;
-                                this.updateCellDisplay(row, col);
-                            }
-                        }
-                    }
+                if (won) {
+                    this.playSound('win');
+                } else {
+                    // Mine sound is already played in revealCell, so just reveal mines and false flags
+                    console.log('Game over - revealing all mines and false flags');
+                    this.revealMinesAndFalseFlags();
                 }
                 
                 this.showMessage(won);
@@ -635,6 +830,24 @@
                 // Show share result button if game is completed
                 const shareResultBtn = document.getElementById('share-result-btn');
                 shareResultBtn.style.display = 'inline-flex';
+            }
+            
+            revealMinesAndFalseFlags() {
+                for (let row = 0; row < this.config.rows; row++) {
+                    for (let col = 0; col < this.config.cols; col++) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        
+                        if (this.board[row][col] === -1) {
+                            // Reveal mine
+                            this.revealed[row][col] = true;
+                            this.updateCellDisplay(row, col);
+                        } else if (this.flagged[row][col]) {
+                            // This is a false flag
+                            cell.classList.add('false-flag');
+                            cell.textContent = '❌';
+                        }
+                    }
+                }
             }
             
             showMessage(won) {
