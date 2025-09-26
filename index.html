@@ -29,6 +29,10 @@
     <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
     <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
     <meta name="author" content="vidhyadar.base.eth" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nft.storage/dist/bundle.esm.min.js"></script>
+
      <script type="module">
       import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
       window.farcasterSdk = sdk;
@@ -1024,6 +1028,100 @@
               console.error("❌ Mini App SDK not available");
             }
         });
+    </script>
+    <script>
+        // ---- Config ----
+const NFT_STORAGE_KEY = "1144cc8a.332c392bfee740c9b6794dca1daf979a";  // paste from nft.storage
+const CONTRACT_ADDRESS = "0xe998e76dA35333bCa55d5c8375E8E537Bfe7F819"; // deployed via Remix
+const CONTRACT_ABI = [
+  "function mint(address to, string memory tokenURI) external returns (uint256)",
+  "function nextTokenId() view returns (uint256)"
+];
+
+// ---- Wallet helpers ----
+let provider, signer, nftContract, userAddress;
+
+async function connectWallet() {
+  if (!window.ethereum) throw new Error("Install MetaMask");
+  await window.ethereum.request({ method: "eth_requestAccounts" });
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+  signer = provider.getSigner();
+  userAddress = await signer.getAddress();
+  nftContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+}
+
+// ---- Metadata uploader ----
+async function uploadToNFTStorage(gameResult) {
+  const client = new NFTStorage({ token: NFT_STORAGE_KEY });
+
+  // 1. Generate image (screenshot of canvas)
+  const canvas = document.querySelector("canvas"); // assuming your game renders on canvas
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+
+  // 2. Metadata JSON
+  const metadata = await client.store({
+    name: `Minesweeper Victory - ${gameResult.difficulty}`,
+    description: `I played Minesweeper and ${gameResult.win ? "won" : "lost"} on ${gameResult.difficulty} in ${gameResult.time}s`,
+    image: new File([blob], "result.png", { type: "image/png" }),
+    properties: {
+      difficulty: gameResult.difficulty,
+      time: gameResult.time,
+      win: gameResult.win,
+    }
+  });
+
+  return metadata.url; // ipfs://.../metadata.json
+}
+
+// ---- Mint NFT ----
+async function mintGameNFT(gameResult) {
+  try {
+    if (!signer) await connectWallet();
+
+    // Upload image + metadata to IPFS
+    const tokenURI = await uploadToNFTStorage(gameResult);
+
+    // Mint transaction
+    const tx = await nftContract.mint(userAddress, tokenURI);
+    window.gameInstance.showShareResult("Minting NFT... " + tx.hash);
+
+    await tx.wait();
+    window.gameInstance.showShareResult("✅ Minted! View: " + tokenURI);
+  } catch (err) {
+    console.error(err);
+    window.gameInstance.showShareResult("❌ Mint failed: " + err.message);
+  }
+}
+
+// ---- Hook into Share Result button ----
+document.addEventListener("DOMContentLoaded", () => {
+  const shareBtn = document.getElementById("share-result-btn");
+  if (!shareBtn) return;
+
+  shareBtn.addEventListener("click", async () => {
+    const game = window.gameInstance;
+    if (!game || game.gameState === "playing") {
+      game.showShareResult("Finish the game first!", "error");
+      return;
+    }
+
+    const doMint = confirm("Do you want to mint this game result as an NFT?");
+    if (!doMint) {
+      game.shareResult(); // fallback normal sharing
+      return;
+    }
+
+    // Build game result object
+    const result = {
+      difficulty: game.difficulty || "Easy",
+      time: game.elapsedTime || 0,
+      win: game.gameState === "won",
+    };
+
+    await mintGameNFT(result);
+  });
+});
+
     </script>
 </body>
 </html>
