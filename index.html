@@ -33,7 +33,7 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
+    import { mintSimpleNFT } from './simple-mint.js'
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
   </script>
@@ -964,7 +964,7 @@
         if (window.gameInstance) {
           window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
           window.gameInstance.enableGame();
-          window.gameInstance.updateEarlyAdopterUI();
+          await window.gameInstance.updateEarlyAdopterUI();
         }
           
           return true;
@@ -1061,7 +1061,7 @@
           if (window.gameInstance) {
             window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
             window.gameInstance.enableGame();
-            window.gameInstance.updateEarlyAdopterUI();
+            await window.gameInstance.updateEarlyAdopterUI();
           }
           
           return true;
@@ -1127,7 +1127,7 @@
         
         // Update early adopter UI
         if (window.gameInstance) {
-          window.gameInstance.updateEarlyAdopterUI();
+          await window.gameInstance.updateEarlyAdopterUI();
         }
         
       } else {
@@ -1733,7 +1733,7 @@
 
             if (confirmMint) {
               const result = await mintSimpleNFT(userAddress);
-              this.updateEarlyAdopterUI();
+              await this.updateEarlyAdopterUI();
               this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
             }
           } catch (err) {
@@ -1791,42 +1791,103 @@
         document.getElementById('minefield').classList.add('game-disabled');
       }
 
+      // Get contract data (total minted, remaining supply)
+      async getContractData() {
+        try {
+          if (!window.ethereum) {
+            throw new Error("No ethereum provider");
+          }
+          
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const network = await provider.getNetwork();
+          
+          if (network.chainId !== 84532n) { // Base Sepolia testnet
+            throw new Error("Please switch to Base Sepolia testnet");
+          }
+          
+          const signer = await provider.getSigner();
+          
+          // Contract configuration
+          const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778";
+          const CONTRACT_ABI = [
+            {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"remainingSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+          ];
+          
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          
+          const [totalMinted, remainingSupply, maxSupply] = await Promise.all([
+            contract.totalSupply(),
+            contract.remainingSupply(),
+            contract.MAX_SUPPLY()
+          ]);
+          
+          return {
+            totalMinted: Number(totalMinted),
+            remaining: Number(remainingSupply),
+            maxSupply: Number(maxSupply)
+          };
+        } catch (err) {
+          console.error('Failed to fetch contract data:', err);
+          // Return fallback data
+          return {
+            totalMinted: earlyAdopterNFTs.totalMinted,
+            remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted,
+            maxSupply: earlyAdopterNFTs.maxSupply
+          };
+        }
+      },
+
       // Update early adopter UI
-      updateEarlyAdopterUI() {
+      async updateEarlyAdopterUI() {
         const mintButton = document.getElementById('mint-early-adopter');
         const viewButton = document.getElementById('view-my-nft');
         const infoDiv = document.getElementById('early-adopter-info');
         const nftCount = document.getElementById('nft-count');
         
         if (walletConnected && userAddress) {
-          const eligibility = checkEarlyAdopterEligibility(userAddress);
-          
-          // Show/hide mint button based on eligibility
-          if (eligibility.isEligible) {
-            mintButton.style.display = 'inline-flex';
-            mintButton.textContent = `⭐ Mint Early Adopter NFT (${eligibility.remaining} left)`;
-            viewButton.style.display = 'none';
-          } else {
-            mintButton.style.display = 'none';
-            // Show view button if player has NFT or has played games
-            const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-            if (eligibility.hasNFT || playerStats.gamesPlayed > 0) {
-              viewButton.style.display = 'inline-flex';
-            } else {
+          try {
+            // Fetch real contract data
+            const contractData = await this.getContractData();
+            const eligibility = checkEarlyAdopterEligibility(userAddress);
+            
+            // Update the local totalMinted with real contract data
+            earlyAdopterNFTs.totalMinted = contractData.totalMinted;
+            
+            // Show/hide mint button based on eligibility
+            if (eligibility.isEligible) {
+              mintButton.style.display = 'inline-flex';
+              mintButton.textContent = `⭐ Mint NFT (${contractData.remaining} left)`;
               viewButton.style.display = 'none';
+            } else {
+              mintButton.style.display = 'none';
+              // Show view button if player has NFT or has played games
+              const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+              if (eligibility.hasNFT || playerStats.gamesPlayed > 0) {
+                viewButton.style.display = 'inline-flex';
+              } else {
+                viewButton.style.display = 'none';
+              }
             }
-          }
-          
-          // Show NFT stats
-          infoDiv.style.display = 'block';
-          nftCount.textContent = `${eligibility.totalMinted}/${eligibility.maxSupply}`;
-          
-          // Update button text if player already has NFT
-          if (eligibility.hasNFT) {
-            mintButton.style.display = 'inline-flex';
-            mintButton.textContent = '⭐ You have an Early Adopter NFT!';
-            mintButton.disabled = true;
-            viewButton.style.display = 'inline-flex';
+            
+            // Show NFT stats with real data
+            infoDiv.style.display = 'block';
+            nftCount.textContent = `${contractData.totalMinted}/${contractData.maxSupply}`;
+            
+            // Update button text if player already has NFT
+            if (eligibility.hasNFT) {
+              mintButton.style.display = 'inline-flex';
+              mintButton.textContent = '⭐ You have an NFT!';
+              mintButton.disabled = true;
+              viewButton.style.display = 'inline-flex';
+            }
+          } catch (err) {
+            console.error('Failed to update early adopter UI:', err);
+            // Fallback to local data
+            const eligibility = checkEarlyAdopterEligibility(userAddress);
+            infoDiv.style.display = 'block';
+            nftCount.textContent = `${eligibility.totalMinted}/${eligibility.maxSupply}`;
           }
         } else {
           mintButton.style.display = 'none';
