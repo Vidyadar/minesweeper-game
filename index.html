@@ -336,6 +336,56 @@
             display: none;
         }
 
+        /* Wallet connection section styling */
+        .wallet-section {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .wallet-btn {
+            background: rgba(0, 150, 255, 0.8);
+            font-weight: bold;
+            min-width: 140px;
+        }
+
+        .wallet-btn:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .wallet-btn.connected {
+            background: rgba(0, 200, 100, 0.8);
+        }
+
+        .wallet-btn.connected:hover {
+            background: rgba(0, 200, 100, 1);
+        }
+
+        .wallet-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .wallet-status #wallet-address {
+            font-family: monospace;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* Disabled state for game elements when wallet not connected */
+        .game-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         /* Sound toggle button */
         .sound-toggle {
             position: fixed;
@@ -432,6 +482,15 @@
       <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
     </div>
 
+    <!-- Wallet Connection Section -->
+    <div class="wallet-section" id="wallet-section">
+      <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
+      <div class="wallet-status" id="wallet-status" style="display: none;">
+        <span>👤 Connected: </span>
+        <span id="wallet-address"></span>
+      </div>
+    </div>
+
     <div class="minefield" id="minefield"></div>
     <div class="game-message" id="game-message"></div>
 
@@ -458,69 +517,112 @@
     let walletConnected = false;
     let provider, signer, userAddress, farcasterUser;
 
-    // Connect Farcaster wallet function
+    // Connect Farcaster wallet function with proper sign-in
     async function connectWallet() {
       if (walletConnected) return true;
       
+      // Update button state
+      const connectBtn = document.getElementById('connect-wallet');
+      connectBtn.textContent = '⏳ Connecting...';
+      connectBtn.disabled = true;
+      
       try {
-        // Check if Farcaster SDK is available
-        if (!window.farcasterSdk) {
-          console.error("Farcaster SDK not available");
-          // Fallback to MetaMask if no Farcaster SDK
+        // Check if running in Farcaster
+        if (window.farcasterSdk) {
+          console.log("Attempting Farcaster wallet connection...");
+          
+          // Try to get user context first
+          const context = await window.farcasterSdk.context;
+          console.log("Farcaster context:", context);
+          
+          if (context?.user) {
+            farcasterUser = context.user;
+            console.log("Farcaster user found:", farcasterUser);
+          }
+          
+          // Request wallet connection and signature
+          try {
+            const walletResponse = await window.farcasterSdk.wallet.connectWallet();
+            console.log("Wallet connection response:", walletResponse);
+            
+            if (!walletResponse || !walletResponse.address) {
+              throw new Error("No wallet address received from Farcaster");
+            }
+            
+            userAddress = walletResponse.address;
+            
+            // Get the provider
+            if (window.farcasterSdk.wallet.ethProvider) {
+              provider = new ethers.providers.Web3Provider(window.farcasterSdk.wallet.ethProvider);
+            } else if (window.ethereum) {
+              provider = new ethers.providers.Web3Provider(window.ethereum);
+            } else {
+              throw new Error("No ethereum provider available");
+            }
+            
+            signer = provider.getSigner();
+            
+            // Request signature for authentication
+            const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+            
+            try {
+              const signature = await signer.signMessage(message);
+              console.log("✅ Message signed successfully:", signature.slice(0, 10) + "...");
+              
+              walletConnected = true;
+              updateWalletUI();
+              
+              if (window.gameInstance) {
+                window.gameInstance.showShareResult(`🎉 Farcaster wallet connected!`, "success");
+                window.gameInstance.enableGame();
+              }
+              
+              return true;
+              
+            } catch (signError) {
+              console.error("Signature failed:", signError);
+              throw new Error("Please sign the message to authenticate");
+            }
+            
+          } catch (farcasterError) {
+            console.error("Farcaster wallet error:", farcasterError);
+            throw farcasterError;
+          }
+          
+        } else {
+          console.log("Farcaster SDK not available, trying MetaMask...");
           return await connectMetaMaskWallet();
         }
-
-        console.log("Connecting to Farcaster wallet...");
-        
-        // Connect via Farcaster SDK
-        const connectResult = await window.farcasterSdk.wallet.connectWallet();
-        console.log("Farcaster connect result:", connectResult);
-
-        if (!connectResult || !connectResult.address) {
-          throw new Error("Failed to get wallet address from Farcaster");
-        }
-
-        userAddress = connectResult.address;
-        farcasterUser = connectResult;
-        
-        // Get provider from Farcaster SDK
-        if (window.farcasterSdk.wallet.ethProvider) {
-          provider = new ethers.providers.Web3Provider(window.farcasterSdk.wallet.ethProvider);
-          signer = provider.getSigner();
-        } else {
-          // Fallback to window.ethereum if available
-          if (window.ethereum) {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-          } else {
-            throw new Error("No ethereum provider available");
-          }
-        }
-        
-        console.log("✅ Farcaster wallet connected:", userAddress);
-        walletConnected = true;
-        
-        // Show success message
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`Wallet connected! 🔗 ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`, "success");
-        }
-        
-        return true;
         
       } catch (err) {
-        console.error("❌ Farcaster wallet connection failed:", err);
+        console.error("❌ Wallet connection failed:", err);
+        
+        // Reset button
+        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.disabled = false;
+        
         // Try MetaMask as fallback
-        console.log("Trying MetaMask fallback...");
-        return await connectMetaMaskWallet();
+        if (!window.farcasterSdk) {
+          return await connectMetaMaskWallet();
+        } else {
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult(`❌ Connection failed: ${err.message}`, "error");
+          } else {
+            alert(`Wallet connection failed: ${err.message}`);
+          }
+          return false;
+        }
       }
     }
 
-    // Fallback MetaMask connection
+    // Fallback MetaMask connection with signature
     async function connectMetaMaskWallet() {
+      const connectBtn = document.getElementById('connect-wallet');
+      connectBtn.textContent = '⏳ Connecting to MetaMask...';
+      
       try {
         if (!window.ethereum) {
-          alert("Please install MetaMask or use this app in Farcaster!");
-          return false;
+          throw new Error("Please install MetaMask or use this app in Farcaster!");
         }
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -528,19 +630,75 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         
-        console.log("✅ MetaMask wallet connected:", userAddress);
-        walletConnected = true;
+        // Request signature for authentication
+        const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
         
-        // Show success message
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`MetaMask connected! 🔗 ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`, "success");
+        try {
+          const signature = await signer.signMessage(message);
+          console.log("✅ MetaMask message signed successfully");
+          
+          walletConnected = true;
+          updateWalletUI();
+          
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult(`🦊 MetaMask connected!`, "success");
+            window.gameInstance.enableGame();
+          }
+          
+          return true;
+          
+        } catch (signError) {
+          throw new Error("Please sign the message to authenticate");
         }
         
-        return true;
       } catch (err) {
         console.error("❌ MetaMask connection failed:", err);
-        alert("Wallet connection failed! Please try again or use this app in Farcaster.");
+        
+        // Reset button
+        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.disabled = false;
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`❌ ${err.message}`, "error");
+        } else {
+          alert(err.message);
+        }
         return false;
+      }
+    }
+
+    // Update wallet UI
+    function updateWalletUI() {
+      const connectBtn = document.getElementById('connect-wallet');
+      const walletStatus = document.getElementById('wallet-status');
+      const walletAddress = document.getElementById('wallet-address');
+      
+      if (walletConnected && userAddress) {
+        connectBtn.textContent = '✅ Connected';
+        connectBtn.classList.add('connected');
+        connectBtn.disabled = false;
+        
+        walletStatus.style.display = 'flex';
+        walletAddress.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+        
+        // Enable game elements
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.remove('game-disabled');
+        });
+        document.getElementById('minefield').classList.remove('game-disabled');
+        
+      } else {
+        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.classList.remove('connected');
+        connectBtn.disabled = false;
+        
+        walletStatus.style.display = 'none';
+        
+        // Disable game elements
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.add('game-disabled');
+        });
+        document.getElementById('minefield').classList.add('game-disabled');
       }
     }
 
@@ -808,10 +966,8 @@
       async handleCellClick(row, col) {
         // Check if wallet is connected before allowing any gameplay
         if (!walletConnected) {
-          const connected = await connectWallet();
-          if (!connected) {
-            return; // Don't allow any moves without wallet
-          }
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
         }
 
         if (this.gameState !== 'ready' && this.gameState !== 'playing') return;
@@ -1019,17 +1175,26 @@
       }
 
       setupEventListeners() {
+        // Connect Wallet button
+        document.getElementById('connect-wallet').addEventListener('click', async () => {
+          await connectWallet();
+        });
+
         // New Game button - requires wallet connection
         document.getElementById('new-game').addEventListener('click', async () => {
           if (!walletConnected) {
-            const connected = await connectWallet();
-            if (!connected) return;
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
           }
           this.initializeGame();
         });
 
         // Mode toggle
         document.getElementById('toggle-mode').addEventListener('click', () => {
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
           this.toggleMode();
         });
 
@@ -1037,8 +1202,8 @@
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             if (!walletConnected) {
-              const connected = await connectWallet();
-              if (!connected) return;
+              this.showShareResult('Please connect your wallet first! 🔗', 'error');
+              return;
             }
             this.changeDifficulty(e.target.dataset.difficulty);
           });
@@ -1081,10 +1246,32 @@
           }
         });
       }
+
+      // Enable game after wallet connection
+      enableGame() {
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.remove('game-disabled');
+        });
+        document.getElementById('minefield').classList.remove('game-disabled');
+      }
+
+      // Disable game when wallet not connected
+      disableGame() {
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.add('game-disabled');
+        });
+        document.getElementById('minefield').classList.add('game-disabled');
+      }
     }
 
     // Initialize game when page loads
     document.addEventListener('DOMContentLoaded', async () => {
+      // Create game instance
+      window.gameInstance = new Minesweeper();
+      
+      // Initialize wallet UI
+      updateWalletUI();
+
       // Wait for Farcaster SDK to be ready
       if (window.farcasterSdk) {
         try {
@@ -1097,33 +1284,25 @@
           if (context?.user) {
             console.log("Farcaster user context:", context.user);
             farcasterUser = context.user;
+            
+            // Show user info in game
+            window.gameInstance.showShareResult(`👋 Welcome ${context.user.displayName || context.user.username || 'Farcaster User'}!`, "info");
           }
-
-          // Auto-connect if running in Farcaster
-          setTimeout(async () => {
-            if (!walletConnected) {
-              console.log("Attempting auto-connect to Farcaster wallet...");
-              const autoConnected = await connectWallet();
-              if (!autoConnected) {
-                window.gameInstance.showShareResult("Tap 'New Game' to connect your Farcaster wallet! 🔗", "info");
-              }
-            }
-          }, 1500);
 
         } catch (error) {
           console.error("Farcaster SDK initialization failed:", error);
         }
       } else {
-        console.log("Farcaster SDK not available, using fallback");
-        setTimeout(() => {
-          if (!walletConnected) {
-            window.gameInstance.showShareResult("Connect your wallet to start playing! 🔗", "info");
-          }
-        }, 1000);
+        console.log("Farcaster SDK not available, running in fallback mode");
       }
 
-      // Create game instance
-      window.gameInstance = new Minesweeper();
+      // Show initial connection prompt
+      setTimeout(() => {
+        if (!walletConnected) {
+          window.gameInstance.showShareResult("Click 'Connect Wallet' to start playing! 🎮", "info");
+          window.gameInstance.disableGame();
+        }
+      }, 1500);
     });
   </script>
 </body>
