@@ -33,7 +33,7 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './simple-mint.js'
+    import { mintSimpleNFT } from './mint.js'
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
   </script>
@@ -1805,14 +1805,14 @@
             throw new Error("No ethereum provider");
           }
           
-          const provider = new ethers.BrowserProvider(window.ethereum);
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
           const network = await provider.getNetwork();
           
-          if (network.chainId !== 84532n) { // Base Sepolia testnet
+          if (network.chainId !== 84532) { // Base Sepolia testnet
             throw new Error("Please switch to Base Sepolia testnet");
           }
           
-          const signer = await provider.getSigner();
+          const signer = provider.getSigner();
           
           // Contract configuration
           const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778";
