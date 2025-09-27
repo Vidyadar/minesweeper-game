@@ -33,7 +33,7 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
+    import { mintSimpleNFT } from './simple-mint.js'
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
   </script>
@@ -978,20 +978,20 @@
       }
     }
 
-    // Switch to Base chain
+    // Switch to Base Sepolia testnet
     async function switchToBaseChain() {
       try {
-        const baseChainId = '0x2105'; // 8453 in hex
+        const baseChainId = '0x14a34'; // 84532 in hex (Base Sepolia testnet)
         const baseChainConfig = {
           chainId: baseChainId,
-          chainName: 'Base',
-          rpcUrls: ['https://mainnet.base.org'],
+          chainName: 'Base Sepolia',
+          rpcUrls: ['https://sepolia.base.org'],
           nativeCurrency: {
             name: 'Ethereum',
             symbol: 'ETH',
             decimals: 18
           },
-          blockExplorerUrls: ['https://basescan.org']
+          blockExplorerUrls: ['https://sepolia.basescan.org']
         };
 
         try {
@@ -1000,7 +1000,7 @@
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: baseChainId }],
           });
-          console.log("✅ Switched to Base chain");
+          console.log("✅ Switched to Base Sepolia testnet");
         } catch (switchError) {
           // If the chain doesn't exist, add it
           if (switchError.code === 4902) {
@@ -1009,17 +1009,17 @@
                 method: 'wallet_addEthereumChain',
                 params: [baseChainConfig],
               });
-              console.log("✅ Added and switched to Base chain");
+              console.log("✅ Added and switched to Base Sepolia testnet");
             } catch (addError) {
-              throw new Error("Failed to add Base chain: " + addError.message);
+              throw new Error("Failed to add Base Sepolia testnet: " + addError.message);
             }
           } else {
-            throw new Error("Failed to switch to Base chain: " + switchError.message);
+            throw new Error("Failed to switch to Base Sepolia testnet: " + switchError.message);
           }
         }
       } catch (err) {
         console.error("Base chain switch failed:", err);
-        throw new Error("Please switch to Base chain manually in your wallet");
+        throw new Error("Please switch to Base Sepolia testnet manually in your wallet");
       }
     }
 
@@ -1105,8 +1105,8 @@
         try {
           if (provider) {
             const network = await provider.getNetwork();
-            if (network.chainId === 8453) {
-              chainIndicator.textContent = '🔗 Base Chain';
+            if (network.chainId === 84532) {
+              chainIndicator.textContent = '🔗 Base Sepolia';
               chainIndicator.classList.add('base');
             } else {
               chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
