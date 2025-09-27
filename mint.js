@@ -17,17 +17,17 @@ export async function mintSimpleNFT(playerAddress) {
   }
 
   try {
-    // Check if we're on Base chain
+    // Check if we're on Base Sepolia testnet
     const provider = new ethers.BrowserProvider(window.ethereum);
     const network = await provider.getNetwork();
-    if (network.chainId !== 8453n) {
-      throw new Error("Please switch to Base chain to mint NFTs");
+    if (network.chainId !== 84532n) { // Base Sepolia testnet
+      throw new Error("Please switch to Base Sepolia testnet to mint NFTs");
     }
 
     const signer = await provider.getSigner();
     
-    // Contract configuration for mainnet
-    const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778"; // Replace with your correct contract address
+    // Contract configuration for Base Sepolia testnet
+    const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778"; // Your testnet contract address
     const CONTRACT_ABI = [
       {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
       {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
