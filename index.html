@@ -454,7 +454,7 @@
   </div>
 
   <script>
-  // ----- WALLET CONNECTION MODULE -----
+  // ----- WALLET CONNECTION -----
   let walletConnected = false;
   let provider, signer, userAddress;
 
@@ -465,15 +465,15 @@
         alert("MetaMask or a Web3 wallet is required!");
         return false;
       }
-      provider = new ethers.providers.Web3Provider(window.ethereum);
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
       await provider.send("eth_requestAccounts", []);
       signer = provider.getSigner();
       userAddress = await signer.getAddress();
-      console.log("Wallet connected:", userAddress);
+      console.log("✅ Wallet connected:", userAddress);
       walletConnected = true;
       return true;
     } catch (err) {
-      console.error("Wallet connection failed:", err);
+      console.error("❌ Wallet connection failed:", err);
       alert("Wallet connection failed!");
       return false;
     }
@@ -482,11 +482,9 @@
   // ----- NFT MINT FUNCTION -----
   async function captureAndMint(result) {
     try {
-      // Capture game container screenshot
       const canvas = await html2canvas(document.querySelector(".game-container"));
       const image = canvas.toDataURL("image/png");
 
-      // Metadata JSON
       const metadata = {
         name: `Minesweeper - ${result.win ? "Victory" : "Defeat"}`,
         description: `Difficulty: ${result.difficulty}, Time: ${result.time}s`,
@@ -498,34 +496,31 @@
         ]
       };
 
-      // On-chain metadata URI
       const tokenURI =
         "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-      // Replace with your deployed NFT contract
+      // 🔴 Replace with your deployed NFT contract address
       const CONTRACT_ADDRESS = "0xYourNFTContractHere";
       const CONTRACT_ABI = [
         "function mintGameNFT(address to, string memory tokenURI) public returns (uint256)"
       ];
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-      const tx = await contract.mintGameNFT(await signer.getAddress(), tokenURI, {
-        gasLimit: 200000 // low gas
+      const tx = await contract.mintGameNFT(userAddress, tokenURI, {
+        gasLimit: 200000
       });
 
-      alert("Minting started! Tx: " + tx.hash);
+      alert("⏳ Minting started! Tx: " + tx.hash);
       await tx.wait();
       alert("✅ NFT Minted Successfully!");
     } catch (err) {
-      console.error("Mint failed:", err);
-      alert("❌ Mint failed: " + err.message);
+      console.error("❌ Mint failed:", err);
+      alert("Mint failed: " + err.message);
     }
   }
 
-  // ----- MINESWEEPER CLASS -----
+  // ----- GAME INITIALIZATION -----
   class Minesweeper {
     constructor() {
       this.gameState = "ready";
@@ -552,12 +547,10 @@
       this.setupEventListeners();
     }
 
-    /* ... all your existing game logic unchanged ... */
+    /* keep all your existing Minesweeper methods here */
 
     setupEventListeners() {
-      // Difficulty & Mode buttons
-      document
-        .getElementById("toggle-mode")
+      document.getElementById("toggle-mode")
         .addEventListener("click", () => this.toggleMode());
       document.querySelectorAll(".difficulty-btn").forEach((btn) => {
         btn.addEventListener("click", (e) =>
@@ -565,7 +558,6 @@
         );
       });
 
-      // Sound toggle
       document.getElementById("sound-toggle").addEventListener("click", () => {
         this.soundEnabled = !this.soundEnabled;
         document.getElementById("sound-toggle").textContent = this.soundEnabled
@@ -573,66 +565,52 @@
           : "🔇";
       });
 
-      // Share buttons
-      document
-        .getElementById("share-warpcast")
-        .addEventListener("click", () => this.shareToWarpcast());
-      document
-        .getElementById("share-general")
-        .addEventListener("click", () => this.copyGameLink());
+      document.getElementById("share-result-btn").addEventListener("click", async () => {
+        if (!walletConnected) {
+          const connected = await connectWallet();
+          if (!connected) return;
+        }
 
-      // Share / Mint Result
-      document
-        .getElementById("share-result-btn")
-        .addEventListener("click", async () => {
-          if (!walletConnected) {
-            const connected = await connectWallet();
-            if (!connected) return;
-          }
+        if (this.gameState === "ready" || this.gameState === "playing") {
+          this.showShareResult("Finish the game first! 🎮", "error");
+          return;
+        }
 
-          if (this.gameState === "ready" || this.gameState === "playing") {
-            this.showShareResult("Finish the game first! 🎮", "error");
-            return;
-          }
-
-          const doMint = confirm(
-            "Do you want to mint this game result as an NFT? (Optional, low gas)"
-          );
-          if (doMint) {
-            const result = {
-              difficulty: this.currentDifficulty,
-              time: this.timer,
-              win: this.gameState === "won"
-            };
-            await captureAndMint(result);
-          } else {
-            this.shareResult();
-          }
-        });
+        const doMint = confirm(
+          "Do you want to mint this game result as an NFT? (Optional, low gas)"
+        );
+        if (doMint) {
+          const result = {
+            difficulty: this.currentDifficulty,
+            time: this.timer,
+            win: this.gameState === "won"
+          };
+          await captureAndMint(result);
+        } else {
+          this.shareResult();
+        }
+      });
     }
   }
 
-  // ----- INIT GAME -----
-  document.addEventListener("DOMContentLoaded", () => {
+  // ----- FORCE WALLET BEFORE NEW GAME -----
+  document.addEventListener("DOMContentLoaded", async () => {
     window.gameInstance = new Minesweeper();
 
-    if (window.farcasterSdk?.actions?.ready) {
-      window.farcasterSdk.actions.ready();
-      console.log("✅ Mini App ready() called");
-    }
-  });
-
-  // ----- FORCE WALLET BEFORE NEW GAME -----
-  document
-    .getElementById("new-game")
-    .addEventListener("click", async () => {
+    document.getElementById("new-game").addEventListener("click", async () => {
       if (!walletConnected) {
         const connected = await connectWallet();
         if (!connected) return;
       }
       window.gameInstance.initializeGame();
     });
-  </script>
+
+    if (window.farcasterSdk?.actions?.ready) {
+      window.farcasterSdk.actions.ready();
+      console.log("✅ Mini App ready() called");
+    }
+  });
+</script>
 
   <script>
     // ----- MINESWEEPER CLASS (unchanged logic, only additions for wallet + NFT mint) -----
