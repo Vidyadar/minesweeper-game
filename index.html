@@ -350,6 +350,237 @@
             font-weight: bold;
         }
 
+        .share-btn.view-nft-btn {
+            background: rgba(0, 150, 255, 0.8);
+            font-weight: bold;
+        }
+
+        .share-btn.view-nft-btn:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        /* NFT Viewer Styles */
+        .nft-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .nft-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nft-viewer-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        .close-viewer {
+            background: rgba(255, 0, 0, 0.8);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-viewer:hover {
+            background: rgba(255, 0, 0, 1);
+            transform: scale(1.1);
+        }
+
+        .nft-viewer-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .player-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .nft-position {
+            font-size: 1.2rem;
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .difficulty-stats {
+            margin-bottom: 20px;
+        }
+
+        .difficulty-stats h4 {
+            color: #fff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .difficulty-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .difficulty-name {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .difficulty-games, .difficulty-wins {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .nft-metadata {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .nft-metadata h4 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .metadata-content {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #ccc;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .nft-viewer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .share-nft-btn, .copy-stats-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .share-nft-btn {
+            background: rgba(139, 69, 255, 0.8);
+        }
+
+        .share-nft-btn:hover {
+            background: rgba(139, 69, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .copy-stats-btn {
+            background: rgba(0, 150, 255, 0.8);
+        }
+
+        .copy-stats-btn:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 480px) {
+            .nft-viewer-content {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .difficulty-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .share-result {
             margin: 10px 0;
             padding: 10px;
@@ -540,10 +771,83 @@
         <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
         <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
         <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint Early Adopter NFT</button>
+        <button class="share-btn view-nft-btn" id="view-my-nft" style="display: none;">👤 View My NFT</button>
       </div>
       <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
         <div class="nft-stats">
           <span id="nft-count">0/2500</span> Early Adopter NFTs
+        </div>
+      </div>
+      
+      <!-- NFT Status Viewer -->
+      <div class="nft-viewer" id="nft-viewer" style="display: none;">
+        <div class="nft-viewer-header">
+          <h3>🎮 Your Player Status</h3>
+          <button class="close-viewer" id="close-nft-viewer">✕</button>
+        </div>
+        <div class="nft-viewer-content">
+          <div class="player-info">
+            <div class="player-name" id="viewer-player-name">Player Name</div>
+            <div class="nft-position" id="viewer-nft-position">NFT #0</div>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Games Played</div>
+              <div class="stat-value" id="viewer-games-played">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Wins</div>
+              <div class="stat-value" id="viewer-wins">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Losses</div>
+              <div class="stat-value" id="viewer-losses">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Win Ratio</div>
+              <div class="stat-value" id="viewer-win-ratio">0%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Best Time</div>
+              <div class="stat-value" id="viewer-best-time">N/A</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Play Time</div>
+              <div class="stat-value" id="viewer-total-time">0s</div>
+            </div>
+          </div>
+          
+          <div class="difficulty-stats">
+            <h4>Difficulty Breakdown</h4>
+            <div class="difficulty-grid">
+              <div class="difficulty-card">
+                <div class="difficulty-name">Easy</div>
+                <div class="difficulty-games" id="viewer-easy-games">0 games</div>
+                <div class="difficulty-wins" id="viewer-easy-wins">0 wins</div>
+              </div>
+              <div class="difficulty-card">
+                <div class="difficulty-name">Medium</div>
+                <div class="difficulty-games" id="viewer-medium-games">0 games</div>
+                <div class="difficulty-wins" id="viewer-medium-wins">0 wins</div>
+              </div>
+              <div class="difficulty-card">
+                <div class="difficulty-name">Hard</div>
+                <div class="difficulty-games" id="viewer-hard-games">0 games</div>
+                <div class="difficulty-wins" id="viewer-hard-wins">0 wins</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="nft-metadata" id="viewer-nft-metadata" style="display: none;">
+            <h4>NFT Details</h4>
+            <div class="metadata-content" id="viewer-metadata-content"></div>
+          </div>
+          
+          <div class="nft-viewer-actions">
+            <button class="share-nft-btn" id="share-nft-status">🟣 Share on Warpcast</button>
+            <button class="copy-stats-btn" id="copy-player-stats">📋 Copy Stats</button>
+          </div>
         </div>
       </div>
     </div>
@@ -829,17 +1133,65 @@
       }
     }
 
-    // Early Adopter NFT minting system
+    // Early Adopter NFT minting system with player statistics
     let earlyAdopterNFTs = {
       totalMinted: 0,
       maxSupply: 2500,
       playerNFTs: new Map(), // Track NFTs per player
+      playerStats: new Map(), // Track detailed player statistics
       isEarlyAdopter: function() {
         return this.totalMinted < this.maxSupply;
       },
       canPlayerMint: function(playerAddress) {
         // Allow one NFT per player for early adopters
         return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
+      },
+      // Initialize or get player stats
+      getPlayerStats: function(playerAddress) {
+        if (!this.playerStats.has(playerAddress)) {
+          this.playerStats.set(playerAddress, {
+            gamesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            winRatio: 0,
+            bestTime: null,
+            totalPlayTime: 0,
+            difficultyStats: {
+              easy: { games: 0, wins: 0 },
+              medium: { games: 0, wins: 0 },
+              hard: { games: 0, wins: 0 }
+            }
+          });
+        }
+        return this.playerStats.get(playerAddress);
+      },
+      // Update player stats after game completion
+      updatePlayerStats: function(playerAddress, gameResult) {
+        const stats = this.getPlayerStats(playerAddress);
+        stats.gamesPlayed++;
+        
+        if (gameResult.win) {
+          stats.wins++;
+          if (!stats.bestTime || gameResult.time < stats.bestTime) {
+            stats.bestTime = gameResult.time;
+          }
+        } else {
+          stats.losses++;
+        }
+        
+        stats.totalPlayTime += gameResult.time;
+        stats.winRatio = stats.gamesPlayed > 0 ? (stats.wins / stats.gamesPlayed * 100).toFixed(1) : 0;
+        
+        // Update difficulty stats
+        if (stats.difficultyStats[gameResult.difficulty]) {
+          stats.difficultyStats[gameResult.difficulty].games++;
+          if (gameResult.win) {
+            stats.difficultyStats[gameResult.difficulty].wins++;
+          }
+        }
+        
+        this.playerStats.set(playerAddress, stats);
+        return stats;
       }
     };
 
@@ -861,16 +1213,29 @@
           throw new Error("Please switch to Base chain to mint NFTs");
         }
 
-        // Create early adopter NFT metadata
+        // Get player statistics
+        const playerStats = earlyAdopterNFTs.getPlayerStats(playerAddress);
+        const mintPosition = earlyAdopterNFTs.totalMinted + 1;
+        
+        // Create early adopter NFT metadata with comprehensive stats
         const metadata = {
-          name: `Minesweeper Early Adopter #${earlyAdopterNFTs.totalMinted + 1}`,
-          description: `Early adopter NFT for Minesweeper game. Limited to 2,500 total supply. Player: ${playerName}`,
+          name: `Minesweeper Early Adopter #${mintPosition}`,
+          description: `Early adopter NFT #${mintPosition} for Minesweeper game. Player: ${playerName}. Games: ${playerStats.gamesPlayed}, Wins: ${playerStats.wins}, Win Rate: ${playerStats.winRatio}%`,
           image: "https://minesweeper-game-pearl.vercel.app/assets/icon.png", // Use game icon
           attributes: [
             { trait_type: "Type", value: "Early Adopter" },
             { trait_type: "Player", value: playerName },
-            { trait_type: "Mint Number", value: earlyAdopterNFTs.totalMinted + 1 },
+            { trait_type: "Mint Position", value: mintPosition },
             { trait_type: "Total Supply", value: "2500" },
+            { trait_type: "Games Played", value: playerStats.gamesPlayed },
+            { trait_type: "Wins", value: playerStats.wins },
+            { trait_type: "Losses", value: playerStats.losses },
+            { trait_type: "Win Ratio", value: `${playerStats.winRatio}%` },
+            { trait_type: "Best Time", value: playerStats.bestTime ? `${playerStats.bestTime}s` : "N/A" },
+            { trait_type: "Total Play Time", value: `${playerStats.totalPlayTime}s` },
+            { trait_type: "Easy Games", value: playerStats.difficultyStats.easy.games },
+            { trait_type: "Medium Games", value: playerStats.difficultyStats.medium.games },
+            { trait_type: "Hard Games", value: playerStats.difficultyStats.hard.games },
             { trait_type: "Platform", value: "Farcaster" }
           ]
         };
@@ -890,8 +1255,9 @@
           data: ethers.utils.toUtf8Bytes(`Minesweeper Early Adopter NFT: ${JSON.stringify({
             hash: nftHash,
             player: playerName,
-            mintNumber: earlyAdopterNFTs.totalMinted + 1,
+            mintPosition: mintPosition,
             timestamp: Date.now(),
+            playerStats: playerStats,
             metadata: metadata
           })}`)
         });
@@ -906,7 +1272,7 @@
           timestamp: Date.now()
         });
 
-        window.gameInstance.showShareResult(`🎉 Early Adopter NFT #${earlyAdopterNFTs.totalMinted} minted successfully!`, "success");
+        window.gameInstance.showShareResult(`🎉 Early Adopter NFT #${mintPosition} minted successfully!`, "success");
         
         console.log("Early Adopter NFT minted:", {
           player: playerName,
@@ -1194,6 +1560,16 @@
         this.gameState = won ? 'won' : 'lost';
         this.clearTimer();
 
+        // Update player statistics if wallet is connected
+        if (walletConnected && userAddress) {
+          const gameResult = {
+            difficulty: this.currentDifficulty,
+            time: this.timer,
+            win: won
+          };
+          earlyAdopterNFTs.updatePlayerStats(userAddress, gameResult);
+        }
+
         if (won) {
           this.playSound(880, 500, 'triangle');
           document.getElementById('game-message').textContent = '🎉 You won!';
@@ -1432,6 +1808,33 @@
             this.showShareResult(`❌ ${err.message}`, 'error');
           }
         });
+
+        // View My NFT button
+        document.getElementById('view-my-nft').addEventListener('click', () => {
+          this.showNFTViewer();
+        });
+
+        // Close NFT viewer
+        document.getElementById('close-nft-viewer').addEventListener('click', () => {
+          this.hideNFTViewer();
+        });
+
+        // Close NFT viewer when clicking outside
+        document.getElementById('nft-viewer').addEventListener('click', (e) => {
+          if (e.target.id === 'nft-viewer') {
+            this.hideNFTViewer();
+          }
+        });
+
+        // Share NFT status on Warpcast
+        document.getElementById('share-nft-status').addEventListener('click', () => {
+          this.shareNFTStatusToWarpcast();
+        });
+
+        // Copy player stats
+        document.getElementById('copy-player-stats').addEventListener('click', () => {
+          this.copyPlayerStats();
+        });
       }
 
       // Enable game after wallet connection
@@ -1453,6 +1856,7 @@
       // Update early adopter UI
       updateEarlyAdopterUI() {
         const mintButton = document.getElementById('mint-early-adopter');
+        const viewButton = document.getElementById('view-my-nft');
         const infoDiv = document.getElementById('early-adopter-info');
         const nftCount = document.getElementById('nft-count');
         
@@ -1463,8 +1867,16 @@
           if (eligibility.isEligible) {
             mintButton.style.display = 'inline-flex';
             mintButton.textContent = `⭐ Mint Early Adopter NFT (${eligibility.remaining} left)`;
+            viewButton.style.display = 'none';
           } else {
             mintButton.style.display = 'none';
+            // Show view button if player has NFT or has played games
+            const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+            if (eligibility.hasNFT || playerStats.gamesPlayed > 0) {
+              viewButton.style.display = 'inline-flex';
+            } else {
+              viewButton.style.display = 'none';
+            }
           }
           
           // Show NFT stats
@@ -1476,11 +1888,159 @@
             mintButton.style.display = 'inline-flex';
             mintButton.textContent = '⭐ You have an Early Adopter NFT!';
             mintButton.disabled = true;
+            viewButton.style.display = 'inline-flex';
           }
         } else {
           mintButton.style.display = 'none';
+          viewButton.style.display = 'none';
           infoDiv.style.display = 'none';
         }
+      }
+
+      // Show NFT viewer with player data
+      showNFTViewer() {
+        if (!walletConnected || !userAddress) {
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+
+        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
+        const eligibility = checkEarlyAdopterEligibility(userAddress);
+        
+        // Update player info
+        document.getElementById('viewer-player-name').textContent = playerName;
+        document.getElementById('viewer-nft-position').textContent = eligibility.hasNFT ? 
+          `NFT #${earlyAdopterNFTs.playerNFTs.get(userAddress)?.mintNumber || 'Unknown'}` : 
+          'No NFT yet';
+
+        // Update stats
+        document.getElementById('viewer-games-played').textContent = playerStats.gamesPlayed;
+        document.getElementById('viewer-wins').textContent = playerStats.wins;
+        document.getElementById('viewer-losses').textContent = playerStats.losses;
+        document.getElementById('viewer-win-ratio').textContent = `${playerStats.winRatio}%`;
+        document.getElementById('viewer-best-time').textContent = playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A';
+        document.getElementById('viewer-total-time').textContent = `${playerStats.totalPlayTime}s`;
+
+        // Update difficulty stats
+        document.getElementById('viewer-easy-games').textContent = `${playerStats.difficultyStats.easy.games} games`;
+        document.getElementById('viewer-easy-wins').textContent = `${playerStats.difficultyStats.easy.wins} wins`;
+        document.getElementById('viewer-medium-games').textContent = `${playerStats.difficultyStats.medium.games} games`;
+        document.getElementById('viewer-medium-wins').textContent = `${playerStats.difficultyStats.medium.wins} wins`;
+        document.getElementById('viewer-hard-games').textContent = `${playerStats.difficultyStats.hard.games} games`;
+        document.getElementById('viewer-hard-wins').textContent = `${playerStats.difficultyStats.hard.wins} wins`;
+
+        // Show NFT metadata if player has NFT
+        if (eligibility.hasNFT) {
+          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
+          if (nftData) {
+            document.getElementById('viewer-nft-metadata').style.display = 'block';
+            document.getElementById('viewer-metadata-content').textContent = JSON.stringify({
+              mintPosition: nftData.mintNumber,
+              txHash: nftData.txHash,
+              timestamp: new Date(nftData.timestamp).toISOString(),
+              playerStats: playerStats
+            }, null, 2);
+          }
+        } else {
+          document.getElementById('viewer-nft-metadata').style.display = 'none';
+        }
+
+        // Show the viewer
+        document.getElementById('nft-viewer').style.display = 'flex';
+      }
+
+      // Hide NFT viewer
+      hideNFTViewer() {
+        document.getElementById('nft-viewer').style.display = 'none';
+      }
+
+      // Share NFT status to Warpcast
+      shareNFTStatusToWarpcast() {
+        if (!walletConnected || !userAddress) {
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+
+        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
+        const eligibility = checkEarlyAdopterEligibility(userAddress);
+        
+        // Create beautiful share message
+        let shareText = `🎮 Minesweeper Player Status\n\n`;
+        shareText += `👤 Player: ${playerName}\n`;
+        
+        if (eligibility.hasNFT) {
+          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
+          shareText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
+        } else {
+          shareText += `🎯 Building my stats...\n\n`;
+        }
+        
+        shareText += `📊 Game Statistics:\n`;
+        shareText += `• Games Played: ${playerStats.gamesPlayed}\n`;
+        shareText += `• Wins: ${playerStats.wins}\n`;
+        shareText += `• Losses: ${playerStats.losses}\n`;
+        shareText += `• Win Rate: ${playerStats.winRatio}%\n`;
+        
+        if (playerStats.bestTime) {
+          shareText += `• Best Time: ${playerStats.bestTime}s\n`;
+        }
+        
+        shareText += `\n🎯 Difficulty Breakdown:\n`;
+        shareText += `• Easy: ${playerStats.difficultyStats.easy.games} games (${playerStats.difficultyStats.easy.wins} wins)\n`;
+        shareText += `• Medium: ${playerStats.difficultyStats.medium.games} games (${playerStats.difficultyStats.medium.wins} wins)\n`;
+        shareText += `• Hard: ${playerStats.difficultyStats.hard.games} games (${playerStats.difficultyStats.hard.wins} wins)\n`;
+        
+        shareText += `\n💣 Play Minesweeper on Farcaster!\n`;
+        shareText += `🔗 ${window.location.href}`;
+        
+        // Open Warpcast with the share text
+        const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
+        window.open(warpcastUrl, '_blank');
+        
+        this.showShareResult('Opening Warpcast to share your status! 🟣', 'success');
+      }
+
+      // Copy player stats to clipboard
+      copyPlayerStats() {
+        if (!walletConnected || !userAddress) {
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+
+        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
+        const eligibility = checkEarlyAdopterEligibility(userAddress);
+        
+        // Create formatted stats text
+        let statsText = `🎮 Minesweeper Player Status\n\n`;
+        statsText += `👤 Player: ${playerName}\n`;
+        
+        if (eligibility.hasNFT) {
+          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
+          statsText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
+        }
+        
+        statsText += `📊 Game Statistics:\n`;
+        statsText += `• Games Played: ${playerStats.gamesPlayed}\n`;
+        statsText += `• Wins: ${playerStats.wins}\n`;
+        statsText += `• Losses: ${playerStats.losses}\n`;
+        statsText += `• Win Rate: ${playerStats.winRatio}%\n`;
+        statsText += `• Best Time: ${playerStats.bestTime ? playerStats.bestTime + 's' : 'N/A'}\n`;
+        statsText += `• Total Play Time: ${playerStats.totalPlayTime}s\n\n`;
+        
+        statsText += `🎯 Difficulty Breakdown:\n`;
+        statsText += `• Easy: ${playerStats.difficultyStats.easy.games} games (${playerStats.difficultyStats.easy.wins} wins)\n`;
+        statsText += `• Medium: ${playerStats.difficultyStats.medium.games} games (${playerStats.difficultyStats.medium.wins} wins)\n`;
+        statsText += `• Hard: ${playerStats.difficultyStats.hard.games} games (${playerStats.difficultyStats.hard.wins} wins)\n`;
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(statsText).then(() => {
+          this.showShareResult('Player stats copied to clipboard! 📋', 'success');
+        }).catch(() => {
+          this.showShareResult('Failed to copy stats. Try again!', 'error');
+        });
       }
     }
 
