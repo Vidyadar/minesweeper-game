@@ -33,7 +33,7 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
+    import { mintSimpleNFT } from './simple-mint.js'
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
   </script>
@@ -787,6 +787,7 @@
       <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
         <div class="nft-stats">
           <span id="nft-count">0/2500</span> Early Adopter NFTs
+          <button id="refresh-count" style="margin-left: 10px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">🔄 Refresh</button>
         </div>
       </div>
       
@@ -1747,6 +1748,12 @@
           this.showNFTViewer();
         });
 
+        // Refresh count button
+        document.getElementById('refresh-count').addEventListener('click', async () => {
+          console.log('Manual refresh triggered');
+          await this.updateEarlyAdopterUI();
+        });
+
         // Close NFT viewer
         document.getElementById('close-nft-viewer').addEventListener('click', () => {
           this.hideNFTViewer();
@@ -1810,6 +1817,7 @@
           // Contract configuration
           const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778";
           const CONTRACT_ABI = [
+            {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
             {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
             {"inputs":[],"name":"remainingSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
             {"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
@@ -1817,11 +1825,31 @@
           
           const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
           
+          // First, let's test if the contract exists and is callable
+          console.log('Testing contract connection...');
+          console.log('Contract address:', CONTRACT_ADDRESS);
+          console.log('Signer address:', await signer.getAddress());
+          
+          // Try to call a simple function first
+          try {
+            const name = await contract.name();
+            console.log('Contract name:', name);
+          } catch (err) {
+            console.error('Contract name call failed:', err);
+            throw new Error('Contract not found or not deployed at this address');
+          }
+          
           const [totalMinted, remainingSupply, maxSupply] = await Promise.all([
             contract.totalSupply(),
             contract.remainingSupply(),
             contract.MAX_SUPPLY()
           ]);
+          
+          console.log('Contract data fetched:', {
+            totalMinted: totalMinted.toString(),
+            remainingSupply: remainingSupply.toString(),
+            maxSupply: maxSupply.toString()
+          });
           
           return {
             totalMinted: Number(totalMinted),
@@ -1874,6 +1902,7 @@
             // Show NFT stats with real data
             infoDiv.style.display = 'block';
             nftCount.textContent = `${contractData.totalMinted}/${contractData.maxSupply}`;
+            console.log('UI updated with contract data:', contractData);
             
             // Update button text if player already has NFT
             if (eligibility.hasNFT) {
