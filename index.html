@@ -372,23 +372,12 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            flex-direction: column;
         }
 
         .wallet-status #wallet-address {
             font-family: monospace;
             color: #00ff88;
             font-weight: bold;
-        }
-
-        .chain-indicator {
-            font-size: 0.7rem;
-            color: #66aaff;
-            margin-top: 2px;
-        }
-
-        .chain-indicator.base {
-            color: #00ff88;
         }
 
         /* Disabled state for game elements when wallet not connected */
@@ -497,11 +486,8 @@
     <div class="wallet-section" id="wallet-section">
       <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
       <div class="wallet-status" id="wallet-status" style="display: none;">
-        <div>
-          <span>👤 Connected: </span>
-          <span id="wallet-address"></span>
-        </div>
-        <div class="chain-indicator" id="chain-indicator">Checking network...</div>
+        <span>👤 Connected: </span>
+        <span id="wallet-address"></span>
       </div>
     </div>
 
@@ -527,9 +513,41 @@
   </div>
 
   <script>
-    // Global variables for Farcaster wallet
+    // Global variables for wallet and early adopter tracking
     let walletConnected = false;
     let provider, signer, userAddress, farcasterUser;
+    let isEarlyAdopter = false;
+    let totalEarlyAdopters = 0;
+    const MAX_EARLY_ADOPTERS = 2500;
+
+    // Early Adopter NFT Contract (replace with your deployed contract)
+    const EARLY_ADOPTER_CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93";
+    const EARLY_ADOPTER_ABI = [
+      {
+        "inputs": [
+          {"internalType": "address", "name": "to", "type": "address"},
+          {"internalType": "string", "name": "playerName", "type": "string"}
+        ],
+        "name": "mintEarlyAdopter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
+        "name": "balanceOf",
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
 
     // Connect wallet function with better error handling
     async function connectWallet() {
@@ -577,101 +595,56 @@
       try {
         console.log("Available Farcaster SDK methods:", Object.keys(window.farcasterSdk));
         
-        // Get user context from Farcaster SDK
-        const context = await window.farcasterSdk.context;
-        console.log("Farcaster context:", context);
+        // Check different possible wallet methods in Farcaster SDK
+        let walletResponse;
         
-        if (!context || !context.user) {
-          throw new Error("No Farcaster user context available");
+        if (window.farcasterSdk.wallet && typeof window.farcasterSdk.wallet.connectWallet === 'function') {
+          walletResponse = await window.farcasterSdk.wallet.connectWallet();
+        } else if (window.farcasterSdk.actions && typeof window.farcasterSdk.actions.connectWallet === 'function') {
+          walletResponse = await window.farcasterSdk.actions.connectWallet();
+        } else if (typeof window.farcasterSdk.connectWallet === 'function') {
+          walletResponse = await window.farcasterSdk.connectWallet();
+        } else {
+          throw new Error("Farcaster wallet connection method not found");
         }
         
-        // Store Farcaster user data
-        farcasterUser = context.user;
-        console.log("Farcaster user:", farcasterUser);
+        console.log("Farcaster wallet response:", walletResponse);
         
-        // For Farcaster, we'll use the embedded wallet or MetaMask
-        if (window.ethereum) {
-          // Switch to Base chain if not already on it
-          await switchToBaseChain();
-          
+        if (!walletResponse || !walletResponse.address) {
+          throw new Error("No wallet address received from Farcaster");
+        }
+        
+        userAddress = walletResponse.address;
+        
+        // Setup provider
+        if (window.farcasterSdk.wallet && window.farcasterSdk.wallet.ethProvider) {
+          provider = new ethers.providers.Web3Provider(window.farcasterSdk.wallet.ethProvider);
+        } else if (window.ethereum) {
           provider = new ethers.providers.Web3Provider(window.ethereum);
-          const accounts = await provider.send("eth_requestAccounts", []);
-          
-          if (!accounts || accounts.length === 0) {
-            throw new Error("No accounts found");
-          }
-          
-          signer = provider.getSigner();
-          userAddress = await signer.getAddress();
-          
-          console.log("✅ Wallet connected via Farcaster context");
-          
-          // Request signature for authentication
-          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
-          const signature = await signer.signMessage(message);
-          console.log("✅ Message signed successfully");
-          
-        walletConnected = true;
-        await updateWalletUI();
-        
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
-          window.gameInstance.enableGame();
-        }
-          
-          return true;
         } else {
           throw new Error("No ethereum provider available");
         }
         
+        signer = provider.getSigner();
+        
+        // Request signature for authentication
+        const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+        const signature = await signer.signMessage(message);
+        console.log("✅ Farcaster message signed successfully");
+        
+        walletConnected = true;
+        updateWalletUI();
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected!`, "success");
+          window.gameInstance.enableGame();
+        }
+        
+        return true;
+        
       } catch (err) {
         console.error("Farcaster connection failed:", err);
         throw err;
-      }
-    }
-
-    // Switch to Base chain
-    async function switchToBaseChain() {
-      try {
-        const baseChainId = '0x2105'; // 8453 in hex
-        const baseChainConfig = {
-          chainId: baseChainId,
-          chainName: 'Base',
-          rpcUrls: ['https://mainnet.base.org'],
-          nativeCurrency: {
-            name: 'Ethereum',
-            symbol: 'ETH',
-            decimals: 18
-          },
-          blockExplorerUrls: ['https://basescan.org']
-        };
-
-        try {
-          // Try to switch to Base chain
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: baseChainId }],
-          });
-          console.log("✅ Switched to Base chain");
-        } catch (switchError) {
-          // If the chain doesn't exist, add it
-          if (switchError.code === 4902) {
-            try {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [baseChainConfig],
-              });
-              console.log("✅ Added and switched to Base chain");
-            } catch (addError) {
-              throw new Error("Failed to add Base chain: " + addError.message);
-            }
-          } else {
-            throw new Error("Failed to switch to Base chain: " + switchError.message);
-          }
-        }
-      } catch (err) {
-        console.error("Base chain switch failed:", err);
-        throw new Error("Please switch to Base chain manually in your wallet");
       }
     }
 
@@ -683,9 +656,6 @@
         }
         
         console.log("Connecting to MetaMask...");
-        
-        // Switch to Base chain first
-        await switchToBaseChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
@@ -708,10 +678,10 @@
           console.log("✅ MetaMask message signed successfully");
           
           walletConnected = true;
-          await updateWalletUI();
+          updateWalletUI();
           
           if (window.gameInstance) {
-            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
+            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully!`, "success");
             window.gameInstance.enableGame();
           }
           
@@ -738,11 +708,10 @@
     }
 
     // Update wallet UI
-    async function updateWalletUI() {
+    function updateWalletUI() {
       const connectBtn = document.getElementById('connect-wallet');
       const walletStatus = document.getElementById('wallet-status');
       const walletAddress = document.getElementById('wallet-address');
-      const chainIndicator = document.getElementById('chain-indicator');
       
       if (walletConnected && userAddress) {
         connectBtn.textContent = '✅ Connected';
@@ -751,24 +720,6 @@
         
         walletStatus.style.display = 'flex';
         walletAddress.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-        
-        // Update chain indicator
-        try {
-          if (provider) {
-            const network = await provider.getNetwork();
-            if (network.chainId === 8453) {
-              chainIndicator.textContent = '🔗 Base Chain';
-              chainIndicator.classList.add('base');
-            } else {
-              chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
-              chainIndicator.classList.remove('base');
-            }
-          } else {
-            chainIndicator.textContent = '❓ Unknown Network';
-          }
-        } catch (err) {
-          chainIndicator.textContent = '❌ Network Error';
-        }
         
         // Enable game elements
         document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
@@ -814,101 +765,34 @@
 
         const tokenURI = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        // Check if we're on Base chain first
-        const network = await provider.getNetwork();
-        if (network.chainId !== 8453) {
-          throw new Error("Please switch to Base chain to mint NFTs");
-        }
-
-        // TODO: Replace with your deployed contract address from Remix
-        const CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93"; // Your deployed contract address
+        // Replace with your deployed NFT contract address
+        const CONTRACT_ADDRESS = "0xe998e76dA35333bCa55d5c8375E8E537Bfe7F819";
         const CONTRACT_ABI = [
           {
             "inputs": [
-              {"internalType": "string", "name": "difficulty", "type": "string"},
-              {"internalType": "uint256", "name": "time", "type": "uint256"},
-              {"internalType": "bool", "name": "win", "type": "bool"},
-              {"internalType": "string", "name": "playerName", "type": "string"},
-              {"internalType": "string", "name": "imageHash", "type": "string"}
+              {"internalType": "address", "name": "to", "type": "address"},
+              {"internalType": "string", "name": "tokenURI", "type": "string"}
             ],
-            "name": "mintGameResult",
+            "name": "mintResult",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
           }
         ];
 
-        // Check if contract is deployed
-        if (CONTRACT_ADDRESS === "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93") {
-          // Fallback to simple transaction if contract not deployed
-          window.gameInstance.showShareResult("⏳ Creating game result record...", "info");
-          
-          const gameResultHash = ethers.utils.keccak256(
-            ethers.utils.toUtf8Bytes(
-              `${userAddress}-${result.difficulty}-${result.time}-${result.win}-${Date.now()}`
-            )
-          );
-          
-          try {
-            const gasPrice = await provider.getGasPrice();
-            const gasLimit = 100000;
-            
-            const tx = await signer.sendTransaction({
-              to: userAddress,
-              value: 0,
-              gasLimit: gasLimit,
-              gasPrice: gasPrice,
-              data: ethers.utils.toUtf8Bytes(`Minesweeper Result: ${JSON.stringify({
-                hash: gameResultHash,
-                difficulty: result.difficulty,
-                time: result.time,
-                win: result.win,
-                timestamp: Date.now(),
-                player: result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous'
-              })}`)
-            });
-            
-            window.gameInstance.showShareResult("⏳ Recording result on Base chain...", "info");
-            await tx.wait();
-            
-            window.gameInstance.showShareResult("✅ Game result recorded on Base chain! 🎉", "success");
-            console.log("✅ Game result recorded:", {
-              txHash: tx.hash,
-              gameHash: gameResultHash,
-              baseScanUrl: `https://basescan.org/tx/${tx.hash}`
-            });
-            
-          } catch (txError) {
-            console.error("Transaction failed:", txError);
-            window.gameInstance.showShareResult("✅ Game result saved locally! 🎉", "success");
-          }
-        } else {
-          // Use deployed NFT contract
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-          
-          window.gameInstance.showShareResult("⏳ Minting NFT on Base chain...", "info");
-          
-          const tx = await contract.mintGameResult(
-            result.difficulty,
-            result.time,
-            result.win,
-            result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous',
-            image, // Base64 encoded image
-            {
-              gasLimit: 500000
-            }
-          );
-          
-          window.gameInstance.showShareResult("⏳ Waiting for confirmation...", "info");
-          await tx.wait();
-          
-          window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
-          console.log("✅ NFT Minted:", {
-            txHash: tx.hash,
-            contractAddress: CONTRACT_ADDRESS,
-            baseScanUrl: `https://basescan.org/tx/${tx.hash}`
-          });
-        }
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        window.gameInstance.showShareResult("⏳ Minting NFT...", "info");
+        
+        const tx = await contract.mintResult(userAddress, tokenURI, {
+          gasLimit: 300000 // Increased gas limit for safety
+        });
+
+        console.log("Transaction sent:", tx.hash);
+        await tx.wait();
+        
+        window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
+        console.log("✅ NFT Minted:", tx);
         
         // Share on Farcaster if SDK available
         if (window.farcasterSdk && result.farcasterUser) {
@@ -1387,25 +1271,7 @@
             return;
           }
 
-          // Check if wallet is connected
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
-          }
-
-          // Check if we're on Base chain
-          try {
-            const network = await provider.getNetwork();
-            if (network.chainId !== 8453) {
-              this.showShareResult('Please switch to Base chain to mint NFTs! 🔄', 'error');
-              return;
-            }
-          } catch (err) {
-            this.showShareResult('Unable to check network. Please ensure you\'re on Base chain.', 'error');
-            return;
-          }
-
-          const doMint = confirm("Do you want to mint this game result as an NFT on Base chain? (Optional)\n\nClick OK to mint NFT\nClick Cancel to just share result");
+          const doMint = confirm("Do you want to mint this game result as an NFT? (Optional)\n\nClick OK to mint NFT\nClick Cancel to just share result");
           
           if (doMint) {
             const result = {
@@ -1444,7 +1310,7 @@
       window.gameInstance = new Minesweeper();
       
       // Initialize wallet UI
-      await updateWalletUI();
+      updateWalletUI();
 
       // Wait for Farcaster SDK to be ready
       if (window.farcasterSdk) {
