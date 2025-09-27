@@ -9,7 +9,7 @@ function showGameMessage(msg) {
   }
 }
 
-// Function to mint NFT
+// Function to mint NFT on Base chain
 export async function captureAndMint(gameResult) {
   if (!window.ethereum) {
     alert("Please install MetaMask or another Web3 wallet!");
@@ -22,10 +22,16 @@ export async function captureAndMint(gameResult) {
     const signer = await provider.getSigner();
     const userAddress = await signer.getAddress();
 
-    // Replace with your contract address and ABI
+    // Check if we're on Base chain
+    const network = await provider.getNetwork();
+    if (network.chainId !== 8453n) {
+      alert("Please switch to Base chain to mint NFTs!");
+      return;
+    }
+
+    // Base chain NFT contract address
     const CONTRACT_ADDRESS = "0xe998e76dA35333bCa55d5c8375E8E537Bfe7F819";
     const ABI = [
-      // Make sure your contract has a mintResult(address, string) function
       {
         "inputs":[
           {"internalType":"address","name":"to","type":"address"},
@@ -40,18 +46,23 @@ export async function captureAndMint(gameResult) {
 
     const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-    // Create a simple string for the NFT metadata
+    // Create enhanced metadata for the NFT
     const metadata = JSON.stringify({
-      difficulty: gameResult.difficulty,
-      time: gameResult.time,
-      win: gameResult.win
+      name: `Minesweeper - ${gameResult.win ? "Victory" : "Defeat"}`,
+      description: `Difficulty: ${gameResult.difficulty}, Time: ${gameResult.time}s, Result: ${gameResult.win ? "Win" : "Loss"}`,
+      attributes: [
+        { trait_type: "Difficulty", value: gameResult.difficulty },
+        { trait_type: "Time", value: gameResult.time },
+        { trait_type: "Result", value: gameResult.win ? "Win" : "Lose" },
+        { trait_type: "Platform", value: "Farcaster" }
+      ]
     });
 
-    const tx = await contract.mintResult(userAddress, metadata, { gasLimit: 200000 });
-    showGameMessage("⏳ Minting NFT...");
+    const tx = await contract.mintResult(userAddress, metadata, { gasLimit: 500000 });
+    showGameMessage("⏳ Minting NFT on Base chain...");
     await tx.wait();
-    showGameMessage("NFT minted successfully! 🎉");
-    console.log("Minted NFT:", tx);
+    showGameMessage("NFT minted successfully on Base! 🎉");
+    console.log("Minted NFT on Base:", tx);
   } catch (err) {
     console.error("Minting failed:", err);
     showGameMessage("NFT minting failed 😢");
