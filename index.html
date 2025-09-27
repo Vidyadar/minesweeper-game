@@ -33,9 +33,9 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintEarlyAdopterNFT } from './mint.js'
+    import { mintSimpleNFT } from './simple-mint.js'
     window.farcasterSdk = sdk;
-    window.mintEarlyAdopterNFT = mintEarlyAdopterNFT;
+    window.mintSimpleNFT = mintSimpleNFT;
   </script>
 
   <style>
@@ -781,7 +781,7 @@
         <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
         <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
         <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
-        <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint Early Adopter NFT</button>
+        <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint NFT (2500 Limit)</button>
         <button class="share-btn view-nft-btn" id="view-my-nft" style="display: none;">👤 View My NFT</button>
       </div>
       <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
@@ -1226,7 +1226,7 @@
       //   }
 
       // Function body removed - now using real contract from mint.js
-  
+    
 
     // Check if player is eligible for early adopter NFT
     function checkEarlyAdopterEligibility(playerAddress) {
@@ -1724,17 +1724,17 @@
             }
 
             const confirmMint = confirm(
-              `Mint Early Adopter NFT?\n\n` +
+              `Mint Simple NFT?\n\n` +
               `Player: ${playerName}\n` +
               `NFT #${eligibility.totalMinted + 1} of 2,500\n` +
               `Remaining: ${eligibility.remaining}\n\n` +
-              `This will mint a unique NFT to track your player status.`
+              `This will mint a simple NFT with 2500 total supply limit.`
             );
 
             if (confirmMint) {
-              const result = await mintEarlyAdopterNFT(userAddress, playerName);
+              const result = await mintSimpleNFT(userAddress);
               this.updateEarlyAdopterUI();
-              this.showShareResult(`🎉 Early Adopter NFT #${result.mintNumber} minted! ${result.remaining} remaining.`, 'success');
+              this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
             }
           } catch (err) {
             console.error('Early adopter minting failed:', err);
