@@ -9,14 +9,37 @@ function showGameMessage(msg) {
   }
 }
 
-// Function to mint NFT on Base chain
-export async function captureAndMint(gameResult) {
+// Early Adopter NFT minting system
+let earlyAdopterNFTs = {
+  totalMinted: 0,
+  maxSupply: 2500,
+  playerNFTs: new Map(), // Track NFTs per player
+  isEarlyAdopter: function() {
+    return this.totalMinted < this.maxSupply;
+  },
+  canPlayerMint: function(playerAddress) {
+    // Allow one NFT per player for early adopters
+    return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
+  }
+};
+
+// Early adopter NFT minting function
+export async function mintEarlyAdopterNFT(playerAddress, playerName) {
   if (!window.ethereum) {
     alert("Please install MetaMask or another Web3 wallet!");
     return;
   }
 
   try {
+    // Check if player can mint
+    if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
+      if (!earlyAdopterNFTs.isEarlyAdopter()) {
+        throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
+      } else {
+        throw new Error("You already have an early adopter NFT!");
+      }
+    }
+
     const provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     const signer = await provider.getSigner();
@@ -29,97 +52,94 @@ export async function captureAndMint(gameResult) {
       return;
     }
 
-    // TODO: Replace with your deployed contract address from Remix
-    const CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93"; // Your deployed contract address
-    const CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},
-      {"indexed":true,"internalType":"address","name":"approved","type":"address"},
-      {"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],
-      "name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},
-        {"indexed":true,"internalType":"address","name":"operator","type":"address"},
-        {"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},
-        {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"},
-          {"indexed":true,"internalType":"address","name":"player","type":"address"},
-          {"indexed":false,"internalType":"string","name":"difficulty","type":"string"},
-          {"indexed":false,"internalType":"uint256","name":"time","type":"uint256"},
-          {"indexed":false,"internalType":"bool","name":"win","type":"bool"},
-          {"indexed":false,"internalType":"string","name":"playerName","type":"string"}],"name":"GameResultMinted","type":"event"},
-          {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},
-            {"indexed":true,"internalType":"address","name":"to","type":"address"},
-            {"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},
-              {"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},
-              {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"gameResults","outputs":[{"internalType":"string","name":"difficulty","type":"string"},{"internalType":"uint256","name":"time","type":"uint256"},{"internalType":"bool","name":"win","type":"bool"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"playerName","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getGameResult","outputs":[{"components":[{"internalType":"string","name":"difficulty","type":"string"},{"internalType":"uint256","name":"time","type":"uint256"},{"internalType":"bool","name":"win","type":"bool"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"playerName","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"internalType":"struct MinesweeperNFT.GameResult","name":"","type":"tuple"}],
-              "stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"difficulty","type":"string"},
-                {"internalType":"uint256","name":"time","type":"uint256"},{"internalType":"bool","name":"win","type":"bool"},{"internalType":"string","name":"playerName","type":"string"},{"internalType":"string","name":"imageHash","type":"string"}],"name":"mintGameResult","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},
-                {"internalType":"bytes","name":"","type":"bytes"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+    // Create early adopter NFT metadata
+    const metadata = {
+      name: `Minesweeper Early Adopter #${earlyAdopterNFTs.totalMinted + 1}`,
+      description: `Early adopter NFT for Minesweeper game. Limited to 2,500 total supply. Player: ${playerName}`,
+      image: "https://minesweeper-game-pearl.vercel.app/assets/icon.png", // Use game icon
+      attributes: [
+        { trait_type: "Type", value: "Early Adopter" },
+        { trait_type: "Player", value: playerName },
+        { trait_type: "Mint Number", value: earlyAdopterNFTs.totalMinted + 1 },
+        { trait_type: "Total Supply", value: "2500" },
+        { trait_type: "Platform", value: "Farcaster" }
+      ]
+    };
 
-    // Check if contract is deployed
-    if (CONTRACT_ADDRESS === "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93") {
-      // Fallback to simple transaction if contract not deployed
-      const gameResultHash = ethers.keccak256(
-        ethers.toUtf8Bytes(
-          `${userAddress}-${gameResult.difficulty}-${gameResult.time}-${gameResult.win}-${Date.now()}`
-        )
-      );
+    // Use a simple transaction to record the early adopter NFT
+    const nftHash = ethers.keccak256(
+      ethers.toUtf8Bytes(
+        `MinesweeperEarlyAdopter-${playerAddress}-${earlyAdopterNFTs.totalMinted + 1}-${Date.now()}`
+      )
+    );
 
-      const metadata = {
-        name: `Minesweeper - ${gameResult.win ? "Victory" : "Defeat"}`,
-        description: `Difficulty: ${gameResult.difficulty}, Time: ${gameResult.time}s, Result: ${gameResult.win ? "Win" : "Loss"}`,
-        attributes: [
-          { trait_type: "Difficulty", value: gameResult.difficulty },
-          { trait_type: "Time", value: gameResult.time },
-          { trait_type: "Result", value: gameResult.win ? "Win" : "Lose" },
-          { trait_type: "Platform", value: "Farcaster" }
-        ],
-        hash: gameResultHash
-      };
+    showGameMessage("⏳ Minting Early Adopter NFT...");
 
-      showGameMessage("⏳ Recording game result on Base chain...");
-      
-      try {
-        const tx = await signer.sendTransaction({
-          to: userAddress,
-          value: 0,
-          data: ethers.toUtf8Bytes(`Minesweeper Result: ${JSON.stringify(metadata)}`)
-        });
-        
-        await tx.wait();
-        showGameMessage("Game result recorded on Base chain! 🎉");
-        console.log("Game result recorded on Base:", {
-          txHash: tx.hash,
-          gameHash: gameResultHash,
-          metadata: metadata
-        });
-      } catch (txError) {
-        console.error("Transaction failed:", txError);
-        showGameMessage("Game result saved locally! 🎉");
-        console.log("Game result saved locally:", metadata);
-      }
-    } else {
-      // Use deployed NFT contract
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      
-      showGameMessage("⏳ Minting NFT on Base chain...");
-      
-      const tx = await contract.mintGameResult(
-        gameResult.difficulty,
-        gameResult.time,
-        gameResult.win,
-        "Anonymous", // Player name
-        "data:image/png;base64,", // Image hash placeholder
-        { gasLimit: 500000 }
-      );
-      
-      await tx.wait();
-      showGameMessage("NFT minted successfully on Base! 🎉");
-      console.log("NFT minted on Base:", {
-        txHash: tx.hash,
-        contractAddress: CONTRACT_ADDRESS
-      });
-    }
+    const tx = await signer.sendTransaction({
+      to: playerAddress, // Send to self as a record
+      value: 0,
+      data: ethers.toUtf8Bytes(`Minesweeper Early Adopter NFT: ${JSON.stringify({
+        hash: nftHash,
+        player: playerName,
+        mintNumber: earlyAdopterNFTs.totalMinted + 1,
+        timestamp: Date.now(),
+        metadata: metadata
+      })}`)
+    });
+
+    await tx.wait();
+
+    // Update tracking
+    earlyAdopterNFTs.totalMinted++;
+    earlyAdopterNFTs.playerNFTs.set(playerAddress, {
+      mintNumber: earlyAdopterNFTs.totalMinted,
+      txHash: tx.hash,
+      timestamp: Date.now()
+    });
+
+    showGameMessage(`🎉 Early Adopter NFT #${earlyAdopterNFTs.totalMinted} minted successfully!`);
+    
+    console.log("Early Adopter NFT minted:", {
+      player: playerName,
+      mintNumber: earlyAdopterNFTs.totalMinted,
+      txHash: tx.hash,
+      baseScanUrl: `https://basescan.org/tx/${tx.hash}`,
+      remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+    });
+
+    return {
+      success: true,
+      mintNumber: earlyAdopterNFTs.totalMinted,
+      txHash: tx.hash,
+      remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+    };
+
   } catch (err) {
-    console.error("Minting failed:", err);
-    showGameMessage("NFT minting failed 😢");
+    console.error("Early adopter minting failed:", err);
+    showGameMessage(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+// Check if player is eligible for early adopter NFT
+export function checkEarlyAdopterEligibility(playerAddress) {
+  return {
+    isEligible: earlyAdopterNFTs.canPlayerMint(playerAddress),
+    hasNFT: earlyAdopterNFTs.playerNFTs.has(playerAddress),
+    totalMinted: earlyAdopterNFTs.totalMinted,
+    maxSupply: earlyAdopterNFTs.maxSupply,
+    remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+  };
+}
+
+// Legacy function for backward compatibility (now just shares result)
+export async function captureAndMint(gameResult) {
+  // This function is now deprecated - early adopter minting is handled separately
+  console.log("Legacy minting function called - redirecting to share result");
+  
+  if (window.gameInstance && window.gameInstance.shareResult) {
+    window.gameInstance.shareResult();
+  } else {
+    showGameMessage("Game result shared! 🎉");
   }
 }
