@@ -30,7 +30,7 @@ export async function captureAndMint(gameResult) {
     }
 
     // TODO: Replace with your deployed contract address from Remix
-    const CONTRACT_ADDRESS = "0xe8e3F4639C848F169aEB8F68108Fb6c409DDd7d4"; // Your deployed contract address
+    const CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93"; // Your deployed contract address
     const CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
     {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},
       {"indexed":true,"internalType":"address","name":"approved","type":"address"},
@@ -55,7 +55,7 @@ export async function captureAndMint(gameResult) {
                 {"internalType":"bytes","name":"","type":"bytes"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
     // Check if contract is deployed
-    if (CONTRACT_ADDRESS === "0xe8e3F4639C848F169aEB8F68108Fb6c409DDd7d4") {
+    if (CONTRACT_ADDRESS === "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93") {
       // Fallback to simple transaction if contract not deployed
       const gameResultHash = ethers.keccak256(
         ethers.toUtf8Bytes(
