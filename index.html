@@ -454,17 +454,72 @@
   </div>
 
   <script>
-    // Global variables for wallet
+    // Global variables for Farcaster wallet
     let walletConnected = false;
-    let provider, signer, userAddress;
+    let provider, signer, userAddress, farcasterUser;
 
-    // Connect wallet function
+    // Connect Farcaster wallet function
     async function connectWallet() {
       if (walletConnected) return true;
       
       try {
+        // Check if Farcaster SDK is available
+        if (!window.farcasterSdk) {
+          console.error("Farcaster SDK not available");
+          // Fallback to MetaMask if no Farcaster SDK
+          return await connectMetaMaskWallet();
+        }
+
+        console.log("Connecting to Farcaster wallet...");
+        
+        // Connect via Farcaster SDK
+        const connectResult = await window.farcasterSdk.wallet.connectWallet();
+        console.log("Farcaster connect result:", connectResult);
+
+        if (!connectResult || !connectResult.address) {
+          throw new Error("Failed to get wallet address from Farcaster");
+        }
+
+        userAddress = connectResult.address;
+        farcasterUser = connectResult;
+        
+        // Get provider from Farcaster SDK
+        if (window.farcasterSdk.wallet.ethProvider) {
+          provider = new ethers.providers.Web3Provider(window.farcasterSdk.wallet.ethProvider);
+          signer = provider.getSigner();
+        } else {
+          // Fallback to window.ethereum if available
+          if (window.ethereum) {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+          } else {
+            throw new Error("No ethereum provider available");
+          }
+        }
+        
+        console.log("✅ Farcaster wallet connected:", userAddress);
+        walletConnected = true;
+        
+        // Show success message
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`Wallet connected! 🔗 ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`, "success");
+        }
+        
+        return true;
+        
+      } catch (err) {
+        console.error("❌ Farcaster wallet connection failed:", err);
+        // Try MetaMask as fallback
+        console.log("Trying MetaMask fallback...");
+        return await connectMetaMaskWallet();
+      }
+    }
+
+    // Fallback MetaMask connection
+    async function connectMetaMaskWallet() {
+      try {
         if (!window.ethereum) {
-          alert("MetaMask or a Web3 wallet is required to play!");
+          alert("Please install MetaMask or use this app in Farcaster!");
           return false;
         }
         
@@ -473,38 +528,40 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         
-        console.log("✅ Wallet connected:", userAddress);
+        console.log("✅ MetaMask wallet connected:", userAddress);
         walletConnected = true;
         
         // Show success message
         if (window.gameInstance) {
-          window.gameInstance.showShareResult("Wallet connected! 🔗 You can now play.", "success");
+          window.gameInstance.showShareResult(`MetaMask connected! 🔗 ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`, "success");
         }
         
         return true;
       } catch (err) {
-        console.error("❌ Wallet connection failed:", err);
-        alert("Wallet connection failed! Please try again.");
+        console.error("❌ MetaMask connection failed:", err);
+        alert("Wallet connection failed! Please try again or use this app in Farcaster.");
         return false;
       }
     }
 
-    // NFT minting function
+    // NFT minting function with Farcaster integration
     async function captureAndMint(result) {
       try {
         // Capture game screenshot
         const canvas = await html2canvas(document.querySelector(".game-container"));
         const image = canvas.toDataURL("image/png");
 
-        // Create metadata
+        // Create enhanced metadata with Farcaster info
         const metadata = {
           name: `Minesweeper - ${result.win ? "Victory" : "Defeat"}`,
-          description: `Difficulty: ${result.difficulty}, Time: ${result.time}s, Result: ${result.win ? "Win" : "Loss"}`,
+          description: `Difficulty: ${result.difficulty}, Time: ${result.time}s, Result: ${result.win ? "Win" : "Loss"}${result.farcasterUser ? ` by @${result.farcasterUser.username || result.farcasterUser.displayName || 'Anonymous'}` : ''}`,
           image: image,
           attributes: [
             { trait_type: "Difficulty", value: result.difficulty },
             { trait_type: "Time", value: result.time },
-            { trait_type: "Result", value: result.win ? "Win" : "Lose" }
+            { trait_type: "Result", value: result.win ? "Win" : "Lose" },
+            { trait_type: "Player", value: result.farcasterUser?.username || result.farcasterUser?.displayName || "Anonymous" },
+            { trait_type: "Platform", value: "Farcaster" }
           ]
         };
 
@@ -530,7 +587,7 @@
         window.gameInstance.showShareResult("⏳ Minting NFT...", "info");
         
         const tx = await contract.mintResult(userAddress, tokenURI, {
-          gasLimit: 200000
+          gasLimit: 300000 // Increased gas limit for safety
         });
 
         console.log("Transaction sent:", tx.hash);
@@ -539,9 +596,36 @@
         window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
         console.log("✅ NFT Minted:", tx);
         
+        // Share on Farcaster if SDK available
+        if (window.farcasterSdk && result.farcasterUser) {
+          try {
+            const shareText = `🎮 Just minted my Minesweeper result as an NFT!\n${result.win ? '🏆 Victory!' : '💣 Game Over'}\nDifficulty: ${result.difficulty}\nTime: ${result.time}s`;
+            
+            // Use Farcaster SDK to share (if available)
+            if (window.farcasterSdk.actions.cast) {
+              await window.farcasterSdk.actions.cast({
+                text: shareText,
+                embeds: [window.location.href]
+              });
+            }
+          } catch (shareError) {
+            console.log("Auto-share failed, but NFT was minted successfully");
+          }
+        }
+        
       } catch (err) {
         console.error("❌ Mint failed:", err);
-        window.gameInstance.showShareResult("❌ NFT minting failed: " + err.message, "error");
+        let errorMsg = "❌ NFT minting failed: ";
+        
+        if (err.message.includes("user rejected")) {
+          errorMsg += "Transaction was cancelled";
+        } else if (err.message.includes("insufficient funds")) {
+          errorMsg += "Insufficient funds for gas";
+        } else {
+          errorMsg += err.message || "Unknown error";
+        }
+        
+        window.gameInstance.showShareResult(errorMsg, "error");
       }
     }
 
@@ -988,7 +1072,8 @@
             const result = {
               difficulty: this.currentDifficulty,
               time: this.timer,
-              win: this.gameState === 'won'
+              win: this.gameState === 'won',
+              farcasterUser: farcasterUser // Include Farcaster user data
             };
             await captureAndMint(result);
           } else {
@@ -1000,21 +1085,45 @@
 
     // Initialize game when page loads
     document.addEventListener('DOMContentLoaded', async () => {
-      // Create game instance
-      window.gameInstance = new Minesweeper();
+      // Wait for Farcaster SDK to be ready
+      if (window.farcasterSdk) {
+        try {
+          // Initialize Farcaster SDK
+          await window.farcasterSdk.actions.ready();
+          console.log("✅ Farcaster Mini App SDK ready");
 
-      // Initialize Farcaster SDK if available
-      if (window.farcasterSdk?.actions?.ready) {
-        window.farcasterSdk.actions.ready();
-        console.log("✅ Farcaster Mini App ready() called");
+          // Check if user is already authenticated in Farcaster
+          const context = await window.farcasterSdk.context;
+          if (context?.user) {
+            console.log("Farcaster user context:", context.user);
+            farcasterUser = context.user;
+          }
+
+          // Auto-connect if running in Farcaster
+          setTimeout(async () => {
+            if (!walletConnected) {
+              console.log("Attempting auto-connect to Farcaster wallet...");
+              const autoConnected = await connectWallet();
+              if (!autoConnected) {
+                window.gameInstance.showShareResult("Tap 'New Game' to connect your Farcaster wallet! 🔗", "info");
+              }
+            }
+          }, 1500);
+
+        } catch (error) {
+          console.error("Farcaster SDK initialization failed:", error);
+        }
+      } else {
+        console.log("Farcaster SDK not available, using fallback");
+        setTimeout(() => {
+          if (!walletConnected) {
+            window.gameInstance.showShareResult("Connect your wallet to start playing! 🔗", "info");
+          }
+        }, 1000);
       }
 
-      // Show initial wallet connection prompt
-      setTimeout(() => {
-        if (!walletConnected) {
-          window.gameInstance.showShareResult("Connect your wallet to start playing! 🔗", "info");
-        }
-      }, 1000);
+      // Create game instance
+      window.gameInstance = new Minesweeper();
     });
   </script>
 </body>
