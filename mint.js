@@ -27,7 +27,7 @@ export async function mintSimpleNFT(playerAddress) {
     const signer = await provider.getSigner();
     
     // Contract configuration for Base Sepolia testnet
-    const CONTRACT_ADDRESS = "0xB2e0357A94a555B5BB6A3dC0A5c90F18FFCBd778"; // Your testnet contract address
+    const CONTRACT_ADDRESS = "0xe01FfDc6Ca55EBeE68F6Bf7f28e0E22Aef638ecE"; // Your testnet contract address
     const CONTRACT_ABI = [
       {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
       {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
