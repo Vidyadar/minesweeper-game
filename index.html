@@ -325,6 +325,31 @@
             background: rgba(139, 69, 255, 1);
         }
 
+        .share-btn.early-adopter-btn {
+            background: rgba(255, 193, 7, 0.8);
+            font-weight: bold;
+        }
+
+        .share-btn.early-adopter-btn:hover {
+            background: rgba(255, 193, 7, 1);
+            transform: translateY(-2px);
+        }
+
+        .early-adopter-info {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .nft-stats {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
         .share-result {
             margin: 10px 0;
             padding: 10px;
@@ -372,12 +397,23 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            flex-direction: column;
         }
 
         .wallet-status #wallet-address {
             font-family: monospace;
             color: #00ff88;
             font-weight: bold;
+        }
+
+        .chain-indicator {
+            font-size: 0.7rem;
+            color: #66aaff;
+            margin-top: 2px;
+        }
+
+        .chain-indicator.base {
+            color: #00ff88;
         }
 
         /* Disabled state for game elements when wallet not connected */
@@ -486,8 +522,11 @@
     <div class="wallet-section" id="wallet-section">
       <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
       <div class="wallet-status" id="wallet-status" style="display: none;">
-        <span>👤 Connected: </span>
-        <span id="wallet-address"></span>
+        <div>
+          <span>👤 Connected: </span>
+          <span id="wallet-address"></span>
+        </div>
+        <div class="chain-indicator" id="chain-indicator">Checking network...</div>
       </div>
     </div>
 
@@ -500,6 +539,12 @@
         <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
         <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
         <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
+        <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint Early Adopter NFT</button>
+      </div>
+      <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
+        <div class="nft-stats">
+          <span id="nft-count">0/2500</span> Early Adopter NFTs
+        </div>
       </div>
     </div>
 
@@ -513,41 +558,9 @@
   </div>
 
   <script>
-    // Global variables for wallet and early adopter tracking
+    // Global variables for Farcaster wallet
     let walletConnected = false;
     let provider, signer, userAddress, farcasterUser;
-    let isEarlyAdopter = false;
-    let totalEarlyAdopters = 0;
-    const MAX_EARLY_ADOPTERS = 2500;
-
-    // Early Adopter NFT Contract (replace with your deployed contract)
-    const EARLY_ADOPTER_CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93";
-    const EARLY_ADOPTER_ABI = [
-      {
-        "inputs": [
-          {"internalType": "address", "name": "to", "type": "address"},
-          {"internalType": "string", "name": "playerName", "type": "string"}
-        ],
-        "name": "mintEarlyAdopter",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "totalSupply",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ];
 
     // Connect wallet function with better error handling
     async function connectWallet() {
@@ -595,56 +608,102 @@
       try {
         console.log("Available Farcaster SDK methods:", Object.keys(window.farcasterSdk));
         
-        // Check different possible wallet methods in Farcaster SDK
-        let walletResponse;
+        // Get user context from Farcaster SDK
+        const context = await window.farcasterSdk.context;
+        console.log("Farcaster context:", context);
         
-        if (window.farcasterSdk.wallet && typeof window.farcasterSdk.wallet.connectWallet === 'function') {
-          walletResponse = await window.farcasterSdk.wallet.connectWallet();
-        } else if (window.farcasterSdk.actions && typeof window.farcasterSdk.actions.connectWallet === 'function') {
-          walletResponse = await window.farcasterSdk.actions.connectWallet();
-        } else if (typeof window.farcasterSdk.connectWallet === 'function') {
-          walletResponse = await window.farcasterSdk.connectWallet();
-        } else {
-          throw new Error("Farcaster wallet connection method not found");
+        if (!context || !context.user) {
+          throw new Error("No Farcaster user context available");
         }
         
-        console.log("Farcaster wallet response:", walletResponse);
+        // Store Farcaster user data
+        farcasterUser = context.user;
+        console.log("Farcaster user:", farcasterUser);
         
-        if (!walletResponse || !walletResponse.address) {
-          throw new Error("No wallet address received from Farcaster");
-        }
-        
-        userAddress = walletResponse.address;
-        
-        // Setup provider
-        if (window.farcasterSdk.wallet && window.farcasterSdk.wallet.ethProvider) {
-          provider = new ethers.providers.Web3Provider(window.farcasterSdk.wallet.ethProvider);
-        } else if (window.ethereum) {
+        // For Farcaster, we'll use the embedded wallet or MetaMask
+        if (window.ethereum) {
+          // Switch to Base chain if not already on it
+          await switchToBaseChain();
+          
           provider = new ethers.providers.Web3Provider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          
+          if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts found");
+          }
+          
+          signer = provider.getSigner();
+          userAddress = await signer.getAddress();
+          
+          console.log("✅ Wallet connected via Farcaster context");
+          
+          // Request signature for authentication
+          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+          const signature = await signer.signMessage(message);
+          console.log("✅ Message signed successfully");
+          
+        walletConnected = true;
+        await updateWalletUI();
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
+          window.gameInstance.enableGame();
+          window.gameInstance.updateEarlyAdopterUI();
+        }
+          
+          return true;
         } else {
           throw new Error("No ethereum provider available");
         }
         
-        signer = provider.getSigner();
-        
-        // Request signature for authentication
-        const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
-        const signature = await signer.signMessage(message);
-        console.log("✅ Farcaster message signed successfully");
-        
-        walletConnected = true;
-        updateWalletUI();
-        
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected!`, "success");
-          window.gameInstance.enableGame();
-        }
-        
-        return true;
-        
       } catch (err) {
         console.error("Farcaster connection failed:", err);
         throw err;
+      }
+    }
+
+    // Switch to Base chain
+    async function switchToBaseChain() {
+      try {
+        const baseChainId = '0x2105'; // 8453 in hex
+        const baseChainConfig = {
+          chainId: baseChainId,
+          chainName: 'Base',
+          rpcUrls: ['https://mainnet.base.org'],
+          nativeCurrency: {
+            name: 'Ethereum',
+            symbol: 'ETH',
+            decimals: 18
+          },
+          blockExplorerUrls: ['https://basescan.org']
+        };
+
+        try {
+          // Try to switch to Base chain
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: baseChainId }],
+          });
+          console.log("✅ Switched to Base chain");
+        } catch (switchError) {
+          // If the chain doesn't exist, add it
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [baseChainConfig],
+              });
+              console.log("✅ Added and switched to Base chain");
+            } catch (addError) {
+              throw new Error("Failed to add Base chain: " + addError.message);
+            }
+          } else {
+            throw new Error("Failed to switch to Base chain: " + switchError.message);
+          }
+        }
+      } catch (err) {
+        console.error("Base chain switch failed:", err);
+        throw new Error("Please switch to Base chain manually in your wallet");
       }
     }
 
@@ -656,6 +715,9 @@
         }
         
         console.log("Connecting to MetaMask...");
+        
+        // Switch to Base chain first
+        await switchToBaseChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
@@ -678,11 +740,12 @@
           console.log("✅ MetaMask message signed successfully");
           
           walletConnected = true;
-          updateWalletUI();
+          await updateWalletUI();
           
           if (window.gameInstance) {
-            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully!`, "success");
+            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
             window.gameInstance.enableGame();
+            window.gameInstance.updateEarlyAdopterUI();
           }
           
           return true;
@@ -708,10 +771,11 @@
     }
 
     // Update wallet UI
-    function updateWalletUI() {
+    async function updateWalletUI() {
       const connectBtn = document.getElementById('connect-wallet');
       const walletStatus = document.getElementById('wallet-status');
       const walletAddress = document.getElementById('wallet-address');
+      const chainIndicator = document.getElementById('chain-indicator');
       
       if (walletConnected && userAddress) {
         connectBtn.textContent = '✅ Connected';
@@ -721,11 +785,34 @@
         walletStatus.style.display = 'flex';
         walletAddress.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
         
+        // Update chain indicator
+        try {
+          if (provider) {
+            const network = await provider.getNetwork();
+            if (network.chainId === 8453) {
+              chainIndicator.textContent = '🔗 Base Chain';
+              chainIndicator.classList.add('base');
+            } else {
+              chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
+              chainIndicator.classList.remove('base');
+            }
+          } else {
+            chainIndicator.textContent = '❓ Unknown Network';
+          }
+        } catch (err) {
+          chainIndicator.textContent = '❌ Network Error';
+        }
+        
         // Enable game elements
         document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
           el.classList.remove('game-disabled');
         });
         document.getElementById('minefield').classList.remove('game-disabled');
+        
+        // Update early adopter UI
+        if (window.gameInstance) {
+          window.gameInstance.updateEarlyAdopterUI();
+        }
         
       } else {
         connectBtn.textContent = '🔗 Connect Wallet';
@@ -742,89 +829,115 @@
       }
     }
 
-    // NFT minting function with Farcaster integration
-    async function captureAndMint(result) {
-      try {
-        // Capture game screenshot
-        const canvas = await html2canvas(document.querySelector(".game-container"));
-        const image = canvas.toDataURL("image/png");
+    // Early Adopter NFT minting system
+    let earlyAdopterNFTs = {
+      totalMinted: 0,
+      maxSupply: 2500,
+      playerNFTs: new Map(), // Track NFTs per player
+      isEarlyAdopter: function() {
+        return this.totalMinted < this.maxSupply;
+      },
+      canPlayerMint: function(playerAddress) {
+        // Allow one NFT per player for early adopters
+        return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
+      }
+    };
 
-        // Create enhanced metadata with Farcaster info
+    // Early adopter NFT minting function
+    async function mintEarlyAdopterNFT(playerAddress, playerName) {
+      try {
+        // Check if player can mint
+        if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
+          if (!earlyAdopterNFTs.isEarlyAdopter()) {
+            throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
+          } else {
+            throw new Error("You already have an early adopter NFT!");
+          }
+        }
+
+        // Check if we're on Base chain
+        const network = await provider.getNetwork();
+        if (network.chainId !== 8453) {
+          throw new Error("Please switch to Base chain to mint NFTs");
+        }
+
+        // Create early adopter NFT metadata
         const metadata = {
-          name: `Minesweeper - ${result.win ? "Victory" : "Defeat"}`,
-          description: `Difficulty: ${result.difficulty}, Time: ${result.time}s, Result: ${result.win ? "Win" : "Loss"}${result.farcasterUser ? ` by @${result.farcasterUser.username || result.farcasterUser.displayName || 'Anonymous'}` : ''}`,
-          image: image,
+          name: `Minesweeper Early Adopter #${earlyAdopterNFTs.totalMinted + 1}`,
+          description: `Early adopter NFT for Minesweeper game. Limited to 2,500 total supply. Player: ${playerName}`,
+          image: "https://minesweeper-game-pearl.vercel.app/assets/icon.png", // Use game icon
           attributes: [
-            { trait_type: "Difficulty", value: result.difficulty },
-            { trait_type: "Time", value: result.time },
-            { trait_type: "Result", value: result.win ? "Win" : "Lose" },
-            { trait_type: "Player", value: result.farcasterUser?.username || result.farcasterUser?.displayName || "Anonymous" },
+            { trait_type: "Type", value: "Early Adopter" },
+            { trait_type: "Player", value: playerName },
+            { trait_type: "Mint Number", value: earlyAdopterNFTs.totalMinted + 1 },
+            { trait_type: "Total Supply", value: "2500" },
             { trait_type: "Platform", value: "Farcaster" }
           ]
         };
 
-        const tokenURI = "data:application/json;base64," + btoa(JSON.stringify(metadata));
+        // Use a simple transaction to record the early adopter NFT
+        const nftHash = ethers.utils.keccak256(
+          ethers.utils.toUtf8Bytes(
+            `MinesweeperEarlyAdopter-${playerAddress}-${earlyAdopterNFTs.totalMinted + 1}-${Date.now()}`
+          )
+        );
 
-        // Replace with your deployed NFT contract address
-        const CONTRACT_ADDRESS = "0xe998e76dA35333bCa55d5c8375E8E537Bfe7F819";
-        const CONTRACT_ABI = [
-          {
-            "inputs": [
-              {"internalType": "address", "name": "to", "type": "address"},
-              {"internalType": "string", "name": "tokenURI", "type": "string"}
-            ],
-            "name": "mintResult",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          }
-        ];
+        window.gameInstance.showShareResult("⏳ Minting Early Adopter NFT...", "info");
 
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-        window.gameInstance.showShareResult("⏳ Minting NFT...", "info");
-        
-        const tx = await contract.mintResult(userAddress, tokenURI, {
-          gasLimit: 300000 // Increased gas limit for safety
+        const tx = await signer.sendTransaction({
+          to: playerAddress, // Send to self as a record
+          value: 0,
+          data: ethers.utils.toUtf8Bytes(`Minesweeper Early Adopter NFT: ${JSON.stringify({
+            hash: nftHash,
+            player: playerName,
+            mintNumber: earlyAdopterNFTs.totalMinted + 1,
+            timestamp: Date.now(),
+            metadata: metadata
+          })}`)
         });
 
-        console.log("Transaction sent:", tx.hash);
         await tx.wait();
+
+        // Update tracking
+        earlyAdopterNFTs.totalMinted++;
+        earlyAdopterNFTs.playerNFTs.set(playerAddress, {
+          mintNumber: earlyAdopterNFTs.totalMinted,
+          txHash: tx.hash,
+          timestamp: Date.now()
+        });
+
+        window.gameInstance.showShareResult(`🎉 Early Adopter NFT #${earlyAdopterNFTs.totalMinted} minted successfully!`, "success");
         
-        window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
-        console.log("✅ NFT Minted:", tx);
-        
-        // Share on Farcaster if SDK available
-        if (window.farcasterSdk && result.farcasterUser) {
-          try {
-            const shareText = `🎮 Just minted my Minesweeper result as an NFT!\n${result.win ? '🏆 Victory!' : '💣 Game Over'}\nDifficulty: ${result.difficulty}\nTime: ${result.time}s`;
-            
-            // Use Farcaster SDK to share (if available)
-            if (window.farcasterSdk.actions.cast) {
-              await window.farcasterSdk.actions.cast({
-                text: shareText,
-                embeds: [window.location.href]
-              });
-            }
-          } catch (shareError) {
-            console.log("Auto-share failed, but NFT was minted successfully");
-          }
-        }
-        
+        console.log("Early Adopter NFT minted:", {
+          player: playerName,
+          mintNumber: earlyAdopterNFTs.totalMinted,
+          txHash: tx.hash,
+          baseScanUrl: `https://basescan.org/tx/${tx.hash}`,
+          remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+        });
+
+        return {
+          success: true,
+          mintNumber: earlyAdopterNFTs.totalMinted,
+          txHash: tx.hash,
+          remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+        };
+
       } catch (err) {
-        console.error("❌ Mint failed:", err);
-        let errorMsg = "❌ NFT minting failed: ";
-        
-        if (err.message.includes("user rejected")) {
-          errorMsg += "Transaction was cancelled";
-        } else if (err.message.includes("insufficient funds")) {
-          errorMsg += "Insufficient funds for gas";
-        } else {
-          errorMsg += err.message || "Unknown error";
-        }
-        
-        window.gameInstance.showShareResult(errorMsg, "error");
+        console.error("Early adopter minting failed:", err);
+        throw err;
       }
+    }
+
+    // Check if player is eligible for early adopter NFT
+    function checkEarlyAdopterEligibility(playerAddress) {
+      return {
+        isEligible: earlyAdopterNFTs.canPlayerMint(playerAddress),
+        hasNFT: earlyAdopterNFTs.playerNFTs.has(playerAddress),
+        totalMinted: earlyAdopterNFTs.totalMinted,
+        maxSupply: earlyAdopterNFTs.maxSupply,
+        remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
+      };
     }
 
     // Minesweeper Game Class
@@ -1264,25 +1377,59 @@
           this.copyGameLink();
         });
 
-        // Share/Mint result button
+        // Share result button (no minting)
         document.getElementById('share-result-btn').addEventListener('click', async () => {
           if (this.gameState === 'ready' || this.gameState === 'playing') {
             this.showShareResult('Finish the game first! 🎮', 'error');
             return;
           }
 
-          const doMint = confirm("Do you want to mint this game result as an NFT? (Optional)\n\nClick OK to mint NFT\nClick Cancel to just share result");
-          
-          if (doMint) {
-            const result = {
-              difficulty: this.currentDifficulty,
-              time: this.timer,
-              win: this.gameState === 'won',
-              farcasterUser: farcasterUser // Include Farcaster user data
-            };
-            await captureAndMint(result);
-          } else {
-            this.shareResult();
+          // Check if wallet is connected
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
+
+          // Just share the result without minting
+          this.shareResult();
+        });
+
+        // Early adopter NFT minting button
+        document.getElementById('mint-early-adopter').addEventListener('click', async () => {
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
+
+          try {
+            const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
+            const eligibility = checkEarlyAdopterEligibility(userAddress);
+            
+            if (!eligibility.isEligible) {
+              if (eligibility.hasNFT) {
+                this.showShareResult('You already have an Early Adopter NFT! ⭐', 'info');
+              } else {
+                this.showShareResult('Early adopter period ended! All 2,500 NFTs have been minted. 😢', 'error');
+              }
+              return;
+            }
+
+            const confirmMint = confirm(
+              `Mint Early Adopter NFT?\n\n` +
+              `Player: ${playerName}\n` +
+              `NFT #${eligibility.totalMinted + 1} of 2,500\n` +
+              `Remaining: ${eligibility.remaining}\n\n` +
+              `This will mint a unique NFT to track your player status.`
+            );
+
+            if (confirmMint) {
+              const result = await mintEarlyAdopterNFT(userAddress, playerName);
+              this.updateEarlyAdopterUI();
+              this.showShareResult(`🎉 Early Adopter NFT #${result.mintNumber} minted! ${result.remaining} remaining.`, 'success');
+            }
+          } catch (err) {
+            console.error('Early adopter minting failed:', err);
+            this.showShareResult(`❌ ${err.message}`, 'error');
           }
         });
       }
@@ -1302,6 +1449,39 @@
         });
         document.getElementById('minefield').classList.add('game-disabled');
       }
+
+      // Update early adopter UI
+      updateEarlyAdopterUI() {
+        const mintButton = document.getElementById('mint-early-adopter');
+        const infoDiv = document.getElementById('early-adopter-info');
+        const nftCount = document.getElementById('nft-count');
+        
+        if (walletConnected && userAddress) {
+          const eligibility = checkEarlyAdopterEligibility(userAddress);
+          
+          // Show/hide mint button based on eligibility
+          if (eligibility.isEligible) {
+            mintButton.style.display = 'inline-flex';
+            mintButton.textContent = `⭐ Mint Early Adopter NFT (${eligibility.remaining} left)`;
+          } else {
+            mintButton.style.display = 'none';
+          }
+          
+          // Show NFT stats
+          infoDiv.style.display = 'block';
+          nftCount.textContent = `${eligibility.totalMinted}/${eligibility.maxSupply}`;
+          
+          // Update button text if player already has NFT
+          if (eligibility.hasNFT) {
+            mintButton.style.display = 'inline-flex';
+            mintButton.textContent = '⭐ You have an Early Adopter NFT!';
+            mintButton.disabled = true;
+          }
+        } else {
+          mintButton.style.display = 'none';
+          infoDiv.style.display = 'none';
+        }
+      }
     }
 
     // Initialize game when page loads
@@ -1310,7 +1490,7 @@
       window.gameInstance = new Minesweeper();
       
       // Initialize wallet UI
-      updateWalletUI();
+      await updateWalletUI();
 
       // Wait for Farcaster SDK to be ready
       if (window.farcasterSdk) {
