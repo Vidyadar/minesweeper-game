@@ -9,17 +9,65 @@ function showGameMessage(msg) {
   }
 }
 
-// Early Adopter NFT minting system
+// Early Adopter NFT minting system with player statistics
 let earlyAdopterNFTs = {
   totalMinted: 0,
   maxSupply: 2500,
   playerNFTs: new Map(), // Track NFTs per player
+  playerStats: new Map(), // Track detailed player statistics
   isEarlyAdopter: function() {
     return this.totalMinted < this.maxSupply;
   },
   canPlayerMint: function(playerAddress) {
     // Allow one NFT per player for early adopters
     return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
+  },
+  // Initialize or get player stats
+  getPlayerStats: function(playerAddress) {
+    if (!this.playerStats.has(playerAddress)) {
+      this.playerStats.set(playerAddress, {
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        winRatio: 0,
+        bestTime: null,
+        totalPlayTime: 0,
+        difficultyStats: {
+          easy: { games: 0, wins: 0 },
+          medium: { games: 0, wins: 0 },
+          hard: { games: 0, wins: 0 }
+        }
+      });
+    }
+    return this.playerStats.get(playerAddress);
+  },
+  // Update player stats after game completion
+  updatePlayerStats: function(playerAddress, gameResult) {
+    const stats = this.getPlayerStats(playerAddress);
+    stats.gamesPlayed++;
+    
+    if (gameResult.win) {
+      stats.wins++;
+      if (!stats.bestTime || gameResult.time < stats.bestTime) {
+        stats.bestTime = gameResult.time;
+      }
+    } else {
+      stats.losses++;
+    }
+    
+    stats.totalPlayTime += gameResult.time;
+    stats.winRatio = stats.gamesPlayed > 0 ? (stats.wins / stats.gamesPlayed * 100).toFixed(1) : 0;
+    
+    // Update difficulty stats
+    if (stats.difficultyStats[gameResult.difficulty]) {
+      stats.difficultyStats[gameResult.difficulty].games++;
+      if (gameResult.win) {
+        stats.difficultyStats[gameResult.difficulty].wins++;
+      }
+    }
+    
+    this.playerStats.set(playerAddress, stats);
+    return stats;
   }
 };
 
@@ -52,16 +100,29 @@ export async function mintEarlyAdopterNFT(playerAddress, playerName) {
       return;
     }
 
-    // Create early adopter NFT metadata
+    // Get player statistics
+    const playerStats = earlyAdopterNFTs.getPlayerStats(playerAddress);
+    const mintPosition = earlyAdopterNFTs.totalMinted + 1;
+    
+    // Create early adopter NFT metadata with comprehensive stats
     const metadata = {
-      name: `Minesweeper Early Adopter #${earlyAdopterNFTs.totalMinted + 1}`,
-      description: `Early adopter NFT for Minesweeper game. Limited to 2,500 total supply. Player: ${playerName}`,
+      name: `Minesweeper Early Adopter #${mintPosition}`,
+      description: `Early adopter NFT #${mintPosition} for Minesweeper game. Player: ${playerName}. Games: ${playerStats.gamesPlayed}, Wins: ${playerStats.wins}, Win Rate: ${playerStats.winRatio}%`,
       image: "https://minesweeper-game-pearl.vercel.app/assets/icon.png", // Use game icon
       attributes: [
         { trait_type: "Type", value: "Early Adopter" },
         { trait_type: "Player", value: playerName },
-        { trait_type: "Mint Number", value: earlyAdopterNFTs.totalMinted + 1 },
+        { trait_type: "Mint Position", value: mintPosition },
         { trait_type: "Total Supply", value: "2500" },
+        { trait_type: "Games Played", value: playerStats.gamesPlayed },
+        { trait_type: "Wins", value: playerStats.wins },
+        { trait_type: "Losses", value: playerStats.losses },
+        { trait_type: "Win Ratio", value: `${playerStats.winRatio}%` },
+        { trait_type: "Best Time", value: playerStats.bestTime ? `${playerStats.bestTime}s` : "N/A" },
+        { trait_type: "Total Play Time", value: `${playerStats.totalPlayTime}s` },
+        { trait_type: "Easy Games", value: playerStats.difficultyStats.easy.games },
+        { trait_type: "Medium Games", value: playerStats.difficultyStats.medium.games },
+        { trait_type: "Hard Games", value: playerStats.difficultyStats.hard.games },
         { trait_type: "Platform", value: "Farcaster" }
       ]
     };
@@ -81,8 +142,9 @@ export async function mintEarlyAdopterNFT(playerAddress, playerName) {
       data: ethers.toUtf8Bytes(`Minesweeper Early Adopter NFT: ${JSON.stringify({
         hash: nftHash,
         player: playerName,
-        mintNumber: earlyAdopterNFTs.totalMinted + 1,
+        mintPosition: mintPosition,
         timestamp: Date.now(),
+        playerStats: playerStats,
         metadata: metadata
       })}`)
     });
@@ -97,11 +159,12 @@ export async function mintEarlyAdopterNFT(playerAddress, playerName) {
       timestamp: Date.now()
     });
 
-    showGameMessage(`🎉 Early Adopter NFT #${earlyAdopterNFTs.totalMinted} minted successfully!`);
+    showGameMessage(`🎉 Early Adopter NFT #${mintPosition} minted successfully!`);
     
     console.log("Early Adopter NFT minted:", {
       player: playerName,
-      mintNumber: earlyAdopterNFTs.totalMinted,
+      mintPosition: mintPosition,
+      playerStats: playerStats,
       txHash: tx.hash,
       baseScanUrl: `https://basescan.org/tx/${tx.hash}`,
       remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
@@ -109,7 +172,8 @@ export async function mintEarlyAdopterNFT(playerAddress, playerName) {
 
     return {
       success: true,
-      mintNumber: earlyAdopterNFTs.totalMinted,
+      mintPosition: mintPosition,
+      playerStats: playerStats,
       txHash: tx.hash,
       remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
     };
