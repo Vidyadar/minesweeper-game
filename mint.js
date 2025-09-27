@@ -49,10 +49,28 @@ export async function mintSimpleNFT(playerAddress) {
     // Create contract instance
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
     
-    // Check if player already has NFT
-    const playerTokenId = await contract.playerTokenId(playerAddress);
-    if (playerTokenId > 0) {
-      throw new Error("You already have an NFT!");
+    // First, check if contract is deployed and working
+    try {
+      const contractName = await contract.name();
+      console.log("Contract name:", contractName);
+    } catch (err) {
+      throw new Error("Contract not found or not deployed at this address. Please check the contract address.");
+    }
+    
+    // Check if player already has NFT (optional check)
+    let playerTokenId = 0;
+    try {
+      playerTokenId = await contract.playerTokenId(playerAddress);
+      console.log("Player token ID:", playerTokenId);
+      if (playerTokenId > 0) {
+        throw new Error("You already have an NFT!");
+      }
+    } catch (err) {
+      if (err.message.includes("already have an NFT")) {
+        throw err; // Re-throw the "already have NFT" error
+      }
+      console.log("Could not check player token ID, proceeding with mint...");
+      // If we can't check, we'll let the contract handle the duplicate check
     }
     
     // Check remaining supply
