@@ -33,7 +33,9 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+    import { mintEarlyAdopterNFT } from './mint.js'
     window.farcasterSdk = sdk;
+    window.mintEarlyAdopterNFT = mintEarlyAdopterNFT;
   </script>
 
   <style>
@@ -535,7 +537,7 @@
             justify-content: center;
         }
 
-        .share-nft-btn, .copy-stats-btn {
+        .share-nft-btn, .copy-stats-btn, .download-image-btn {
             padding: 12px 20px;
             border: none;
             border-radius: 8px;
@@ -563,6 +565,15 @@
 
         .copy-stats-btn:hover {
             background: rgba(0, 150, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .download-image-btn {
+            background: rgba(255, 193, 7, 0.8);
+        }
+
+        .download-image-btn:hover {
+            background: rgba(255, 193, 7, 1);
             transform: translateY(-2px);
         }
 
@@ -847,6 +858,7 @@
           <div class="nft-viewer-actions">
             <button class="share-nft-btn" id="share-nft-status">🟣 Share on Warpcast</button>
             <button class="copy-stats-btn" id="copy-player-stats">📋 Copy Stats</button>
+            <button class="download-image-btn" id="download-status-card">🖼️ Download Image</button>
           </div>
         </div>
       </div>
@@ -1195,104 +1207,25 @@
       }
     };
 
-    // Early adopter NFT minting function
-    async function mintEarlyAdopterNFT(playerAddress, playerName) {
-      try {
-        // Check if player can mint
-        if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
-          if (!earlyAdopterNFTs.isEarlyAdopter()) {
-            throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
-          } else {
-            throw new Error("You already have an early adopter NFT!");
-          }
-        }
+    // Early adopter NFT minting function is now imported from mint.js
+    // async function mintEarlyAdopterNFT(playerAddress, playerName) {
+      // try {
+      //   // Check if player can mint
+      //   if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
+      //     if (!earlyAdopterNFTs.isEarlyAdopter()) {
+      //       throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
+      //     } else {
+      //       throw new Error("You already have an early adopter NFT!");
+      //     }
+      //   }
 
-        // Check if we're on Base chain
-        const network = await provider.getNetwork();
-        if (network.chainId !== 8453) {
-          throw new Error("Please switch to Base chain to mint NFTs");
-        }
+      //   // Check if we're on Base chain
+      //   const network = await provider.getNetwork();
+      //   if (network.chainId !== 8453) {
+      //     throw new Error("Please switch to Base chain to mint NFTs");
+      //   }
 
-        // Get player statistics
-        const playerStats = earlyAdopterNFTs.getPlayerStats(playerAddress);
-        const mintPosition = earlyAdopterNFTs.totalMinted + 1;
-        
-        // Create early adopter NFT metadata with comprehensive stats
-        const metadata = {
-          name: `Minesweeper Early Adopter #${mintPosition}`,
-          description: `Early adopter NFT #${mintPosition} for Minesweeper game. Player: ${playerName}. Games: ${playerStats.gamesPlayed}, Wins: ${playerStats.wins}, Win Rate: ${playerStats.winRatio}%`,
-          image: "https://minesweeper-game-pearl.vercel.app/assets/icon.png", // Use game icon
-          attributes: [
-            { trait_type: "Type", value: "Early Adopter" },
-            { trait_type: "Player", value: playerName },
-            { trait_type: "Mint Position", value: mintPosition },
-            { trait_type: "Total Supply", value: "2500" },
-            { trait_type: "Games Played", value: playerStats.gamesPlayed },
-            { trait_type: "Wins", value: playerStats.wins },
-            { trait_type: "Losses", value: playerStats.losses },
-            { trait_type: "Win Ratio", value: `${playerStats.winRatio}%` },
-            { trait_type: "Best Time", value: playerStats.bestTime ? `${playerStats.bestTime}s` : "N/A" },
-            { trait_type: "Total Play Time", value: `${playerStats.totalPlayTime}s` },
-            { trait_type: "Easy Games", value: playerStats.difficultyStats.easy.games },
-            { trait_type: "Medium Games", value: playerStats.difficultyStats.medium.games },
-            { trait_type: "Hard Games", value: playerStats.difficultyStats.hard.games },
-            { trait_type: "Platform", value: "Farcaster" }
-          ]
-        };
-
-        // Use a simple transaction to record the early adopter NFT
-        const nftHash = ethers.utils.keccak256(
-          ethers.utils.toUtf8Bytes(
-            `MinesweeperEarlyAdopter-${playerAddress}-${earlyAdopterNFTs.totalMinted + 1}-${Date.now()}`
-          )
-        );
-
-        window.gameInstance.showShareResult("⏳ Minting Early Adopter NFT...", "info");
-
-        const tx = await signer.sendTransaction({
-          to: playerAddress, // Send to self as a record
-          value: 0,
-          data: ethers.utils.toUtf8Bytes(`Minesweeper Early Adopter NFT: ${JSON.stringify({
-            hash: nftHash,
-            player: playerName,
-            mintPosition: mintPosition,
-            timestamp: Date.now(),
-            playerStats: playerStats,
-            metadata: metadata
-          })}`)
-        });
-
-        await tx.wait();
-
-        // Update tracking
-        earlyAdopterNFTs.totalMinted++;
-        earlyAdopterNFTs.playerNFTs.set(playerAddress, {
-          mintNumber: earlyAdopterNFTs.totalMinted,
-          txHash: tx.hash,
-          timestamp: Date.now()
-        });
-
-        window.gameInstance.showShareResult(`🎉 Early Adopter NFT #${mintPosition} minted successfully!`, "success");
-        
-        console.log("Early Adopter NFT minted:", {
-          player: playerName,
-          mintNumber: earlyAdopterNFTs.totalMinted,
-          txHash: tx.hash,
-          baseScanUrl: `https://basescan.org/tx/${tx.hash}`,
-          remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
-        });
-
-        return {
-          success: true,
-          mintNumber: earlyAdopterNFTs.totalMinted,
-          txHash: tx.hash,
-          remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
-        };
-
-      } catch (err) {
-        console.error("Early adopter minting failed:", err);
-        throw err;
-      }
+      // Function body removed - now using real contract from mint.js
     }
 
     // Check if player is eligible for early adopter NFT
@@ -1835,6 +1768,11 @@
         document.getElementById('copy-player-stats').addEventListener('click', () => {
           this.copyPlayerStats();
         });
+
+        // Download status card image
+        document.getElementById('download-status-card').addEventListener('click', () => {
+          this.downloadStatusCard();
+        });
       }
 
       // Enable game after wallet connection
@@ -1956,50 +1894,147 @@
       }
 
       // Share NFT status to Warpcast
-      shareNFTStatusToWarpcast() {
+      async shareNFTStatusToWarpcast() {
         if (!walletConnected || !userAddress) {
           this.showShareResult('Please connect your wallet first! 🔗', 'error');
           return;
         }
 
+        try {
+          this.showShareResult('🎨 Creating your status card...', 'info');
+          
+          // Generate the status card image
+          const imageDataUrl = await this.generatePlayerStatusCard();
+          
+          // Create share text with image
+          const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
+          const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
+          const eligibility = checkEarlyAdopterEligibility(userAddress);
+          
+          let shareText = `🎮 Minesweeper Player Status\n\n`;
+          shareText += `👤 Player: ${playerName}\n`;
+          
+          if (eligibility.hasNFT) {
+            const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
+            shareText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
+          } else {
+            shareText += `🎯 Building my stats...\n\n`;
+          }
+          
+          shareText += `📊 Games: ${playerStats.gamesPlayed} | Wins: ${playerStats.wins} | Win Rate: ${playerStats.winRatio}%\n`;
+          shareText += `💣 Play Minesweeper on Farcaster!\n`;
+          shareText += `🔗 ${window.location.href}`;
+          
+          // Open Warpcast with the share text
+          const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
+          window.open(warpcastUrl, '_blank');
+          
+          this.showShareResult('Opening Warpcast to share your status! 🟣', 'success');
+          
+        } catch (error) {
+          console.error('Error generating status card:', error);
+          this.showShareResult('Error creating status card. Please try again.', 'error');
+        }
+      }
+
+      // Generate player status card as image
+      async generatePlayerStatusCard() {
         const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
         const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
         const eligibility = checkEarlyAdopterEligibility(userAddress);
         
-        // Create beautiful share message
-        let shareText = `🎮 Minesweeper Player Status\n\n`;
-        shareText += `👤 Player: ${playerName}\n`;
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 600);
+        gradient.addColorStop(0, '#667eea');
+        gradient.addColorStop(1, '#764ba2');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 800, 600);
+        
+        // Add overlay for better text readability
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(0, 0, 800, 600);
+        
+        // Title
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎮 Minesweeper Player Status', 400, 60);
+        
+        // Player info
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText(`👤 ${playerName}`, 400, 100);
+        
+        // NFT status
         if (eligibility.hasNFT) {
           const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          shareText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
+          ctx.fillStyle = '#ffc107';
+          ctx.font = 'bold 20px Arial';
+          ctx.fillText(`⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}`, 400, 130);
         } else {
-          shareText += `🎯 Building my stats...\n\n`;
+          ctx.fillStyle = '#00ff88';
+          ctx.font = 'bold 20px Arial';
+          ctx.fillText('🎯 Building my stats...', 400, 130);
         }
         
-        shareText += `📊 Game Statistics:\n`;
-        shareText += `• Games Played: ${playerStats.gamesPlayed}\n`;
-        shareText += `• Wins: ${playerStats.wins}\n`;
-        shareText += `• Losses: ${playerStats.losses}\n`;
-        shareText += `• Win Rate: ${playerStats.winRatio}%\n`;
+        // Stats section
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('📊 Game Statistics', 50, 180);
         
-        if (playerStats.bestTime) {
-          shareText += `• Best Time: ${playerStats.bestTime}s\n`;
-        }
+        // Stats grid
+        const stats = [
+          { label: 'Games Played', value: playerStats.gamesPlayed },
+          { label: 'Wins', value: playerStats.wins },
+          { label: 'Losses', value: playerStats.losses },
+          { label: 'Win Rate', value: `${playerStats.winRatio}%` },
+          { label: 'Best Time', value: playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A' },
+          { label: 'Total Play Time', value: `${playerStats.totalPlayTime}s` }
+        ];
         
-        shareText += `\n🎯 Difficulty Breakdown:\n`;
-        shareText += `• Easy: ${playerStats.difficultyStats.easy.games} games (${playerStats.difficultyStats.easy.wins} wins)\n`;
-        shareText += `• Medium: ${playerStats.difficultyStats.medium.games} games (${playerStats.difficultyStats.medium.wins} wins)\n`;
-        shareText += `• Hard: ${playerStats.difficultyStats.hard.games} games (${playerStats.difficultyStats.hard.wins} wins)\n`;
+        ctx.font = '16px Arial';
+        let yPos = 220;
+        stats.forEach((stat, index) => {
+          const x = 50 + (index % 2) * 350;
+          const y = yPos + Math.floor(index / 2) * 30;
+          ctx.fillText(`${stat.label}: ${stat.value}`, x, y);
+        });
         
-        shareText += `\n💣 Play Minesweeper on Farcaster!\n`;
-        shareText += `🔗 ${window.location.href}`;
+        // Difficulty breakdown
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText('🎯 Difficulty Breakdown', 50, 380);
         
-        // Open Warpcast with the share text
-        const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
-        window.open(warpcastUrl, '_blank');
+        ctx.font = '16px Arial';
+        const difficulties = [
+          { name: 'Easy', stats: playerStats.difficultyStats.easy },
+          { name: 'Medium', stats: playerStats.difficultyStats.medium },
+          { name: 'Hard', stats: playerStats.difficultyStats.hard }
+        ];
         
-        this.showShareResult('Opening Warpcast to share your status! 🟣', 'success');
+        difficulties.forEach((diff, index) => {
+          const x = 50 + index * 200;
+          const y = 420;
+          ctx.fillText(`${diff.name}:`, x, y);
+          ctx.fillText(`${diff.stats.games} games`, x, y + 20);
+          ctx.fillText(`${diff.stats.wins} wins`, x, y + 40);
+        });
+        
+        // Footer
+        ctx.fillStyle = '#ffc107';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('💣 Play Minesweeper on Farcaster!', 400, 550);
+        
+        // Convert canvas to image
+        return canvas.toDataURL('image/png');
       }
 
       // Copy player stats to clipboard
@@ -2041,6 +2076,37 @@
         }).catch(() => {
           this.showShareResult('Failed to copy stats. Try again!', 'error');
         });
+      }
+
+      // Download status card as image
+      async downloadStatusCard() {
+        if (!walletConnected || !userAddress) {
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+
+        try {
+          this.showShareResult('🎨 Creating your status card...', 'info');
+          
+          // Generate the status card image
+          const imageDataUrl = await this.generatePlayerStatusCard();
+          
+          // Create download link
+          const link = document.createElement('a');
+          link.download = `minesweeper-status-${userAddress.slice(0,6)}.png`;
+          link.href = imageDataUrl;
+          
+          // Trigger download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          this.showShareResult('Status card downloaded! 🖼️', 'success');
+          
+        } catch (error) {
+          console.error('Error generating status card:', error);
+          this.showShareResult('Error creating status card. Please try again.', 'error');
+        }
       }
     }
 
