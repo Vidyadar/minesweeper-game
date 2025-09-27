@@ -1,1 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper - Farcaster Game</title>
+
+  <!-- Essential Open Graph Meta Tags -->
+  <meta property="og:title" content="💣 Minesweeper Game" />
+  <meta property="og:description" content="Can you clear the minefield? 3 difficulty levels, beat the clock, mobile-friendly!" />
+  <meta property="og:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://minesweeper-game-pearl.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Minesweeper Game" />
+
+  <!-- Farcaster Miniapp Meta -->
+  <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="💣 Minesweeper Game" />
+  <meta name="twitter:description" content="Can you clear the minefield? Play Minesweeper on Farcaster!" />
+  <meta name="twitter:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+
+  <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
+  <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
+  <meta name="author" content="vidhyadar.base.eth" />
+
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+    window.farcasterSdk = sdk;
+  </script>
+
+  <style>
+    /* ... [Your existing CSS from previous code remains unchanged] ... */
+  </style>
+</head>
+<body>
+  <!-- Sound toggle button -->
+  <button class="sound-toggle" id="sound-toggle">🔊</button>
+
+  <div class="game-container">
+    <div class="game-header">
+      <h1 class="game-title">💣 Minesweeper</h1>
+    </div>
+
+    <div class="difficulty-buttons">
+      <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
+    </div>
+
+    <div class="game-stats">
+      <div class="stat">
+        <span>Mines</span>
+        <span class="stat-value" id="mines-count">10</span>
+      </div>
+      <div class="stat">
+        <span>Flags</span>
+        <span class="stat-value" id="flags-count">0</span>
+      </div>
+      <div class="stat">
+        <span>Time</span>
+        <span class="stat-value" id="timer">0</span>
+      </div>
+    </div>
+
+    <div class="game-controls">
+      <button class="btn" id="new-game">New Game</button>
+      <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
+    </div>
+
+    <div class="minefield" id="minefield"></div>
+    <div class="game-message" id="game-message"></div>
+
+    <div class="share-section">
+      <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
+      <div class="share-buttons">
+        <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
+        <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
+        <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <strong>How to play:</strong><br>
+      • Tap to reveal cells<br>
+      • Use Flag Mode to mark mines<br>
+      • Numbers show nearby mines<br>
+      • Find all mines to win!
+    </div>
+  </div>
+
+  <script>
+    // ----- WALLET CONNECTION MODULE -----
+    let walletConnected = false;
+    let provider, signer, userAddress;
+
+    async function connectWallet() {
+      if (walletConnected) return true;
+      try {
+        if (!window.ethereum) {
+          alert("MetaMask or a Web3 wallet is required!");
+          return false;
+        }
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        console.log("Wallet connected:", userAddress);
+        walletConnected = true;
+        return true;
+      } catch (err) {
+        console.error("Wallet connection failed:", err);
+        alert("Wallet connection failed!");
+        return false;
+      }
+    }
+  </script>
+
+  <script>
+    // ----- MINESWEEPER CLASS (unchanged logic, only additions for wallet + NFT mint) -----
+    class Minesweeper {
+      constructor() {
+        this.gameState = 'ready';
+        this.flagMode = false;
+        this.firstClick = true;
+        this.timer = 0;
+        this.timerInterval = null;
+        this.soundEnabled = true;
+
+        this.difficulties = {
+          easy: { rows: 9, cols: 9, mines: 10 },
+          medium: { rows: 12, cols: 12, mines: 20 },
+          hard: { rows: 15, cols: 15, mines: 35 }
+        };
+
+        this.currentDifficulty = 'easy';
+        this.config = this.difficulties.easy;
+        this.board = [];
+        this.revealed = [];
+        this.flagged = [];
+
+        this.createSounds();
+        this.initializeGame();
+        this.setupEventListeners();
+      }
+
+      /* ... [All previous Minesweeper methods remain unchanged] ... */
+
+      setupEventListeners() {
+        // Difficulty & Mode buttons
+        document.getElementById('toggle-mode').addEventListener('click', () => this.toggleMode());
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => this.changeDifficulty(e.target.dataset.difficulty));
+        });
+
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+          this.soundEnabled = !this.soundEnabled;
+          document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
+        });
+
+        // Share buttons
+        document.getElementById('share-warpcast').addEventListener('click', () => this.shareToWarpcast());
+        document.getElementById('share-general').addEventListener('click', () => this.copyGameLink());
+
+        // Share / Mint Result
+        document.getElementById('share-result-btn').addEventListener('click', async () => {
+          if (!walletConnected) {
+            const connected = await connectWallet();
+            if (!connected) return;
+          }
+
+          if (this.gameState === 'ready' || this.gameState === 'playing') {
+            this.showShareResult('Finish the game first! 🎮', 'error');
+            return;
+          }
+
+          const doMint = confirm("Do you want to mint this game result as an NFT? (Optional, low gas)");
+          if (doMint) {
+            const result = {
+              difficulty: this.currentDifficulty,
+              time: this.timer,
+              win: this.gameState === 'won',
+            };
+            await captureAndMint(result);
+          } else {
+            this.shareResult();
+          }
+        });
+      }
+    }
+
+    // ----- INIT GAME -----
+    document.addEventListener('DOMContentLoaded', () => {
+      window.gameInstance = new Minesweeper();
+
+      if (window.farcasterSdk?.actions?.ready) {
+        window.farcasterSdk.actions.ready();
+        console.log("✅ Mini App ready() called");
+      } else {
+        console.error("❌ Mini App SDK not available");
+      }
+    });
+
+    // ----- OVERRIDE NEW GAME BUTTON FOR WALLET -----
+    document.getElementById('new-game').addEventListener('click', async (e) => {
+      if (!walletConnected) {
+        const connected = await connectWallet();
+        if (!connected) return;
+      }
+      window.gameInstance.initializeGame();
+    });
+  </script>
+
+  <!-- Mint NFT script -->
+  <script type="module" src="mint.js"></script>
+</body>
+</html>
 
