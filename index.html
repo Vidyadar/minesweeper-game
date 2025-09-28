@@ -29,7 +29,7 @@
 
   <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
   <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
-  <meta name="author" content="vidhyadar.base.eth" />
+  <meta name="author" content="vidhyadar..eth" />
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
@@ -654,7 +654,7 @@
             margin-top: 2px;
         }
 
-        .chain-indicator.base {
+        .chain-indicator. {
             color: #00ff88;
         }
 
@@ -983,44 +983,44 @@
       try {
         const baseChainId = '0x2105'; // 84532 in hex (Base chain)
         const baseChainConfig = {
-          chainId: baseChainId,
-          chainName: 'Base',
-          rpcUrls: ['https://basescan.org/'],
+          chainId: ChainId,
+          chainName: '',
+          rpcUrls: ['https://scan.org/'],
           
           nativeCurrency: {
             name: 'Ethereum',
             symbol: 'ETH',
             decimals: 18
           },
-          blockExplorerUrls: ['https://basescan.org/']
+          blockExplorerUrls: ['https://scan.org/']
         };
 
         try {
-          // Try to switch to Base chain
+          // Try to switch to  chain
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: baseChainId }],
+            params: [{ chainId: ChainId }],
           });
-          console.log("✅ Switched to Base chain");
+          console.log("✅ Switched to  chain");
         } catch (switchError) {
           // If the chain doesn't exist, add it
           if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
-                params: [baseChainConfig],
+                params: [ChainConfig],
               });
-              console.log("✅ Added and switched to Base chain");
+              console.log("✅ Added and switched to  chain");
             } catch (addError) {
-              throw new Error("Failed to add Base chain: " + addError.message);
+              throw new Error("Failed to add  chain: " + addError.message);
             }
           } else {
-            throw new Error("Failed to switch to Base chain: " + switchError.message);
+            throw new Error("Failed to switch to  chain: " + switchError.message);
           }
         }
       } catch (err) {
-        console.error("Base chain switch failed:", err);
-        throw new Error("Please switch to Base chain manually in your wallet");
+        console.error(" chain switch failed:", err);
+        throw new Error("Please switch to  chain manually in your wallet");
       }
     }
 
@@ -1033,8 +1033,8 @@
         
         console.log("Connecting to MetaMask...");
         
-        // Switch to Base chain first
-        await switchToBaseChain();
+        // Switch to  chain first
+        await switchToChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
@@ -1060,7 +1060,7 @@
           await updateWalletUI();
           
           if (window.gameInstance) {
-            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
+            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on !`, "success");
             window.gameInstance.enableGame();
             await window.gameInstance.updateEarlyAdopterUI();
           }
@@ -1107,11 +1107,11 @@
           if (provider) {
             const network = await provider.getNetwork();
             if (network.chainId === 8453) {
-              chainIndicator.textContent = '🔗 Base Sepolia';
-              chainIndicator.classList.add('base');
+              chainIndicator.textContent = '🔗  Sepolia';
+              chainIndicator.classList.add('');
             } else {
               chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
-              chainIndicator.classList.remove('base');
+              chainIndicator.classList.remove('');
             }
           } else {
             chainIndicator.textContent = '❓ Unknown Network';
@@ -1220,10 +1220,10 @@
       //     }
       //   }
 
-      //   // Check if we're on Base chain
+      //   // Check if we're on  chain
       //   const network = await provider.getNetwork();
       //   if (network.chainId !== 8453) {
-      //     throw new Error("Please switch to Base chain to mint NFTs");
+      //     throw new Error("Please switch to  chain to mint NFTs");
       //   }
 
       // Function body removed - now using real contract from mint.js
@@ -1621,7 +1621,7 @@
         shareResult.textContent = message;
         shareResult.style.display = 'block';
         
-        // Update styling based on type
+        // Update styling d on type
         shareResult.style.background = type === 'error' ? 'rgba(255, 0, 0, 0.1)' : 
                                       type === 'info' ? 'rgba(0, 100, 255, 0.1)' :
                                       'rgba(0, 255, 0, 0.1)';
@@ -1803,8 +1803,8 @@
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const network = await provider.getNetwork();
           
-          if (network.chainId !== 84532) { // Base chain
-            throw new Error("Please switch to Base chain");
+          if (network.chainId !== 84532) { //  chain
+            throw new Error("Please switch to  chain");
           }
           
           const signer = provider.getSigner();
@@ -1868,7 +1868,7 @@
             // Update the local totalMinted with real contract data
             earlyAdopterNFTs.totalMinted = contractData.totalMinted;
             
-            // Show/hide mint button based on eligibility
+            // Show/hide mint button d on eligibility
             if (eligibility.isEligible) {
               mintButton.style.display = 'inline-flex';
               mintButton.textContent = `⭐ Mint NFT (${contractData.remaining} left)`;
