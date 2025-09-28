@@ -879,39 +879,37 @@
     let provider, signer, userAddress, farcasterUser;
 
     // Connect wallet function with better error handling
-    async function connectWallet() {
+    async function connectWallet(){
       if (walletConnected) return true;
       
-      // Update button state
       const connectBtn = document.getElementById('connect-wallet');
       connectBtn.textContent = '⏳ Connecting...';
       connectBtn.disabled = true;
       
       try {
-        // First try MetaMask if available (more reliable)
-        if (window.ethereum) {
-          console.log("Trying MetaMask connection first...");
-          const success = await connectMetaMaskWallet();
+        // First try Farcaster if SDK is available
+        if (window.farcasterSdk) {
+          console.log("Trying Farcaster connection...");
+          const success = await connectFarcasterWallet();
           if (success) return true;
         }
         
-        // Then try Farcaster if SDK is available
-        if (window.farcasterSdk) {
-          console.log("Trying Farcaster connection...");
-          return await connectFarcasterWallet();
+        // Then try MetaMask as fallback
+        if (window.ethereum) {
+          console.log("Trying MetaMask connection...");
+          return await connectMetaMaskWallet();
         }
         
         throw new Error("No wallet provider available. Please install MetaMask!");
         
       } catch (err) {
-        console.error("❌ All wallet connection attempts failed:", err);
+        console.error("All wallet connection attempts failed:", err);
         
-        // Reset button
         connectBtn.textContent = '🔗 Connect Wallet';
         connectBtn.disabled = false;
         
         if (window.gameInstance) {
-          window.gameInstance.showShareResult(`❌ Connection failed: ${err.message}`, "error");
+          window.gameInstance.showShareResult(`Connection failed: ${err.message}`, "error");
         } else {
           alert(`Wallet connection failed: ${err.message}`);
         }
@@ -922,9 +920,8 @@
     // Farcaster wallet connection
     async function connectFarcasterWallet() {
       try {
-        console.log("Available Farcaster SDK methods:", Object.keys(window.farcasterSdk));
+        console.log("Connecting via Farcaster...");
         
-        // Get user context from Farcaster SDK
         const context = await window.farcasterSdk.context;
         console.log("Farcaster context:", context);
         
@@ -932,49 +929,80 @@
           throw new Error("No Farcaster user context available");
         }
         
-        // Store Farcaster user data
         farcasterUser = context.user;
         console.log("Farcaster user:", farcasterUser);
         
-        // For Farcaster, we'll use the embedded wallet or MetaMask
-        if (window.ethereum) {
-          // Switch to Base chain if not already on it
-          await switchToBaseChain();
+        // Try Farcaster SDK wallet provider first
+        try {
+          const walletProvider = await window.farcasterSdk.wallet.request({
+            method: 'eth_requestAccounts'
+          });
           
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          const accounts = await provider.send("eth_requestAccounts", []);
-          
-          if (!accounts || accounts.length === 0) {
-            throw new Error("No accounts found");
+          if (walletProvider) {
+            provider = new ethers.providers.Web3Provider(walletProvider);
+            const accounts = await provider.listAccounts();
+            
+            if (accounts.length === 0) {
+              throw new Error("No accounts available");
+            }
+            
+            signer = provider.getSigner();
+            userAddress = await signer.getAddress();
+            
+            // Check if on Base chain
+            const network = await provider.getNetwork();
+            if (network.chainId !== 8453) {
+              await window.farcasterSdk.wallet.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x2105' }]
+              });
+            }
+            
+            console.log("Connected via Farcaster SDK:", userAddress);
+            
+            walletConnected = true;
+            await updateWalletUI();
+            
+            if (window.gameInstance) {
+              window.gameInstance.showShareResult(`Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
+              window.gameInstance.enableGame();
+              await window.gameInstance.updateEarlyAdopterUI();
+            }
+            
+            return true;
           }
+        } catch (sdkWalletError) {
+          console.log("Farcaster SDK wallet failed:", sdkWalletError);
           
-          signer = provider.getSigner();
-          userAddress = await signer.getAddress();
-          
-          console.log("✅ Wallet connected via Farcaster context");
-          
-          // Request signature for authentication
-          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
-          const signature = await signer.signMessage(message);
-          console.log("✅ Message signed successfully");
-          
-        walletConnected = true;
-        await updateWalletUI();
-        
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
-          window.gameInstance.enableGame();
-          await window.gameInstance.updateEarlyAdopterUI();
-        }
-          
-          return true;
-        } else {
-          throw new Error("No ethereum provider available");
+          // Fallback to embedded wallet
+          if (window.ethereum) {
+            console.log("Falling back to embedded wallet...");
+            
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            userAddress = await signer.getAddress();
+            
+            await switchToBaseChain();
+            
+            walletConnected = true;
+            await updateWalletUI();
+            
+            if (window.gameInstance) {
+              window.gameInstance.showShareResult(`Connected via embedded wallet! Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
+              window.gameInstance.enableGame();
+              await window.gameInstance.updateEarlyAdopterUI();
+            }
+            
+            return true;
+          } else {
+            throw new Error("No wallet provider available in Farcaster frame");
+          }
         }
         
       } catch (err) {
-        console.error("Farcaster connection failed:", err);
-        throw err;
+        console.error("Farcaster wallet connection failed:", err);
+        throw new Error(`Farcaster connection failed: ${err.message}`);
       }
     }
 
@@ -1020,7 +1048,6 @@ async function switchToBaseChain() {
         throw new Error("Please switch to Base chain manually in your wallet");
       }
     }
-
     // MetaMask connection with signature
     async function connectMetaMaskWallet() {
       try {
@@ -1030,12 +1057,10 @@ async function switchToBaseChain() {
         
         console.log("Connecting to MetaMask...");
         
-        // Switch to  chain first
         await switchToBaseChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
-        // Request account access
         const accounts = await provider.send("eth_requestAccounts", []);
         if (!accounts || accounts.length === 0) {
           throw new Error("No accounts found in MetaMask");
@@ -1046,18 +1071,17 @@ async function switchToBaseChain() {
         
         console.log("MetaMask connected, address:", userAddress);
         
-        // Request signature for authentication
         const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
         
         try {
           const signature = await signer.signMessage(message);
-          console.log("✅ MetaMask message signed successfully");
+          console.log("MetaMask message signed successfully");
           
           walletConnected = true;
           await updateWalletUI();
           
           if (window.gameInstance) {
-            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on !`, "success");
+            window.gameInstance.showShareResult(`MetaMask connected successfully on Base!`, "success");
             window.gameInstance.enableGame();
             await window.gameInstance.updateEarlyAdopterUI();
           }
