@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 contract SimpleMinesweeperNFT {
     // Token name and symbol
-    string public name = "Simple Minesweeper NFT";
-    string public symbol = "SMN";
+    string public name = "Minesweeper NFT";
+    string public symbol = "MN";
 
     // Owner
     address public owner;
