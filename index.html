@@ -1,45 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper - Farcaster Game</title>
+    
+    <!-- Essential Open Graph Meta Tags (Primary for embeds) -->
+    <meta property="og:title" content="💣 Minesweeper Game" />
+    <meta property="og:description" content="Can you clear the minefield? 3 difficulty levels, beat the clock, mobile-friendly!" />
+    <meta property="og:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://minesweeper-game-pearl.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Minesweeper Game" />
+    
+    <!-- Farcaster Frame Meta Tags -->
+<meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minesweeper - Farcaster Game</title>
-
-  <!-- Essential Open Graph Meta Tags -->
-  <meta property="og:title" content="💣 Minesweeper Game" />
-  <meta property="og:description" content="Can you clear the minefield? 3 difficulty levels, beat the clock, mobile-friendly!" />
-  <meta property="og:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="https://minesweeper-game-pearl.vercel.app/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Minesweeper Game" />
-
-  <!-- Farcaster Miniapp Meta -->
-  <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="💣 Minesweeper Game" />
-  <meta name="twitter:description" content="Can you clear the minefield? Play Minesweeper on Farcaster!" />
-  <meta name="twitter:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
-
-  <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
-  <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
-  <meta name="author" content="vidhyadar..eth" />
-
-  <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
-    window.farcasterSdk = sdk;
-    window.mintSimpleNFT = mintSimpleNFT;
-  </script>
-
-  <style>
-    * {
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="💣 Minesweeper Game" />
+    <meta name="twitter:description" content="Can you clear the minefield? Play Minesweeper on Farcaster!" />
+    <meta name="twitter:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
+    <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
+    <meta name="author" content="vidhyadar.base.eth" />
+     <script type="module">
+      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+      window.farcasterSdk = sdk;
+    </script>
+    <style>
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -327,271 +322,6 @@
             background: rgba(139, 69, 255, 1);
         }
 
-        .share-btn.early-adopter-btn {
-            background: rgba(255, 193, 7, 0.8);
-            font-weight: bold;
-        }
-
-        .share-btn.early-adopter-btn:hover {
-            background: rgba(255, 193, 7, 1);
-            transform: translateY(-2px);
-        }
-
-        .early-adopter-info {
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: rgba(255, 193, 7, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            text-align: center;
-            font-size: 0.8rem;
-        }
-
-        .nft-stats {
-            color: #ffc107;
-            font-weight: bold;
-        }
-
-        .share-btn.view-nft-btn {
-            background: rgba(0, 150, 255, 0.8);
-            font-weight: bold;
-        }
-
-        .share-btn.view-nft-btn:hover {
-            background: rgba(0, 150, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        /* NFT Viewer Styles */
-        .nft-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .nft-viewer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .nft-viewer-header h3 {
-            margin: 0;
-            color: #fff;
-            font-size: 1.5rem;
-        }
-
-        .close-viewer {
-            background: rgba(255, 0, 0, 0.8);
-            border: none;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .close-viewer:hover {
-            background: rgba(255, 0, 0, 1);
-            transform: scale(1.1);
-        }
-
-        .nft-viewer-content {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-info {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .player-name {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .nft-position {
-            font-size: 1.2rem;
-            color: #ffc107;
-            font-weight: bold;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #ccc;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .difficulty-stats {
-            margin-bottom: 20px;
-        }
-
-        .difficulty-stats h4 {
-            color: #fff;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .difficulty-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .difficulty-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .difficulty-name {
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .difficulty-games, .difficulty-wins {
-            font-size: 0.8rem;
-            color: #ccc;
-        }
-
-        .nft-metadata {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-
-        .nft-metadata h4 {
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .metadata-content {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: #ccc;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .nft-viewer-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .share-nft-btn, .copy-stats-btn, .download-image-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .share-nft-btn {
-            background: rgba(139, 69, 255, 0.8);
-        }
-
-        .share-nft-btn:hover {
-            background: rgba(139, 69, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        .copy-stats-btn {
-            background: rgba(0, 150, 255, 0.8);
-        }
-
-        .copy-stats-btn:hover {
-            background: rgba(0, 150, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        .download-image-btn {
-            background: rgba(255, 193, 7, 0.8);
-        }
-
-        .download-image-btn:hover {
-            background: rgba(255, 193, 7, 1);
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 480px) {
-            .nft-viewer-content {
-                padding: 15px;
-                margin: 10px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .difficulty-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .share-result {
             margin: 10px 0;
             padding: 10px;
@@ -601,67 +331,6 @@
             font-size: 0.9rem;
             border: 1px solid rgba(0, 255, 0, 0.3);
             display: none;
-        }
-
-        /* Wallet connection section styling */
-        .wallet-section {
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .wallet-btn {
-            background: rgba(0, 150, 255, 0.8);
-            font-weight: bold;
-            min-width: 140px;
-        }
-
-        .wallet-btn:hover {
-            background: rgba(0, 150, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        .wallet-btn.connected {
-            background: rgba(0, 200, 100, 0.8);
-        }
-
-        .wallet-btn.connected:hover {
-            background: rgba(0, 200, 100, 1);
-        }
-
-        .wallet-status {
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            flex-direction: column;
-        }
-
-        .wallet-status #wallet-address {
-            font-family: monospace;
-            color: #00ff88;
-            font-weight: bold;
-        }
-
-        .chain-indicator {
-            font-size: 0.7rem;
-            color: #66aaff;
-            margin-top: 2px;
-        }
-
-        .chain-indicator. {
-            color: #00ff88;
-        }
-
-        /* Disabled state for game elements when wallet not connected */
-        .game-disabled {
-            opacity: 0.5;
-            pointer-events: none;
         }
 
         /* Sound toggle button */
@@ -723,1523 +392,638 @@
                 font-size: 16px;
             }
         }
-  </style>
+        </style>
+       
+
 </head>
 <body>
-  <!-- Sound toggle button -->
-  <button class="sound-toggle" id="sound-toggle">🔊</button>
+    <!-- Sound toggle button -->
+    <button class="sound-toggle" id="sound-toggle">🔊</button>
 
-  <div class="game-container">
-    <div class="game-header">
-      <h1 class="game-title">💣 Minesweeper</h1>
-    </div>
-
-    <div class="difficulty-buttons">
-      <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
-    </div>
-
-    <div class="game-stats">
-      <div class="stat">
-        <span>Mines</span>
-        <span class="stat-value" id="mines-count">10</span>
-      </div>
-      <div class="stat">
-        <span>Flags</span>
-        <span class="stat-value" id="flags-count">0</span>
-      </div>
-      <div class="stat">
-        <span>Time</span>
-        <span class="stat-value" id="timer">0</span>
-      </div>
-    </div>
-
-    <div class="game-controls">
-      <button class="btn" id="new-game">New Game</button>
-      <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
-    </div>
-
-    <!-- Wallet Connection Section -->
-    <div class="wallet-section" id="wallet-section">
-      <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
-      <div class="wallet-status" id="wallet-status" style="display: none;">
-        <div>
-          <span>👤 Connected: </span>
-          <span id="wallet-address"></span>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">💣 Minesweeper</h1>
         </div>
-        <div class="chain-indicator" id="chain-indicator">Checking network...</div>
-      </div>
+        
+        <div class="difficulty-buttons">
+            <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
+            <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
+            <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <span>Mines</span>
+                <span class="stat-value" id="mines-count">10</span>
+            </div>
+            <div class="stat">
+                <span>Flags</span>
+                <span class="stat-value" id="flags-count">0</span>
+            </div>
+            <div class="stat">
+                <span>Time</span>
+                <span class="stat-value" id="timer">0</span>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn" id="new-game">New Game</button>
+            <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
+        </div>
+
+        <div class="minefield" id="minefield"></div>
+        
+        <div class="game-message" id="game-message"></div>
+        
+        <div class="share-section">
+            <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
+            <div class="share-buttons">
+                <button class="share-btn" id="share-warpcast">
+                    🟣 Share on Warpcast
+                </button>
+                <button class="share-btn" id="share-general">
+                    🔗 Copy Game Link
+                </button>
+                <button class="share-btn" id="share-result-btn" style="display: none;">
+                    🏆 Share Result
+                </button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <strong>How to play:</strong><br>
+            • Tap to reveal cells<br>
+            • Use Flag Mode to mark mines<br>
+            • Numbers show nearby mines<br>
+            • Find all mines to win!
+        </div>
     </div>
 
-    <div class="minefield" id="minefield"></div>
-    <div class="game-message" id="game-message"></div>
-
-    <div class="share-section">
-      <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
-      <div class="share-buttons">
-        <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
-        <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
-        <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
-        <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint NFT (2500 Limit)</button>
-        <button class="share-btn view-nft-btn" id="view-my-nft" style="display: none;">👤 View My NFT</button>
-      </div>
-      <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
-        <div class="nft-stats">
-          <span id="nft-count">0/2500</span> Early Adopter NFTs
-        </div>
-      </div>
-      
-      <!-- NFT Status Viewer -->
-      <div class="nft-viewer" id="nft-viewer" style="display: none;">
-        <div class="nft-viewer-header">
-          <h3>🎮 Your Player Status</h3>
-          <button class="close-viewer" id="close-nft-viewer">✕</button>
-        </div>
-        <div class="nft-viewer-content">
-          <div class="player-info">
-            <div class="player-name" id="viewer-player-name">Player Name</div>
-            <div class="nft-position" id="viewer-nft-position">NFT #0</div>
-          </div>
-          
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Games Played</div>
-              <div class="stat-value" id="viewer-games-played">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Wins</div>
-              <div class="stat-value" id="viewer-wins">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Losses</div>
-              <div class="stat-value" id="viewer-losses">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Win Ratio</div>
-              <div class="stat-value" id="viewer-win-ratio">0%</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Best Time</div>
-              <div class="stat-value" id="viewer-best-time">N/A</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Total Play Time</div>
-              <div class="stat-value" id="viewer-total-time">0s</div>
-            </div>
-          </div>
-          
-          <div class="difficulty-stats">
-            <h4>Difficulty Breakdown</h4>
-            <div class="difficulty-grid">
-              <div class="difficulty-card">
-                <div class="difficulty-name">Easy</div>
-                <div class="difficulty-games" id="viewer-easy-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-easy-wins">0 wins</div>
-              </div>
-              <div class="difficulty-card">
-                <div class="difficulty-name">Medium</div>
-                <div class="difficulty-games" id="viewer-medium-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-medium-wins">0 wins</div>
-              </div>
-              <div class="difficulty-card">
-                <div class="difficulty-name">Hard</div>
-                <div class="difficulty-games" id="viewer-hard-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-hard-wins">0 wins</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="nft-metadata" id="viewer-nft-metadata" style="display: none;">
-            <h4>NFT Details</h4>
-            <div class="metadata-content" id="viewer-metadata-content"></div>
-          </div>
-          
-          <div class="nft-viewer-actions">
-            <button class="share-nft-btn" id="share-nft-status">🟣 Share on Warpcast</button>
-            <button class="copy-stats-btn" id="copy-player-stats">📋 Copy Stats</button>
-            <button class="download-image-btn" id="download-status-card">🖼️ Download Image</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="instructions">
-      <strong>How to play:</strong><br>
-      • Tap to reveal cells<br>
-      • Use Flag Mode to mark mines<br>
-      • Numbers show nearby mines<br>
-      • Find all mines to win!
-    </div>
-  </div>
-
-  <script>
-    // Global variables for Farcaster wallet
-    let walletConnected = false;
-    let provider, signer, userAddress, farcasterUser;
-
-    // Connect wallet function with better error handling
-    async function connectWallet(){
-      if (walletConnected) return true;
-      
-      const connectBtn = document.getElementById('connect-wallet');
-      connectBtn.textContent = '⏳ Connecting...';
-      connectBtn.disabled = true;
-      
-      try {
-        // First try Farcaster if SDK is available
-        if (window.farcasterSdk) {
-          console.log("Trying Farcaster connection...");
-          const success = await connectFarcasterWallet();
-          if (success) return true;
-        }
-        
-        // Then try MetaMask as fallback
-        if (window.ethereum) {
-          console.log("Trying MetaMask connection...");
-          return await connectMetaMaskWallet();
-        }
-        
-        throw new Error("No wallet provider available. Please install MetaMask!");
-        
-      } catch (err) {
-        console.error("All wallet connection attempts failed:", err);
-        
-        connectBtn.textContent = '🔗 Connect Wallet';
-        connectBtn.disabled = false;
-        
-        if (window.gameInstance) {
-          window.gameInstance.showShareResult(`Connection failed: ${err.message}`, "error");
-        } else {
-          alert(`Wallet connection failed: ${err.message}`);
-        }
-        return false;
-      }
-    }
-
-    // Farcaster wallet connection
-    async function connectFarcasterWallet() {
-      try {
-        console.log("Connecting via Farcaster...");
-        
-        const context = await window.farcasterSdk.context;
-        console.log("Farcaster context:", context);
-        
-        if (!context || !context.user) {
-          throw new Error("No Farcaster user context available");
-        }
-        
-        farcasterUser = context.user;
-        console.log("Farcaster user:", farcasterUser);
-        
-        // Try Farcaster SDK wallet provider first
-        try {
-          const walletProvider = await window.farcasterSdk.wallet.request({
-            method: 'eth_requestAccounts'
-          });
-          
-          if (walletProvider) {
-            provider = new ethers.providers.Web3Provider(walletProvider);
-            const accounts = await provider.listAccounts();
-            
-            if (accounts.length === 0) {
-              throw new Error("No accounts available");
+    <script>
+        class Minesweeper {
+            constructor() {
+                this.gameState = 'ready'; // ready, playing, won, lost
+                this.flagMode = false;
+                this.firstClick = true;
+                this.timer = 0;
+                this.timerInterval = null;
+                this.soundEnabled = true;
+                
+                this.difficulties = {
+                    easy: { rows: 9, cols: 9, mines: 10 },
+                    medium: { rows: 12, cols: 12, mines: 20 },
+                    hard: { rows: 15, cols: 15, mines: 35 }
+                };
+                
+                this.currentDifficulty = 'easy';
+                this.config = this.difficulties.easy;
+                
+                this.board = [];
+                this.revealed = [];
+                this.flagged = [];
+                
+                this.createSounds();
+                this.initializeGame();
+                this.setupEventListeners();
             }
             
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            // Check if on Base chain
-            const network = await provider.getNetwork();
-            if (network.chainId !== 8453) {
-              await window.farcasterSdk.wallet.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x2105' }]
-              });
+            createSounds() {
+                // Create audio context for sound effects
+                this.audioContext = null;
+                this.audioInitialized = false;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
             }
             
-            console.log("Connected via Farcaster SDK:", userAddress);
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
+            initializeAudio() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                this.audioInitialized = true;
             }
             
-            return true;
-          }
-        } catch (sdkWalletError) {
-          console.log("Farcaster SDK wallet failed:", sdkWalletError);
-          
-          // Fallback to embedded wallet
-          if (window.ethereum) {
-            console.log("Falling back to embedded wallet...");
-            
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            await switchToBaseChain();
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Connected via embedded wallet! Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
+            playSound(type) {
+                if (!this.soundEnabled || !this.audioContext) return;
+                
+                // Initialize audio on first interaction
+                if (!this.audioInitialized) {
+                    this.initializeAudio();
+                }
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                switch (type) {
+                    case 'click':
+                        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.1);
+                        break;
+                    case 'flag':
+                        oscillator.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.15);
+                        break;
+                    case 'mine':
+                        // Enhanced explosion sound - more dramatic
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.8);
+                        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.8);
+                        console.log('Playing mine explosion sound!'); // Debug log
+                        break;
+                    case 'win':
+                        // Victory sound - ascending notes
+                        const notes = [523, 659, 784, 1047]; // C, E, G, C
+                        notes.forEach((freq, i) => {
+                            setTimeout(() => {
+                                const osc = this.audioContext.createOscillator();
+                                const gain = this.audioContext.createGain();
+                                osc.connect(gain);
+                                gain.connect(this.audioContext.destination);
+                                osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                                osc.start();
+                                osc.stop(this.audioContext.currentTime + 0.3);
+                            }, i * 150);
+                        });
+                        return; // Skip the default oscillator code
+                }
             }
             
-            return true;
-          } else {
-            throw new Error("No wallet provider available in Farcaster frame");
-          }
-        }
-        
-      } catch (err) {
-        console.error("Farcaster wallet connection failed:", err);
-        throw new Error(`Farcaster connection failed: ${err.message}`);
-      }
-    }
+            initializeGame() {
+                this.gameState = 'ready';
+                this.firstClick = true;
+                this.timer = 0;
+                this.clearTimer();
+                
+                const { rows, cols, mines } = this.config;
+                
+                // Initialize arrays
+                this.board = Array(rows).fill().map(() => Array(cols).fill(0));
+                this.revealed = Array(rows).fill().map(() => Array(cols).fill(false));
+                this.flagged = Array(rows).fill().map(() => Array(cols).fill(false));
+                
+                this.updateStats();
+                this.createMinefield();
+                this.clearMessage();
+                
+                // Hide share result button on new game
+                document.getElementById('share-result-btn').style.display = 'none';
+                
+                // Reset mode to dig mode
+                this.flagMode = false;
+                this.updateModeButton();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('new-game').addEventListener('click', () => this.initializeGame());
+                document.getElementById('toggle-mode').addEventListener('click', () => this.toggleMode());
+                
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.changeDifficulty(e.target.dataset.difficulty));
+                });
 
-    // Switch to Base chain
-async function switchToBaseChain() {
-      try {
-        const baseChainId = '0x2105';
-        const baseChainConfig = {
-          chainId: baseChainId,
-          chainName: 'Base',
-          rpcUrls: ['https://mainnet.base.org'],
-          nativeCurrency: {
-            name: 'Ethereum',
-            symbol: 'ETH',
-            decimals: 18
-          },
-          blockExplorerUrls: ['https://basescan.org']
-        };
+                // Sound toggle
+                document.getElementById('sound-toggle').addEventListener('click', () => {
+                    this.soundEnabled = !this.soundEnabled;
+                    document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
+                });
 
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: baseChainId }],
-          });
-          console.log("Switched to Base chain");
-        } catch (switchError) {
-          if (switchError.code === 4902) {
-            try {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [baseChainConfig],
-              });
-              console.log("Added and switched to Base chain");
-            } catch (addError) {
-              throw new Error("Failed to add Base chain: " + addError.message);
+                // Share functionality
+                document.getElementById('share-warpcast').addEventListener('click', () => this.shareToWarpcast());
+                document.getElementById('share-general').addEventListener('click', () => this.copyGameLink());
+                document.getElementById('share-result-btn').addEventListener('click', () => this.shareResult());
             }
-          } else {
-            throw new Error("Failed to switch to Base chain: " + switchError.message);
-          }
-        }
-      } catch (err) {
-        console.error("Base chain switch failed:", err);
-        throw new Error("Please switch to Base chain manually in your wallet");
-      }
-    }
-    // MetaMask connection with signature
-    async function connectMetaMaskWallet() {
-      try {
-        if (!window.ethereum) {
-          throw new Error("MetaMask not installed");
-        }
-        
-        console.log("Connecting to MetaMask...");
-        
-        await switchToBaseChain();
-        
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        
-        const accounts = await provider.send("eth_requestAccounts", []);
-        if (!accounts || accounts.length === 0) {
-          throw new Error("No accounts found in MetaMask");
-        }
-        
-        signer = provider.getSigner();
-        userAddress = await signer.getAddress();
-        
-        console.log("MetaMask connected, address:", userAddress);
-        
-        const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
-        
-        try {
-          const signature = await signer.signMessage(message);
-          console.log("MetaMask message signed successfully");
-          
-          walletConnected = true;
-          await updateWalletUI();
-          
-          if (window.gameInstance) {
-            window.gameInstance.showShareResult(`MetaMask connected successfully on Base!`, "success");
-            window.gameInstance.enableGame();
-            await window.gameInstance.updateEarlyAdopterUI();
-          }
-          
-          return true;
-          
-        } catch (signError) {
-          if (signError.code === 4001) {
-            throw new Error("Please sign the message to authenticate");
-          } else {
-            throw new Error("Signature failed: " + signError.message);
-          }
-        }
-        
-      } catch (err) {
-        console.error("MetaMask connection failed:", err);
-        if (err.code === 4001) {
-          throw new Error("Please connect your MetaMask wallet");
-        } else if (err.code === -32002) {
-          throw new Error("MetaMask connection request pending. Please check MetaMask.");
-        } else {
-          throw err;
-        }
-      }
-    }
+            
+            changeDifficulty(difficulty) {
+                this.currentDifficulty = difficulty;
+                this.config = this.difficulties[difficulty];
+                
+                document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+                
+                this.initializeGame();
+            }
+            
+            toggleMode() {
+                this.flagMode = !this.flagMode;
+                this.updateModeButton();
+                this.playSound('flag'); // Play sound when switching modes
+            }
+            
+            updateModeButton() {
+                const btn = document.getElementById('toggle-mode');
+                if (this.flagMode) {
+                    btn.textContent = '🚩 Flag Mode';
+                    btn.className = 'btn flag-mode';
+                } else {
+                    btn.textContent = '👆 Reveal Mode';
+                    btn.className = 'btn dig-mode';
+                }
+            }
+            
+            createMinefield() {
+                const minefield = document.getElementById('minefield');
+                const { rows, cols } = this.config;
+                
+                minefield.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                minefield.innerHTML = '';
+                
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const cell = document.createElement('button');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // Handle both click and touch events
+                        cell.addEventListener('click', (e) => this.handleCellClick(e));
+                        cell.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            this.handleRightClick(row, col);
+                        });
+                        
+                        minefield.appendChild(cell);
+                    }
+                }
+            }
+            
+            placeMines(excludeRow, excludeCol) {
+                const { rows, cols, mines } = this.config;
+                let minesPlaced = 0;
+                
+                while (minesPlaced < mines) {
+                    const row = Math.floor(Math.random() * rows);
+                    const col = Math.floor(Math.random() * cols);
+                    
+                    // Don't place mine on first click or if already has mine
+                    if ((row === excludeRow && col === excludeCol) || this.board[row][col] === -1) {
+                        continue;
+                    }
+                    
+                    this.board[row][col] = -1;
+                    minesPlaced++;
+                    
+                    // Update adjacent numbers
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const newRow = row + dr;
+                            const newCol = col + dc;
+                            
+                            if (this.isValidCell(newRow, newCol) && this.board[newRow][newCol] !== -1) {
+                                this.board[newRow][newCol]++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            isValidCell(row, col) {
+                return row >= 0 && row < this.config.rows && col >= 0 && col < this.config.cols;
+            }
+            
+            handleCellClick(e) {
+                if (this.gameState === 'won' || this.gameState === 'lost') return;
+                
+                // Initialize audio on first user interaction
+                if (!this.audioInitialized) {
+                    this.initializeAudio();
+                }
+                
+                const row = parseInt(e.target.dataset.row);
+                const col = parseInt(e.target.dataset.col);
+                
+                if (this.flagMode) {
+                    this.handleRightClick(row, col);
+                } else {
+                    this.revealCell(row, col);
+                }
+            }
+            
+            handleRightClick(row, col) {
+                if (this.revealed[row][col]) return;
+                
+                this.flagged[row][col] = !this.flagged[row][col];
+                this.playSound('flag'); // Play flag sound
+                this.updateCellDisplay(row, col);
+                this.updateStats();
+            }
+            
+            revealCell(row, col) {
+                if (this.revealed[row][col] || this.flagged[row][col]) return;
+                
+                if (this.firstClick) {
+                    this.placeMines(row, col);
+                    this.firstClick = false;
+                    this.gameState = 'playing';
+                    this.startTimer();
+                }
+                
+                this.revealed[row][col] = true;
+                
+                if (this.board[row][col] === -1) {
+                    // Play explosion sound immediately when mine is hit
+                    console.log('Mine hit! Playing explosion sound...');
+                    this.playSound('mine');
+                    this.updateCellDisplay(row, col);
+                    // Small delay to let the explosion sound start before game over
+                    setTimeout(() => {
+                        this.gameOver(false);
+                    }, 100);
+                    return;
+                }
+                
+                this.playSound('click'); // Play click sound only for safe cells
+                
+                if (this.board[row][col] === 0) {
+                    // Reveal adjacent cells for empty cells
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const newRow = row + dr;
+                            const newCol = col + dc;
+                            if (this.isValidCell(newRow, newCol)) {
+                                this.revealCell(newRow, newCol);
+                            }
+                        }
+                    }
+                }
+                
+                this.updateCellDisplay(row, col);
+                this.checkWinCondition();
+            }
+            
+            updateCellDisplay(row, col) {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                
+                // Clear all special classes first
+                cell.classList.remove('flagged', 'mine', 'false-flag');
+                
+                if (this.flagged[row][col]) {
+                    cell.textContent = '🚩';
+                    cell.classList.add('flagged');
+                } else {
+                    if (this.revealed[row][col]) {
+                        cell.classList.add('revealed');
+                        
+                        if (this.board[row][col] === -1) {
+                            cell.textContent = '💣';
+                            cell.classList.add('mine');
+                        } else if (this.board[row][col] > 0) {
+                            cell.textContent = this.board[row][col];
+                            cell.classList.add(`number-${this.board[row][col]}`);
+                        } else {
+                            cell.textContent = '';
+                        }
+                    } else {
+                        cell.textContent = '';
+                        cell.classList.remove('revealed');
+                    }
+                }
+            }
+            
+            checkWinCondition() {
+                const { rows, cols } = this.config;
+                let cellsToReveal = 0;
+                
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (this.board[row][col] !== -1 && !this.revealed[row][col]) {
+                            cellsToReveal++;
+                        }
+                    }
+                }
+                
+                if (cellsToReveal === 0) {
+                    this.gameOver(true);
+                }
+            }
+            
+            gameOver(won) {
+                this.gameState = won ? 'won' : 'lost';
+                this.clearTimer();
+                
+                if (won) {
+                    this.playSound('win');
+                } else {
+                    // Mine sound is already played in revealCell, so just reveal mines and false flags
+                    console.log('Game over - revealing all mines and false flags');
+                    this.revealMinesAndFalseFlags();
+                }
+                
+                this.showMessage(won);
+                
+                // Show share result button if game is completed
+                const shareResultBtn = document.getElementById('share-result-btn');
+                shareResultBtn.style.display = 'inline-flex';
+            }
+            
+            revealMinesAndFalseFlags() {
+                for (let row = 0; row < this.config.rows; row++) {
+                    for (let col = 0; col < this.config.cols; col++) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        
+                        if (this.board[row][col] === -1) {
+                            // Reveal mine
+                            this.revealed[row][col] = true;
+                            this.updateCellDisplay(row, col);
+                        } else if (this.flagged[row][col]) {
+                            // This is a false flag
+                            cell.classList.add('false-flag');
+                            cell.textContent = '❌';
+                        }
+                    }
+                }
+            }
+            
+            showMessage(won) {
+                const messageEl = document.getElementById('game-message');
+                if (won) {
+                    messageEl.textContent = `🎉 You Won in ${this.timer}s!`;
+                    messageEl.className = 'game-message win';
+                } else {
+                    messageEl.textContent = '💥 Game Over!';
+                    messageEl.className = 'game-message lose';
+                }
+            }
+            
+            clearMessage() {
+                const messageEl = document.getElementById('game-message');
+                messageEl.textContent = '';
+                messageEl.className = 'game-message';
+            }
+            
+            updateStats() {
+                const flagsUsed = this.flagged.flat().filter(f => f).length;
+                document.getElementById('mines-count').textContent = this.config.mines;
+                document.getElementById('flags-count').textContent = flagsUsed;
+                document.getElementById('timer').textContent = this.timer;
+            }
+            
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    this.timer++;
+                    this.updateStats();
+                }, 1000);
+            }
+            
+            clearTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
 
-    // Update wallet UI
-    async function updateWalletUI() {
-      const connectBtn = document.getElementById('connect-wallet');
-      const walletStatus = document.getElementById('wallet-status');
-      const walletAddress = document.getElementById('wallet-address');
-      const chainIndicator = document.getElementById('chain-indicator');
-      
-      if (walletConnected && userAddress) {
-        connectBtn.textContent = '✅ Connected';
-        connectBtn.classList.add('connected');
-        connectBtn.disabled = false;
+            // Farcaster sharing methods
+            getGameUrl() {
+                // Get current page URL or use a default
+                return window.location.href || 'https://your-domain.com/minesweeper.html';
+            }
+
+            getDifficultyEmoji() {
+                switch(this.currentDifficulty) {
+                    case 'easy': return '🟢';
+                    case 'medium': return '🟡';
+                    case 'hard': return '🔴';
+                    default: return '💣';
+                }
+            }
+
+            generateResultText() {
+                const difficultyEmoji = this.getDifficultyEmoji();
+                const difficultyName = this.currentDifficulty.charAt(0).toUpperCase() + this.currentDifficulty.slice(1);
+                const { rows, cols, mines } = this.config;
+                
+                if (this.gameState === 'won') {
+                    return `🎉 I just won Minesweeper! ${difficultyEmoji}\n\n` +
+                           `Difficulty: ${difficultyName} (${rows}×${cols}, ${mines} mines)\n` +
+                           `Time: ${this.timer}s ⏱️\n\n` +
+                           `Think you can beat my time? 🤔\n` +
+                           `Play here: ${this.getGameUrl()}`;
+                } else {
+                    return `💥 I got blown up in Minesweeper! ${difficultyEmoji}\n\n` +
+                           `Difficulty: ${difficultyName} (${rows}×${cols}, ${mines} mines)\n` +
+                           `Time survived: ${this.timer}s ⏱️\n\n` +
+                           `Think you can do better? 💪\n` +
+                           `Try your luck: ${this.getGameUrl()}`;
+                }
+            }
+
+            shareToWarpcast() {
+                const gameUrl = this.getGameUrl();
+                const shareText = `🎮 Playing Minesweeper on Farcaster! 💣\n\nCan you clear the minefield without exploding? 🤔\n\n🎯 3 difficulty levels\n⏱️ Beat the clock\n📱 Mobile-friendly\n\nPlay now: ${gameUrl}`;
+                
+                // Encode the text for URL
+                const encodedText = encodeURIComponent(shareText);
+                
+                // Warpcast share URL
+                const warpcastUrl = `https://warpcast.com/~/compose?text=${encodedText}`;
+                
+                // Open in new window/tab
+                window.open(warpcastUrl, '_blank', 'width=600,height=400');
+            }
+
+            async copyGameLink() {
+                const gameUrl = this.getGameUrl();
+                
+                try {
+                    await navigator.clipboard.writeText(gameUrl);
+                    this.showShareResult('Game link copied to clipboard! 🔗');
+                } catch (err) {
+                    // Fallback for browsers that don't support clipboard API
+                    this.fallbackCopyTextToClipboard(gameUrl);
+                }
+            }
+
+            shareResult() {
+                if (this.gameState === 'ready' || this.gameState === 'playing') {
+                    this.showShareResult('Finish the game first! 🎮', 'error');
+                    return;
+                }
+
+                const resultText = this.generateResultText();
+                const encodedText = encodeURIComponent(resultText);
+                const warpcastUrl = `https://warpcast.com/~/compose?text=${encodedText}`;
+                
+                window.open(warpcastUrl, '_blank', 'width=600,height=400');
+            }
+
+            fallbackCopyTextToClipboard(text) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                
+                // Avoid scrolling to bottom
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        this.showShareResult('Game link copied to clipboard! 🔗');
+                    } else {
+                        this.showShareResult('Could not copy link 😅', 'error');
+                    }
+                } catch (err) {
+                    this.showShareResult('Could not copy link 😅', 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+
+            showShareResult(message, type = 'success') {
+                const shareResult = document.getElementById('share-result');
+                shareResult.textContent = message;
+                shareResult.style.display = 'block';
+                
+                if (type === 'error') {
+                    shareResult.style.background = 'rgba(255, 0, 0, 0.1)';
+                    shareResult.style.color = '#ff6666';
+                    shareResult.style.borderColor = 'rgba(255, 0, 0, 0.3)';
+                } else {
+                    shareResult.style.background = 'rgba(0, 255, 0, 0.1)';
+                    shareResult.style.color = '#00ff88';
+                    shareResult.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+                }
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    shareResult.style.display = 'none';
+                }, 3000);
+            }
+        }
         
-        walletStatus.style.display = 'flex';
-        walletAddress.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-        
-        // Update chain indicator
-        try {
-          if (provider) {
-            const network = await provider.getNetwork();
-            if (network.chainId === 8453) {
-              chainIndicator.textContent = '🔗 Base Chain';
-              chainIndicator.classList.add('base');
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new Minesweeper();
+            
+            if (window.farcasterSdk &&
+              window.farcasterSdk.actions &&
+                typeof window.farcasterSdk.actions.ready === 'function') {
+              window.farcasterSdk.actions.ready();
+              console.log("✅ Mini App ready() called");
             } else {
-              chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
-              chainIndicator.classList.remove('');
+              console.error("❌ Mini App SDK not available");
             }
-          } else {
-            chainIndicator.textContent = '❓ Unknown Network';
-          }
-        } catch (err) {
-          chainIndicator.textContent = '❌ Network Error';
-        }
-        
-        // Enable game elements
-        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
-          el.classList.remove('game-disabled');
         });
-        document.getElementById('minefield').classList.remove('game-disabled');
-        
-        // Update early adopter UI
-        if (window.gameInstance) {
-          await window.gameInstance.updateEarlyAdopterUI();
-        }
-        
-      } else {
-        connectBtn.textContent = '🔗 Connect Wallet';
-        connectBtn.classList.remove('connected');
-        connectBtn.disabled = false;
-        
-        walletStatus.style.display = 'none';
-        
-        // Disable game elements
-        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
-          el.classList.add('game-disabled');
-        });
-        document.getElementById('minefield').classList.add('game-disabled');
-      }
-    }
-
-    // Early Adopter NFT minting system with player statistics
-    let earlyAdopterNFTs = {
-      totalMinted: 0,
-      maxSupply: 2500,
-      playerNFTs: new Map(), // Track NFTs per player
-      playerStats: new Map(), // Track detailed player statistics
-      isEarlyAdopter: function() {
-        return this.totalMinted < this.maxSupply;
-      },
-      canPlayerMint: function(playerAddress) {
-        // Allow one NFT per player for early adopters
-        return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
-      },
-      // Initialize or get player stats
-      getPlayerStats: function(playerAddress) {
-        if (!this.playerStats.has(playerAddress)) {
-          this.playerStats.set(playerAddress, {
-            gamesPlayed: 0,
-            wins: 0,
-            losses: 0,
-            winRatio: 0,
-            bestTime: null,
-            totalPlayTime: 0,
-            difficultyStats: {
-              easy: { games: 0, wins: 0 },
-              medium: { games: 0, wins: 0 },
-              hard: { games: 0, wins: 0 }
-            }
-          });
-        }
-        return this.playerStats.get(playerAddress);
-      },
-      // Update player stats after game completion
-      updatePlayerStats: function(playerAddress, gameResult) {
-        const stats = this.getPlayerStats(playerAddress);
-        stats.gamesPlayed++;
-        
-        if (gameResult.win) {
-          stats.wins++;
-          if (!stats.bestTime || gameResult.time < stats.bestTime) {
-            stats.bestTime = gameResult.time;
-          }
-        } else {
-          stats.losses++;
-        }
-        
-        stats.totalPlayTime += gameResult.time;
-        stats.winRatio = stats.gamesPlayed > 0 ? (stats.wins / stats.gamesPlayed * 100).toFixed(1) : 0;
-        
-        // Update difficulty stats
-        if (stats.difficultyStats[gameResult.difficulty]) {
-          stats.difficultyStats[gameResult.difficulty].games++;
-          if (gameResult.win) {
-            stats.difficultyStats[gameResult.difficulty].wins++;
-          }
-        }
-        
-        this.playerStats.set(playerAddress, stats);
-        return stats;
-      }
-    };
-
-    // Early adopter NFT minting function is now imported from mint.js
-    // async function mintEarlyAdopterNFT(playerAddress, playerName) {
-      // try {
-      //   // Check if player can mint
-      //   if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
-      //     if (!earlyAdopterNFTs.isEarlyAdopter()) {
-      //       throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
-      //     } else {
-      //       throw new Error("You already have an early adopter NFT!");
-      //     }
-      //   }
-
-      //   // Check if we're on  chain
-      //   const network = await provider.getNetwork();
-      //   if (network.chainId !== 8453) {
-      //     throw new Error("Please switch to  chain to mint NFTs");
-      //   }
-
-      // Function body removed - now using real contract from mint.js
-    
-
-    // Check if player is eligible for early adopter NFT
-    function checkEarlyAdopterEligibility(playerAddress) {
-      return {
-        isEligible: earlyAdopterNFTs.canPlayerMint(playerAddress),
-        hasNFT: earlyAdopterNFTs.playerNFTs.has(playerAddress),
-        totalMinted: earlyAdopterNFTs.totalMinted,
-        maxSupply: earlyAdopterNFTs.maxSupply,
-        remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
-      };
-    }
-
-    // Minesweeper Game Class
-    class Minesweeper {
-      constructor() {
-        this.gameState = 'ready';
-        this.flagMode = false;
-        this.firstClick = true;
-        this.timer = 0;
-        this.timerInterval = null;
-        this.soundEnabled = true;
-
-        this.difficulties = {
-          easy: { rows: 9, cols: 9, mines: 10 },
-          medium: { rows: 12, cols: 12, mines: 20 },
-          hard: { rows: 15, cols: 15, mines: 35 }
-        };
-
-        this.currentDifficulty = 'easy';
-        this.config = this.difficulties.easy;
-        this.board = [];
-        this.revealed = [];
-        this.flagged = [];
-
-        this.createSounds();
-        this.initializeGame();
-        this.setupEventListeners();
-      }
-
-      createSounds() {
-        // Create sound effects using Web Audio API
-        this.audioContext = null;
-        try {
-          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-          console.log('Audio not supported');
-        }
-      }
-
-      playSound(frequency = 440, duration = 200, type = 'sine') {
-        if (!this.soundEnabled || !this.audioContext) return;
-
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
-
-        oscillator.frequency.value = frequency;
-        oscillator.type = type;
-
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
-
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + duration / 1000);
-      }
-
-      initializeGame() {
-        this.gameState = 'ready';
-        this.firstClick = true;
-        this.timer = 0;
-        this.clearTimer();
-        
-        this.config = this.difficulties[this.currentDifficulty];
-        this.board = [];
-        this.revealed = [];
-        this.flagged = [];
-
-        // Initialize empty board
-        for (let i = 0; i < this.config.rows; i++) {
-          this.board[i] = [];
-          this.revealed[i] = [];
-          this.flagged[i] = [];
-          for (let j = 0; j < this.config.cols; j++) {
-            this.board[i][j] = 0;
-            this.revealed[i][j] = false;
-            this.flagged[i][j] = false;
-          }
-        }
-
-        this.updateDisplay();
-        this.renderBoard();
-        document.getElementById('game-message').textContent = '';
-        document.getElementById('share-result-btn').style.display = 'none';
-      }
-
-      placeMines(excludeRow, excludeCol) {
-        let minesPlaced = 0;
-        while (minesPlaced < this.config.mines) {
-          const row = Math.floor(Math.random() * this.config.rows);
-          const col = Math.floor(Math.random() * this.config.cols);
-          
-          // Don't place mine on first click or if already has mine
-          if ((row === excludeRow && col === excludeCol) || this.board[row][col] === -1) {
-            continue;
-          }
-          
-          this.board[row][col] = -1; // -1 represents a mine
-          minesPlaced++;
-        }
-
-        // Calculate numbers for each cell
-        for (let i = 0; i < this.config.rows; i++) {
-          for (let j = 0; j < this.config.cols; j++) {
-            if (this.board[i][j] !== -1) {
-              this.board[i][j] = this.countAdjacentMines(i, j);
-            }
-          }
-        }
-      }
-
-      countAdjacentMines(row, col) {
-        let count = 0;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            const newRow = row + i;
-            const newCol = col + j;
-            if (newRow >= 0 && newRow < this.config.rows && 
-                newCol >= 0 && newCol < this.config.cols && 
-                this.board[newRow][newCol] === -1) {
-              count++;
-            }
-          }
-        }
-        return count;
-      }
-
-      renderBoard() {
-        const minefield = document.getElementById('minefield');
-        minefield.innerHTML = '';
-        minefield.style.gridTemplateColumns = `repeat(${this.config.cols}, 32px)`;
-        minefield.style.gridTemplateRows = `repeat(${this.config.rows}, 32px)`;
-
-        for (let i = 0; i < this.config.rows; i++) {
-          for (let j = 0; j < this.config.cols; j++) {
-            const cell = document.createElement('button');
-            cell.className = 'cell';
-            cell.dataset.row = i;
-            cell.dataset.col = j;
-            
-            cell.addEventListener('click', (e) => {
-              e.preventDefault();
-              this.handleCellClick(i, j);
-            });
-
-            minefield.appendChild(cell);
-          }
-        }
-
-        this.updateBoard();
-      }
-
-      updateBoard() {
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(cell => {
-          const row = parseInt(cell.dataset.row);
-          const col = parseInt(cell.dataset.col);
-          
-          cell.className = 'cell';
-          cell.textContent = '';
-
-          if (this.flagged[row][col]) {
-            cell.classList.add('flagged');
-            cell.textContent = '🚩';
-          } else if (this.revealed[row][col]) {
-            cell.classList.add('revealed');
-            if (this.board[row][col] === -1) {
-              cell.classList.add('mine');
-              cell.textContent = '💣';
-            } else if (this.board[row][col] > 0) {
-              cell.textContent = this.board[row][col];
-              cell.classList.add(`number-${this.board[row][col]}`);
-            }
-          }
-        });
-      }
-
-      async handleCellClick(row, col) {
-        // Check if wallet is connected before allowing any gameplay
-        if (!walletConnected) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        if (this.gameState !== 'ready' && this.gameState !== 'playing') return;
-        if (this.revealed[row][col]) return;
-
-        if (this.flagMode) {
-          this.toggleFlag(row, col);
-          return;
-        }
-
-        // First click - place mines
-        if (this.firstClick) {
-          this.placeMines(row, col);
-          this.firstClick = false;
-          this.gameState = 'playing';
-          this.startTimer();
-        }
-
-        if (this.flagged[row][col]) return;
-
-        this.revealCell(row, col);
-        this.playSound(800, 100);
-
-        if (this.board[row][col] === -1) {
-          this.gameOver(false);
-        } else if (this.checkWin()) {
-          this.gameOver(true);
-        }
-
-        this.updateBoard();
-        this.updateDisplay();
-      }
-
-      revealCell(row, col) {
-        if (row < 0 || row >= this.config.rows || col < 0 || col >= this.config.cols) return;
-        if (this.revealed[row][col] || this.flagged[row][col]) return;
-
-        this.revealed[row][col] = true;
-
-        // Auto-reveal adjacent cells if this cell has no adjacent mines
-        if (this.board[row][col] === 0) {
-          for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-              this.revealCell(row + i, col + j);
-            }
-          }
-        }
-      }
-
-      toggleFlag(row, col) {
-        if (this.revealed[row][col]) return;
-
-        this.flagged[row][col] = !this.flagged[row][col];
-        this.playSound(600, 150);
-        this.updateBoard();
-        this.updateDisplay();
-      }
-
-      checkWin() {
-        for (let i = 0; i < this.config.rows; i++) {
-          for (let j = 0; j < this.config.cols; j++) {
-            if (this.board[i][j] !== -1 && !this.revealed[i][j]) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-
-      gameOver(won) {
-        this.gameState = won ? 'won' : 'lost';
-        this.clearTimer();
-
-        // Update player statistics if wallet is connected
-        if (walletConnected && userAddress) {
-          const gameResult = {
-            difficulty: this.currentDifficulty,
-            time: this.timer,
-            win: won
-          };
-          earlyAdopterNFTs.updatePlayerStats(userAddress, gameResult);
-        }
-
-        if (won) {
-          this.playSound(880, 500, 'triangle');
-          document.getElementById('game-message').textContent = '🎉 You won!';
-          document.getElementById('game-message').className = 'game-message win';
-        } else {
-          this.playSound(220, 800, 'sawtooth');
-          document.getElementById('game-message').textContent = '💥 Game over!';
-          document.getElementById('game-message').className = 'game-message lose';
-          
-          // Reveal all mines
-          for (let i = 0; i < this.config.rows; i++) {
-            for (let j = 0; j < this.config.cols; j++) {
-              if (this.board[i][j] === -1) {
-                this.revealed[i][j] = true;
-              }
-              if (this.flagged[i][j] && this.board[i][j] !== -1) {
-                document.querySelector(`[data-row="${i}"][data-col="${j}"]`).classList.add('false-flag');
-              }
-            }
-          }
-        }
-
-        document.getElementById('share-result-btn').style.display = 'inline-flex';
-        this.updateBoard();
-      }
-
-      startTimer() {
-        this.timerInterval = setInterval(() => {
-          this.timer++;
-          document.getElementById('timer').textContent = this.timer;
-        }, 1000);
-      }
-
-      clearTimer() {
-        if (this.timerInterval) {
-          clearInterval(this.timerInterval);
-          this.timerInterval = null;
-        }
-      }
-
-      updateDisplay() {
-        document.getElementById('mines-count').textContent = this.config.mines;
-        
-        const flagCount = this.flagged.flat().filter(Boolean).length;
-        document.getElementById('flags-count').textContent = flagCount;
-        document.getElementById('timer').textContent = this.timer;
-      }
-
-      toggleMode() {
-        this.flagMode = !this.flagMode;
-        const button = document.getElementById('toggle-mode');
-        
-        if (this.flagMode) {
-          button.textContent = '🚩 Flag Mode';
-          button.className = 'btn flag-mode';
-        } else {
-          button.textContent = '👆 Reveal Mode';
-          button.className = 'btn dig-mode';
-        }
-      }
-
-      changeDifficulty(difficulty) {
-        if (this.gameState === 'playing') {
-          if (!confirm('This will start a new game. Continue?')) return;
-        }
-
-        this.currentDifficulty = difficulty;
-        
-        // Update active button
-        document.querySelectorAll('.difficulty-btn').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
-        
-        this.initializeGame();
-      }
-
-      shareToWarpcast() {
-        const gameUrl = window.location.href;
-        const text = encodeURIComponent('🎮 Playing Minesweeper! Can you beat my score?');
-        const warpcastUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(gameUrl)}`;
-        window.open(warpcastUrl, '_blank');
-      }
-
-      copyGameLink() {
-        const gameUrl = window.location.href;
-        navigator.clipboard.writeText(gameUrl).then(() => {
-          this.showShareResult('Game link copied to clipboard! 📋');
-        }).catch(() => {
-          this.showShareResult('Failed to copy link. Try again!', 'error');
-        });
-      }
-
-      shareResult() {
-        const result = this.gameState === 'won' ? 'Won' : 'Lost';
-        const text = `🎮 Minesweeper Result: ${result}!\nDifficulty: ${this.currentDifficulty}\nTime: ${this.timer}s\n\nPlay here: ${window.location.href}`;
-        
-        if (navigator.share) {
-          navigator.share({
-            title: 'Minesweeper Game Result',
-            text: text,
-            url: window.location.href
-          });
-        } else {
-          navigator.clipboard.writeText(text).then(() => {
-            this.showShareResult('Result copied to clipboard! 📋');
-          }).catch(() => {
-            this.showShareResult('Failed to copy result. Try again!', 'error');
-          });
-        }
-      }
-
-      showShareResult(message, type = 'success') {
-        const shareResult = document.getElementById('share-result');
-        shareResult.textContent = message;
-        shareResult.style.display = 'block';
-        
-        // Update styling d on type
-        shareResult.style.background = type === 'error' ? 'rgba(255, 0, 0, 0.1)' : 
-                                      type === 'info' ? 'rgba(0, 100, 255, 0.1)' :
-                                      'rgba(0, 255, 0, 0.1)';
-        shareResult.style.color = type === 'error' ? '#ff6666' : 
-                                 type === 'info' ? '#66aaff' :
-                                 '#00ff88';
-        shareResult.style.borderColor = type === 'error' ? 'rgba(255, 0, 0, 0.3)' : 
-                                       type === 'info' ? 'rgba(0, 100, 255, 0.3)' :
-                                       'rgba(0, 255, 0, 0.3)';
-        
-        setTimeout(() => {
-          shareResult.style.display = 'none';
-        }, 3000);
-      }
-
-      setupEventListeners() {
-        // Connect Wallet button
-        document.getElementById('connect-wallet').addEventListener('click', async () => {
-          await connectWallet();
-        });
-
-        // New Game button - requires wallet connection
-        document.getElementById('new-game').addEventListener('click', async () => {
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
-          }
-          this.initializeGame();
-        });
-
-        // Mode toggle
-        document.getElementById('toggle-mode').addEventListener('click', () => {
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
-          }
-          this.toggleMode();
-        });
-
-        // Difficulty buttons
-        document.querySelectorAll('.difficulty-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            if (!walletConnected) {
-              this.showShareResult('Please connect your wallet first! 🔗', 'error');
-              return;
-            }
-            this.changeDifficulty(e.target.dataset.difficulty);
-          });
-        });
-
-        // Sound toggle
-        document.getElementById('sound-toggle').addEventListener('click', () => {
-          this.soundEnabled = !this.soundEnabled;
-          document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
-        });
-
-        // Share buttons
-        document.getElementById('share-warpcast').addEventListener('click', () => {
-          this.shareToWarpcast();
-        });
-
-        document.getElementById('share-general').addEventListener('click', () => {
-          this.copyGameLink();
-        });
-
-        // Share result button (no minting)
-        document.getElementById('share-result-btn').addEventListener('click', async () => {
-          if (this.gameState === 'ready' || this.gameState === 'playing') {
-            this.showShareResult('Finish the game first! 🎮', 'error');
-            return;
-          }
-
-          // Check if wallet is connected
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
-          }
-
-          // Just share the result without minting
-          this.shareResult();
-        });
-
-        // Early adopter NFT minting button
-        document.getElementById('mint-early-adopter').addEventListener('click', async () => {
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
-          }
-
-          try {
-            const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            
-            if (!eligibility.isEligible) {
-              if (eligibility.hasNFT) {
-                this.showShareResult('You already have an Early Adopter NFT! ⭐', 'info');
-              } else {
-                this.showShareResult('Early adopter period ended! All 2,500 NFTs have been minted. 😢', 'error');
-              }
-              return;
-            }
-
-            const confirmMint = confirm(
-              `Mint Simple NFT?\n\n` +
-              `Player: ${playerName}\n` +
-              `NFT #${eligibility.totalMinted + 1} of 2,500\n` +
-              `Remaining: ${eligibility.remaining}\n\n` +
-              `This will mint a simple NFT with 2500 total supply limit.`
-            );
-
-            if (confirmMint) {
-              const result = await mintSimpleNFT(userAddress);
-              await this.updateEarlyAdopterUI();
-              this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
-            }
-          } catch (err) {
-            console.error('Early adopter minting failed:', err);
-            this.showShareResult(`❌ ${err.message}`, 'error');
-          }
-        });
-
-        // View My NFT button
-        document.getElementById('view-my-nft').addEventListener('click', () => {
-          this.showNFTViewer();
-        });
-
-
-        // Close NFT viewer
-        document.getElementById('close-nft-viewer').addEventListener('click', () => {
-          this.hideNFTViewer();
-        });
-
-        // Close NFT viewer when clicking outside
-        document.getElementById('nft-viewer').addEventListener('click', (e) => {
-          if (e.target.id === 'nft-viewer') {
-            this.hideNFTViewer();
-          }
-        });
-
-        // Share NFT status on Warpcast
-        document.getElementById('share-nft-status').addEventListener('click', () => {
-          this.shareNFTStatusToWarpcast();
-        });
-
-        // Copy player stats
-        document.getElementById('copy-player-stats').addEventListener('click', () => {
-          this.copyPlayerStats();
-        });
-
-        // Download status card image
-        document.getElementById('download-status-card').addEventListener('click', () => {
-          this.downloadStatusCard();
-        });
-      }
-
-      // Enable game after wallet connection
-      enableGame() {
-        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
-          el.classList.remove('game-disabled');
-        });
-        document.getElementById('minefield').classList.remove('game-disabled');
-      }
-
-      // Disable game when wallet not connected
-      disableGame() {
-        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
-          el.classList.add('game-disabled');
-        });
-        document.getElementById('minefield').classList.add('game-disabled');
-      }
-
-      // Get contract data (total minted, remaining supply)
-      async getContractData() {
-        try {
-          if (!window.ethereum) {
-            throw new Error("No ethereum provider");
-          }
-          
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const network = await provider.getNetwork();
-          
-          if (network.chainId !== 84532) { //  chain
-            throw new Error("Please switch to  chain");
-          }
-          
-          const signer = provider.getSigner();
-          
-          // Contract configuration
-          const CONTRACT_ADDRESS = "0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b";
-          const CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"},{"indexed":true,"internalType":"address","name":"player","type":"address"}],"name":"NFTMinted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"playerTokenId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"remainingSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
-          
-          
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-          
-          // Test contract connection
-          try {
-            await contract.name();
-          } catch (err) {
-            console.error('Contract not found or not deployed at this address:', err);
-            throw new Error('Contract not found or not deployed at this address');
-          }
-          
-          const [totalMinted, remainingSupply, maxSupply] = await Promise.all([
-            contract.totalSupply(),
-            contract.remainingSupply(),
-            contract.MAX_SUPPLY()
-          ]);
-          
-          
-          return {
-            totalMinted: Number(totalMinted),
-            remaining: Number(remainingSupply),
-            maxSupply: Number(maxSupply)
-          };
-        } catch (err) {
-          console.error('Failed to fetch contract data:', err);
-          // Return fallback data
-          return {
-            totalMinted: earlyAdopterNFTs.totalMinted,
-            remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted,
-            maxSupply: earlyAdopterNFTs.maxSupply
-          };
-        }
-      }
-
-      // Update early adopter UI
-      async updateEarlyAdopterUI() {
-        const mintButton = document.getElementById('mint-early-adopter');
-        const viewButton = document.getElementById('view-my-nft');
-        const infoDiv = document.getElementById('early-adopter-info');
-        const nftCount = document.getElementById('nft-count');
-        
-        if (walletConnected && userAddress) {
-          try {
-            // Fetch real contract data
-            const contractData = await this.getContractData();
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            
-            // Update the local totalMinted with real contract data
-            earlyAdopterNFTs.totalMinted = contractData.totalMinted;
-            
-            // Show/hide mint button d on eligibility
-            if (eligibility.isEligible) {
-              mintButton.style.display = 'inline-flex';
-              mintButton.textContent = `⭐ Mint NFT (${contractData.remaining} left)`;
-              viewButton.style.display = 'none';
-            } else {
-              mintButton.style.display = 'none';
-              // Show view button if player has NFT or has played games
-              const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-              if (eligibility.hasNFT || playerStats.gamesPlayed > 0) {
-                viewButton.style.display = 'inline-flex';
-              } else {
-                viewButton.style.display = 'none';
-              }
-            }
-            
-            // Show NFT stats with real data
-            infoDiv.style.display = 'block';
-            nftCount.textContent = `${contractData.totalMinted}/${contractData.maxSupply}`;
-            
-            // Update button text if player already has NFT
-            if (eligibility.hasNFT) {
-              mintButton.style.display = 'inline-flex';
-              mintButton.textContent = '⭐ You have an NFT!';
-              mintButton.disabled = true;
-              viewButton.style.display = 'inline-flex';
-            }
-          } catch (err) {
-            console.error('Failed to update early adopter UI:', err);
-            // Fallback to local data
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            infoDiv.style.display = 'block';
-            nftCount.textContent = `${eligibility.totalMinted}/${eligibility.maxSupply}`;
-          }
-        } else {
-          mintButton.style.display = 'none';
-          viewButton.style.display = 'none';
-          infoDiv.style.display = 'none';
-        }
-      }
-
-      // Show NFT viewer with player data
-      showNFTViewer() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Update player info
-        document.getElementById('viewer-player-name').textContent = playerName;
-        document.getElementById('viewer-nft-position').textContent = eligibility.hasNFT ? 
-          `NFT #${earlyAdopterNFTs.playerNFTs.get(userAddress)?.mintNumber || 'Unknown'}` : 
-          'No NFT yet';
-
-        // Update stats
-        document.getElementById('viewer-games-played').textContent = playerStats.gamesPlayed;
-        document.getElementById('viewer-wins').textContent = playerStats.wins;
-        document.getElementById('viewer-losses').textContent = playerStats.losses;
-        document.getElementById('viewer-win-ratio').textContent = `${playerStats.winRatio}%`;
-        document.getElementById('viewer-best-time').textContent = playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A';
-        document.getElementById('viewer-total-time').textContent = `${playerStats.totalPlayTime}s`;
-
-        // Update difficulty stats
-        document.getElementById('viewer-easy-games').textContent = `${playerStats.difficultyStats.easy.games} games`;
-        document.getElementById('viewer-easy-wins').textContent = `${playerStats.difficultyStats.easy.wins} wins`;
-        document.getElementById('viewer-medium-games').textContent = `${playerStats.difficultyStats.medium.games} games`;
-        document.getElementById('viewer-medium-wins').textContent = `${playerStats.difficultyStats.medium.wins} wins`;
-        document.getElementById('viewer-hard-games').textContent = `${playerStats.difficultyStats.hard.games} games`;
-        document.getElementById('viewer-hard-wins').textContent = `${playerStats.difficultyStats.hard.wins} wins`;
-
-        // Show NFT metadata if player has NFT
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          if (nftData) {
-            document.getElementById('viewer-nft-metadata').style.display = 'block';
-            document.getElementById('viewer-metadata-content').textContent = JSON.stringify({
-              mintPosition: nftData.mintNumber,
-              txHash: nftData.txHash,
-              timestamp: new Date(nftData.timestamp).toISOString(),
-              playerStats: playerStats
-            }, null, 2);
-          }
-        } else {
-          document.getElementById('viewer-nft-metadata').style.display = 'none';
-        }
-
-        // Show the viewer
-        document.getElementById('nft-viewer').style.display = 'flex';
-      }
-
-      // Hide NFT viewer
-      hideNFTViewer() {
-        document.getElementById('nft-viewer').style.display = 'none';
-      }
-
-      // Share NFT status to Warpcast
-      async shareNFTStatusToWarpcast() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        try {
-          this.showShareResult('🎨 Creating your status card...', 'info');
-          
-          // Generate the status card image
-          const imageDataUrl = await this.generatePlayerStatusCard();
-          
-          // Create share text with image
-          const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-          const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-          const eligibility = checkEarlyAdopterEligibility(userAddress);
-          
-          let shareText = `🎮 Minesweeper Player Status\n\n`;
-          shareText += `👤 Player: ${playerName}\n`;
-          
-          if (eligibility.hasNFT) {
-            const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-            shareText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
-          } else {
-            shareText += `🎯 Building my stats...\n\n`;
-          }
-          
-          shareText += `📊 Games: ${playerStats.gamesPlayed} | Wins: ${playerStats.wins} | Win Rate: ${playerStats.winRatio}%\n`;
-          shareText += `💣 Play Minesweeper on Farcaster!\n`;
-          shareText += `🔗 ${window.location.href}`;
-          
-          // Open Warpcast with the share text
-          const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
-          window.open(warpcastUrl, '_blank');
-          
-          this.showShareResult('Opening Warpcast to share your status! 🟣', 'success');
-          
-        } catch (error) {
-          console.error('Error generating status card:', error);
-          this.showShareResult('Error creating status card. Please try again.', 'error');
-        }
-      }
-
-      // Generate player status card as image
-      async generatePlayerStatusCard() {
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas size
-        canvas.width = 800;
-        canvas.height = 600;
-        
-        // Background gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, 600);
-        gradient.addColorStop(0, '#667eea');
-        gradient.addColorStop(1, '#764ba2');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 800, 600);
-        
-        // Add overlay for better text readability
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(0, 0, 800, 600);
-        
-        // Title
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('🎮 Minesweeper Player Status', 400, 60);
-        
-        // Player info
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText(`👤 ${playerName}`, 400, 100);
-        
-        // NFT status
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          ctx.fillStyle = '#ffc107';
-          ctx.font = 'bold 20px Arial';
-          ctx.fillText(`⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}`, 400, 130);
-        } else {
-          ctx.fillStyle = '#00ff88';
-          ctx.font = 'bold 20px Arial';
-          ctx.fillText('🎯 Building my stats...', 400, 130);
-        }
-        
-        // Stats section
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('📊 Game Statistics', 50, 180);
-        
-        // Stats grid
-        const stats = [
-          { label: 'Games Played', value: playerStats.gamesPlayed },
-          { label: 'Wins', value: playerStats.wins },
-          { label: 'Losses', value: playerStats.losses },
-          { label: 'Win Rate', value: `${playerStats.winRatio}%` },
-          { label: 'Best Time', value: playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A' },
-          { label: 'Total Play Time', value: `${playerStats.totalPlayTime}s` }
-        ];
-        
-        ctx.font = '16px Arial';
-        let yPos = 220;
-        stats.forEach((stat, index) => {
-          const x = 50 + (index % 2) * 350;
-          const y = yPos + Math.floor(index / 2) * 30;
-          ctx.fillText(`${stat.label}: ${stat.value}`, x, y);
-        });
-        
-        // Difficulty breakdown
-        ctx.font = 'bold 18px Arial';
-        ctx.fillText('🎯 Difficulty Breakdown', 50, 380);
-        
-        ctx.font = '16px Arial';
-        const difficulties = [
-          { name: 'Easy', stats: playerStats.difficultyStats.easy },
-          { name: 'Medium', stats: playerStats.difficultyStats.medium },
-          { name: 'Hard', stats: playerStats.difficultyStats.hard }
-        ];
-        
-        difficulties.forEach((diff, index) => {
-          const x = 50 + index * 200;
-          const y = 420;
-          ctx.fillText(`${diff.name}:`, x, y);
-          ctx.fillText(`${diff.stats.games} games`, x, y + 20);
-          ctx.fillText(`${diff.stats.wins} wins`, x, y + 40);
-        });
-        
-        // Footer
-        ctx.fillStyle = '#ffc107';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('💣 Play Minesweeper on Farcaster!', 400, 550);
-        
-        // Convert canvas to image
-        return canvas.toDataURL('image/png');
-      }
-
-      // Copy player stats to clipboard
-      copyPlayerStats() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Create formatted stats text
-        let statsText = `🎮 Minesweeper Player Status\n\n`;
-        statsText += `👤 Player: ${playerName}\n`;
-        
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          statsText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
-        }
-        
-        statsText += `📊 Game Statistics:\n`;
-        statsText += `• Games Played: ${playerStats.gamesPlayed}\n`;
-        statsText += `• Wins: ${playerStats.wins}\n`;
-        statsText += `• Losses: ${playerStats.losses}\n`;
-        statsText += `• Win Rate: ${playerStats.winRatio}%\n`;
-        statsText += `• Best Time: ${playerStats.bestTime ? playerStats.bestTime + 's' : 'N/A'}\n`;
-        statsText += `• Total Play Time: ${playerStats.totalPlayTime}s\n\n`;
-        
-        statsText += `🎯 Difficulty Breakdown:\n`;
-        statsText += `• Easy: ${playerStats.difficultyStats.easy.games} games (${playerStats.difficultyStats.easy.wins} wins)\n`;
-        statsText += `• Medium: ${playerStats.difficultyStats.medium.games} games (${playerStats.difficultyStats.medium.wins} wins)\n`;
-        statsText += `• Hard: ${playerStats.difficultyStats.hard.games} games (${playerStats.difficultyStats.hard.wins} wins)\n`;
-        
-        // Copy to clipboard
-        navigator.clipboard.writeText(statsText).then(() => {
-          this.showShareResult('Player stats copied to clipboard! 📋', 'success');
-        }).catch(() => {
-          this.showShareResult('Failed to copy stats. Try again!', 'error');
-        });
-      }
-
-      // Download status card as image
-      async downloadStatusCard() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        try {
-          this.showShareResult('🎨 Creating your status card...', 'info');
-          
-          // Generate the status card image
-          const imageDataUrl = await this.generatePlayerStatusCard();
-          
-          // Create download link
-          const link = document.createElement('a');
-          link.download = `minesweeper-status-${userAddress.slice(0,6)}.png`;
-          link.href = imageDataUrl;
-          
-          // Trigger download
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          this.showShareResult('Status card downloaded! 🖼️', 'success');
-          
-        } catch (error) {
-          console.error('Error generating status card:', error);
-          this.showShareResult('Error creating status card. Please try again.', 'error');
-        }
-      }
-    }
-
-    // Initialize game when page loads
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Create game instance
-      window.gameInstance = new Minesweeper();
-      
-      // Initialize wallet UI
-      await updateWalletUI();
-
-      // Wait for Farcaster SDK to be ready
-      if (window.farcasterSdk) {
-        try {
-          // Initialize Farcaster SDK
-          await window.farcasterSdk.actions.ready();
-          console.log("✅ Farcaster Mini App SDK ready");
-
-          // Check if user is already authenticated in Farcaster
-          const context = await window.farcasterSdk.context;
-          if (context?.user) {
-            console.log("Farcaster user context:", context.user);
-            farcasterUser = context.user;
-            
-            // Show user info in game
-            window.gameInstance.showShareResult(`👋 Welcome ${context.user.displayName || context.user.username || 'Farcaster User'}!`, "info");
-          }
-
-        } catch (error) {
-          console.error("Farcaster SDK initialization failed:", error);
-        }
-      } else {
-        console.log("Farcaster SDK not available, running in fallback mode");
-      }
-
-      // Show initial connection prompt
-      setTimeout(() => {
-        if (!walletConnected) {
-          window.gameInstance.showShareResult("Click 'Connect Wallet' to start playing! 🎮", "info");
-          window.gameInstance.disableGame();
-        }
-      }, 1500);
-    });
-  </script>
+    </script>
 </body>
 </html>
