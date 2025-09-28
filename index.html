@@ -979,48 +979,45 @@
     }
 
     // Switch to Base chain
-    async function switchToBaseChain() {
+async function switchToBaseChain() {
       try {
-        const baseChainId = '0x2105'; // 84532 in hex (Base chain)
+        const baseChainId = '0x2105';
         const baseChainConfig = {
           chainId: baseChainId,
           chainName: 'Base',
-          rpcUrls: ['https://scan.org/'],
-          
+          rpcUrls: ['https://mainnet.base.org'],
           nativeCurrency: {
             name: 'Ethereum',
             symbol: 'ETH',
             decimals: 18
           },
-          blockExplorerUrls: ['https://scan.org/']
+          blockExplorerUrls: ['https://basescan.org']
         };
 
         try {
-          // Try to switch to  chain
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: baseChainId }],
           });
-          console.log("✅ Switched to Base chain");
+          console.log("Switched to Base chain");
         } catch (switchError) {
-          // If the chain doesn't exist, add it
           if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
-                params: [ChainConfig],
+                params: [baseChainConfig],
               });
-              console.log("✅ Added and switched to Base chain");
+              console.log("Added and switched to Base chain");
             } catch (addError) {
-              throw new Error("Failed to add base chain: " + addError.message);
+              throw new Error("Failed to add Base chain: " + addError.message);
             }
           } else {
-            throw new Error("Failed to switch to base chain: " + switchError.message);
+            throw new Error("Failed to switch to Base chain: " + switchError.message);
           }
         }
       } catch (err) {
         console.error("Base chain switch failed:", err);
-        throw new Error("Please switch to base chain manually in your wallet");
+        throw new Error("Please switch to Base chain manually in your wallet");
       }
     }
 
