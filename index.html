@@ -1001,7 +1001,7 @@
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: ChainId }],
           });
-          console.log("✅ Switched to  chain");
+          console.log("✅ Switched to Base chain");
         } catch (switchError) {
           // If the chain doesn't exist, add it
           if (switchError.code === 4902) {
@@ -1010,17 +1010,17 @@
                 method: 'wallet_addEthereumChain',
                 params: [ChainConfig],
               });
-              console.log("✅ Added and switched to  chain");
+              console.log("✅ Added and switched to Base chain");
             } catch (addError) {
-              throw new Error("Failed to add  chain: " + addError.message);
+              throw new Error("Failed to add base chain: " + addError.message);
             }
           } else {
-            throw new Error("Failed to switch to  chain: " + switchError.message);
+            throw new Error("Failed to switch to base chain: " + switchError.message);
           }
         }
       } catch (err) {
-        console.error(" chain switch failed:", err);
-        throw new Error("Please switch to  chain manually in your wallet");
+        console.error("Base chain switch failed:", err);
+        throw new Error("Please switch to base chain manually in your wallet");
       }
     }
 
@@ -1107,8 +1107,8 @@
           if (provider) {
             const network = await provider.getNetwork();
             if (network.chainId === 8453) {
-              chainIndicator.textContent = '🔗  Sepolia';
-              chainIndicator.classList.add('');
+              chainIndicator.textContent = '🔗 Base Chain';
+              chainIndicator.classList.add('base');
             } else {
               chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
               chainIndicator.classList.remove('');
