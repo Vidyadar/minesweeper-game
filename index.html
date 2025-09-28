@@ -1034,7 +1034,7 @@
         console.log("Connecting to MetaMask...");
         
         // Switch to  chain first
-        await switchToChain();
+        await switchToBaseChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
