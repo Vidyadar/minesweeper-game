@@ -983,7 +983,7 @@
       try {
         const baseChainId = '0x2105'; // 84532 in hex (Base chain)
         const baseChainConfig = {
-          chainId: ChainId,
+          chainId: baseChainId,
           chainName: 'Base',
           rpcUrls: ['https://scan.org/'],
           
@@ -999,7 +999,7 @@
           // Try to switch to  chain
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: ChainId }],
+            params: [{ chainId: baseChainId }],
           });
           console.log("✅ Switched to Base chain");
         } catch (switchError) {
