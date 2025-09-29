@@ -21,6 +21,10 @@
   <!-- Farcaster Miniapp Meta -->
   <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
 
+  <!-- Farcaster Frame Wallet Metadata for Warpcast -->
+  <meta property="fc:frame" content="vNext" />
+  <meta property="fc:frame:wallets" content='[{"chain":"eip155:1","methods":["personal_sign","eth_sendTransaction"]}]' />
+
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="💣 Minesweeper Game" />
@@ -654,9 +658,6 @@
             margin-top: 2px;
         }
 
-        .chain-indicator. {
-            color: #00ff88;
-        }
 
         /* Disabled state for game elements when wallet not connected */
         .game-disabled {
