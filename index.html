@@ -874,6 +874,10 @@
   </div>
 
   <script>
+    // Measure and report frame load timing for diagnostics
+    const frameLoadStart = typeof performance !== 'undefined' ? performance.now() : null;
+    const FRAME_LOAD_TIMEOUT = 8000; // 8 seconds fallback timer
+
     // Global variables for Farcaster wallet
     let walletConnected = false;
     let provider, signer, userAddress, farcasterUser;
@@ -2246,6 +2250,10 @@
 
     // Initialize game when page loads
     document.addEventListener('DOMContentLoaded', async () => {
+      const domReadyTime = typeof performance !== 'undefined' && frameLoadStart !== null
+        ? (performance.now() - frameLoadStart).toFixed(0)
+        : null;
+
       // Create game instance
       window.gameInstance = new Minesweeper();
       
@@ -2256,8 +2264,15 @@
       if (window.farcasterSdk) {
         try {
           // Initialize Farcaster SDK
-          await window.farcasterSdk.actions.ready();
-          console.log("✅ Farcaster Mini App SDK ready");
+          if (window.farcasterSdk.actions?.ready) {
+            await window.farcasterSdk.actions.ready();
+            console.log("✅ Farcaster Mini App SDK ready");
+          }
+
+          // In a frame we can wait for explicit ready signal too
+          if (window.farcasterSdk.actions?.onReady) {
+            await window.farcasterSdk.actions.onReady();
+          }
 
           // Check if user is already authenticated in Farcaster
           const context = await window.farcasterSdk.context;
@@ -2276,13 +2291,31 @@
         console.log("Farcaster SDK not available, running in fallback mode");
       }
 
-      // Show initial connection prompt
-      setTimeout(() => {
+      if (domReadyTime) {
+        console.log(`Frame DOM ready in ${domReadyTime}ms`);
+      }
+
+      // Show initial connection prompt if the frame hasn't reported ready
+      const readyTimeout = setTimeout(() => {
         if (!walletConnected) {
           window.gameInstance.showShareResult("Click 'Connect Wallet' to start playing! 🎮", "info");
           window.gameInstance.disableGame();
         }
       }, 1500);
+
+      // Listen for Farcaster frame ready signal to clear any placeholder
+      if (typeof window !== 'undefined') {
+        window.addEventListener('message', (event) => {
+          if (event?.data === 'farcaster:miniframe:ready') {
+            clearTimeout(readyTimeout);
+            console.log('Farcaster miniframe reports ready');
+            if (frameLoadStart !== null) {
+              const readySpan = (performance.now() - frameLoadStart).toFixed(0);
+              console.log(`Frame fully ready in ${readySpan}ms`);
+            }
+          }
+        });
+      }
     });
   </script>
 </body>
