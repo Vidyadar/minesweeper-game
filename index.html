@@ -889,6 +889,7 @@
       
       try {
         const hasFarcasterSdk = typeof window.farcasterSdk !== 'undefined' && window.farcasterSdk !== null;
+        const isFarcasterFrame = hasFarcasterSdk;
 
         if (hasFarcasterSdk) {
           console.log("Trying Farcaster connection...");
@@ -896,12 +897,14 @@
           return true;
         }
         
-        if (window.ethereum) {
+        if (!isFarcasterFrame && window.ethereum) {
           console.log("Trying MetaMask connection...");
           return await connectMetaMaskWallet();
         }
         
-        throw new Error("No wallet provider available. Please install MetaMask!");
+        throw new Error(isFarcasterFrame
+          ? "Farcaster wallet is unavailable right now. Please reopen the frame."
+          : "No wallet provider available. Please install MetaMask!");
         
       } catch (err) {
         console.error("All wallet connection attempts failed:", err);
@@ -909,10 +912,14 @@
         connectBtn.textContent = '🔗 Connect Wallet';
         connectBtn.disabled = false;
         
+        const message = err?.code === 'FARCASTER_CONNECTION_FAILED'
+          ? `Farcaster wallet connection failed: ${err.message}`
+          : `Wallet connection failed: ${err.message}`;
+
         if (window.gameInstance) {
-          window.gameInstance.showShareResult(`Connection failed: ${err.message}`, "error");
+          window.gameInstance.showShareResult(message, "error");
         } else {
-          alert(`Wallet connection failed: ${err.message}`);
+          alert(message);
         }
         return false;
       }
@@ -963,6 +970,9 @@
 
         provider = new ethers.providers.Web3Provider(farcasterProvider);
         signer = provider.getSigner();
+        if (signer && typeof signer.connect === 'function') {
+          signer = signer.connect(provider);
+        }
         currentChainId = await farcasterProvider.request({ method: 'eth_chainId' });
 
         if (currentChainId !== '0x2105') {
@@ -1691,8 +1701,11 @@
         // New Game button - requires wallet connection
         document.getElementById('new-game').addEventListener('click', async () => {
           if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
-            return;
+            const didConnect = await connectWallet();
+            if (!didConnect) {
+              this.showShareResult('Wallet connection required to start a new game!', 'error');
+              return;
+            }
           }
           this.initializeGame();
         });
@@ -1710,8 +1723,11 @@
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             if (!walletConnected) {
-              this.showShareResult('Please connect your wallet first! 🔗', 'error');
-              return;
+              const didConnect = await connectWallet();
+              if (!didConnect) {
+                this.showShareResult('Wallet connection required to change difficulty!', 'error');
+                return;
+              }
             }
             this.changeDifficulty(e.target.dataset.difficulty);
           });
@@ -1778,7 +1794,11 @@
             );
 
             if (confirmMint) {
-              const result = await mintSimpleNFT(userAddress);
+              const result = await mintSimpleNFT({
+                playerAddress: userAddress,
+                signer,
+                provider: provider?.provider || provider,
+              });
               await this.updateEarlyAdopterUI();
               this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
             }
