@@ -935,7 +935,7 @@
         farcasterUser = context.user;
         console.log("Farcaster user:", farcasterUser);
 
-        const farcasterProvider = window.farcasterSdk.wallet.getEthereumProvider();
+        const farcasterProvider = await window.farcasterSdk.wallet.getEthereumProvider();
         if (!farcasterProvider || typeof farcasterProvider.request !== 'function') {
           const providerError = new Error("Farcaster Ethereum provider is unavailable");
           providerError.code = 'FARCASTER_PROVIDER_ERROR';
