@@ -1799,14 +1799,61 @@
 
             if (confirmMint) {
               const mintFunction = typeof window !== 'undefined' ? window.mintSimpleNFT : null;
+              const userInFrame = typeof window !== 'undefined' && window !== window.parent;
 
-              if (typeof mintFunction !== 'function') {
-                console.error('mintSimpleNFT unavailable on window at mint time', { mintFunction });
+              const getReadyMintFunction = async () => {
+                if (typeof mintFunction === 'function') {
+                  return mintFunction;
+                }
+
+                if (!userInFrame) {
+                  try {
+                    const module = await import('./mint.js');
+                    if (typeof module?.mintSimpleNFT === 'function') {
+                      return module.mintSimpleNFT;
+                    }
+                  } catch (dynamicImportError) {
+                    console.error('Dynamic import of mint.js failed', { dynamicImportError });
+                  }
+                  return window.mintSimpleNFT;
+                }
+
+                if (window.__mintModuleReady && typeof window.mintSimpleNFT === 'function') {
+                  return window.mintSimpleNFT;
+                }
+
+                return new Promise((resolve, reject) => {
+                  const handleReadyEvent = () => {
+                    clearTimeout(timeoutId);
+                    resolve(window.mintSimpleNFT);
+                  };
+
+                  const timeoutId = setTimeout(() => {
+                    window.removeEventListener('mint-ready', handleReadyEvent);
+                    reject(new Error('Mint module not ready in time'));
+                  }, 2000);
+
+                  window.addEventListener('mint-ready', handleReadyEvent, { once: true });
+                });
+              };
+
+              let resolvedMintFunction;
+
+              try {
+                resolvedMintFunction = await getReadyMintFunction();
+              } catch (waitErr) {
+                console.error('mintSimpleNFT unavailable on window at mint time', { waitErr });
                 this.showShareResult('Minting module is still loading. Please try again in a moment.', 'error');
                 return;
               }
 
-              const result = await mintFunction({
+              if (typeof resolvedMintFunction !== 'function') {
+                console.error('mintSimpleNFT did not resolve to a function', { resolvedMintFunction });
+                this.showShareResult('Minting module is still loading. Please try again in a moment.', 'error');
+                return;
+              }
+
+              const result = await resolvedMintFunction({
                 playerAddress: userAddress,
                 signer,
                 provider: provider?.provider || provider,
