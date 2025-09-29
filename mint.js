@@ -170,4 +170,8 @@ export async function mintSimpleNFT({ playerAddress, signer: externalSigner, pro
 
 if (typeof window !== 'undefined') {
   window.mintSimpleNFT = mintSimpleNFT;
+  window.__mintModuleReady = true;
+  if (typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('mint-ready', { detail: { timestamp: Date.now() } }));
+  }
 }
