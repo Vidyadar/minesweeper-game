@@ -65,10 +65,18 @@ export async function mintSimpleNFT(playerAddress) {
       // Only call Farcaster wallet logic inside Farcaster frame
       try {
         const wallet = await requestFrameWallet();
+        // Check for wallet address and Farcaster user context
+        if (!wallet?.address) {
+          showGameMessage(
+            "Farcaster wallet provider is missing. Please refresh the app or re-login to Farcaster.",
+            "error"
+          );
+          return { success: false, error: "No Farcaster wallet provider" };
+        }
         return { frameWallet: wallet, success: true };
       } catch (error) {
         showGameMessage(
-          "Farcaster wallet connection failed. Please ensure you have a Farcaster user context or try a browser wallet if available.",
+          "Farcaster wallet connection failed. Please ensure you have a Farcaster user context, refresh the app, or re-login to Farcaster.",
           "error"
         );
         return { success: false, error: "Farcaster wallet connection failed" };
