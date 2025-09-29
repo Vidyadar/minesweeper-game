@@ -60,20 +60,23 @@ function getContractConfig() {
 
 export async function mintSimpleNFT(playerAddress) {
   try {
-    const isMiniApp = await isRunningInMiniApp();
-    if (isMiniApp) {
-      // Use Farcaster wallet provider via EIP-1193
-      const provider = sdk.wallet.getEthereumProvider();
-      if (!provider) {
-        showGameMessage(
-          "Farcaster wallet provider is missing. Please refresh the app or re-login to Farcaster.",
-          "error"
-        );
-        return { success: false, error: "No Farcaster wallet provider" };
-      }
-      const ethersProvider = new ethers.BrowserProvider(provider);
-      await ensureBaseNetwork(ethersProvider);
-      const signer = await ethersProvider.getSigner();
+    // Detect Farcaster Frame by checking for wallet context from backend (not window.ethereum)
+    const farcasterWalletContext = window.farcasterWalletContext || null;
+    if (farcasterWalletContext && farcasterWalletContext.address) {
+      // Use wallet context from Farcaster frame POST payload
+      // You may need to fetch this from your backend after a frame button click
+      showGameMessage(`Connected via Farcaster: ${farcasterWalletContext.address.slice(0, 8)}...`, "success");
+      // Use the address in your game logic, e.g., mint NFT server-side
+      return {
+        success: true,
+        address: farcasterWalletContext.address,
+        chain: farcasterWalletContext.chain
+      };
+    } else if (window.ethereum) {
+      // Fallback: Browser wallet (MetaMask, Coinbase, etc.)
+      const provider = await getBrowserProvider();
+      await ensureBaseNetwork(provider);
+      const signer = await provider.getSigner();
 
       const { address, abi } = getContractConfig();
       const contract = new ethers.Contract(address, abi, signer);
@@ -118,62 +121,12 @@ export async function mintSimpleNFT(playerAddress) {
         remaining: Number(remainingSupply) - 1
       };
     } else {
-      // Only use browser wallet logic outside Farcaster frame
-      if (window.ethereum) {
-        const provider = await getBrowserProvider();
-        await ensureBaseNetwork(provider);
-        const signer = await provider.getSigner();
-
-        const { address, abi } = getContractConfig();
-        const contract = new ethers.Contract(address, abi, signer);
-
-        showGameMessage("⏳ Minting Simple NFT…", "info");
-
-        try {
-          await contract.name();
-        } catch (error) {
-          throw new Error("Contract not deployed or unreachable at configured address.");
-        }
-
-        try {
-          const playerTokenId = await contract.playerTokenId(playerAddress);
-          if (playerTokenId > 0n) {
-            throw new Error("You already minted this NFT.");
-          }
-        } catch (error) {
-          if (error.message?.includes("already minted")) {
-            throw error;
-          }
-          console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
-        }
-
-        const remainingSupply = await contract.remainingSupply();
-        if (remainingSupply === 0n) {
-          throw new Error("All NFTs have been minted.");
-        }
-
-        const tx = await contract.mintNFT({ gasLimit: 300000 });
-        await tx.wait();
-
-        const totalSupply = await contract.totalSupply();
-        const mintedTokenId = Number(totalSupply);
-
-        showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
-
-        return {
-          success: true,
-          tokenId: mintedTokenId,
-          txHash: tx.hash,
-          remaining: Number(remainingSupply) - 1
-        };
-      } else {
-        // No wallet available at all
-        showGameMessage(
-          "No browser wallet detected. Please install MetaMask or use Farcaster frame with wallet support.",
-          "error"
-        );
-        return { success: false, error: "No browser wallet detected" };
-      }
+      // No wallet available at all
+      showGameMessage(
+        "No wallet detected. Please open in Warpcast (Farcaster) or use a Web3 browser like MetaMask.",
+        "error"
+      );
+      return { success: false, error: "No wallet detected" };
     }
   } catch (error) {
     console.error("Simple NFT minting failed", error);
