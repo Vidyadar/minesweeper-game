@@ -67,75 +67,69 @@ export async function mintSimpleNFT(playerAddress) {
         const wallet = await requestFrameWallet();
         return { frameWallet: wallet, success: true };
       } catch (error) {
-        // If Farcaster wallet fails, try browser wallet if available
-        if (window.ethereum) {
-          showGameMessage("Farcaster wallet unavailable, trying browser wallet...", "info");
-          // Continue to browser wallet logic below
-        } else {
-          showGameMessage(
-            "No wallet provider available in Farcaster frame. Please open this app in a browser with a wallet provider (e.g., MetaMask) to mint.",
-            "error"
-          );
-          return { success: false, error: "No wallet provider in Farcaster frame" };
-        }
+        showGameMessage(
+          "Farcaster wallet connection failed. Please ensure you have a Farcaster user context or try a browser wallet if available.",
+          "error"
+        );
+        return { success: false, error: "Farcaster wallet connection failed" };
       }
-    }
-
-    // Only use browser wallet logic outside Farcaster frame or as fallback
-    if (!isMiniApp || window.ethereum) {
-      const provider = await getBrowserProvider();
-      await ensureBaseNetwork(provider);
-      const signer = await provider.getSigner();
-
-      const { address, abi } = getContractConfig();
-      const contract = new ethers.Contract(address, abi, signer);
-
-      showGameMessage("⏳ Minting Simple NFT…", "info");
-
-      try {
-        await contract.name();
-      } catch (error) {
-        throw new Error("Contract not deployed or unreachable at configured address.");
-      }
-
-      try {
-        const playerTokenId = await contract.playerTokenId(playerAddress);
-        if (playerTokenId > 0n) {
-          throw new Error("You already minted this NFT.");
-        }
-      } catch (error) {
-        if (error.message?.includes("already minted")) {
-          throw error;
-        }
-        console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
-      }
-
-      const remainingSupply = await contract.remainingSupply();
-      if (remainingSupply === 0n) {
-        throw new Error("All NFTs have been minted.");
-      }
-
-      const tx = await contract.mintNFT({ gasLimit: 300000 });
-      await tx.wait();
-
-      const totalSupply = await contract.totalSupply();
-      const mintedTokenId = Number(totalSupply);
-
-      showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
-
-      return {
-        success: true,
-        tokenId: mintedTokenId,
-        txHash: tx.hash,
-        remaining: Number(remainingSupply) - 1
-      };
     } else {
-      // No wallet available at all
-      showGameMessage(
-        "No wallet provider detected. Please install MetaMask or use Farcaster frame with wallet support.",
-        "error"
-      );
-      return { success: false, error: "No wallet provider detected" };
+      // Only use browser wallet logic outside Farcaster frame
+      if (window.ethereum) {
+        const provider = await getBrowserProvider();
+        await ensureBaseNetwork(provider);
+        const signer = await provider.getSigner();
+
+        const { address, abi } = getContractConfig();
+        const contract = new ethers.Contract(address, abi, signer);
+
+        showGameMessage("⏳ Minting Simple NFT…", "info");
+
+        try {
+          await contract.name();
+        } catch (error) {
+          throw new Error("Contract not deployed or unreachable at configured address.");
+        }
+
+        try {
+          const playerTokenId = await contract.playerTokenId(playerAddress);
+          if (playerTokenId > 0n) {
+            throw new Error("You already minted this NFT.");
+          }
+        } catch (error) {
+          if (error.message?.includes("already minted")) {
+            throw error;
+          }
+          console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
+        }
+
+        const remainingSupply = await contract.remainingSupply();
+        if (remainingSupply === 0n) {
+          throw new Error("All NFTs have been minted.");
+        }
+
+        const tx = await contract.mintNFT({ gasLimit: 300000 });
+        await tx.wait();
+
+        const totalSupply = await contract.totalSupply();
+        const mintedTokenId = Number(totalSupply);
+
+        showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
+
+        return {
+          success: true,
+          tokenId: mintedTokenId,
+          txHash: tx.hash,
+          remaining: Number(remainingSupply) - 1
+        };
+      } else {
+        // No wallet available at all
+        showGameMessage(
+          "No browser wallet detected. Please install MetaMask or use Farcaster frame with wallet support.",
+          "error"
+        );
+        return { success: false, error: "No browser wallet detected" };
+      }
     }
   } catch (error) {
     console.error("Simple NFT minting failed", error);
