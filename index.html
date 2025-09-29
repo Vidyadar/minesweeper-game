@@ -21,10 +21,6 @@
   <!-- Farcaster Miniapp Meta -->
   <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
 
-  <!-- Farcaster Frame Wallet Metadata for Warpcast -->
-  <meta property="fc:frame" content="vNext" />
-  <meta property="fc:frame:wallets" content='[{"chain":"eip155:1","methods":["personal_sign","eth_sendTransaction"]}]' />
-
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="💣 Minesweeper Game" />
@@ -33,13 +29,11 @@
 
   <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
   <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
-  <meta name="author" content="vidhyadar..eth" />
+  <meta name="author" content="vidhyadar.base.eth" />
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
     window.farcasterSdk = sdk;
-    window.mintSimpleNFT = mintSimpleNFT;
   </script>
 
   <style>
@@ -331,271 +325,6 @@
             background: rgba(139, 69, 255, 1);
         }
 
-        .share-btn.early-adopter-btn {
-            background: rgba(255, 193, 7, 0.8);
-            font-weight: bold;
-        }
-
-        .share-btn.early-adopter-btn:hover {
-            background: rgba(255, 193, 7, 1);
-            transform: translateY(-2px);
-        }
-
-        .early-adopter-info {
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: rgba(255, 193, 7, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            text-align: center;
-            font-size: 0.8rem;
-        }
-
-        .nft-stats {
-            color: #ffc107;
-            font-weight: bold;
-        }
-
-        .share-btn.view-nft-btn {
-            background: rgba(0, 150, 255, 0.8);
-            font-weight: bold;
-        }
-
-        .share-btn.view-nft-btn:hover {
-            background: rgba(0, 150, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        /* NFT Viewer Styles */
-        .nft-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .nft-viewer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .nft-viewer-header h3 {
-            margin: 0;
-            color: #fff;
-            font-size: 1.5rem;
-        }
-
-        .close-viewer {
-            background: rgba(255, 0, 0, 0.8);
-            border: none;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .close-viewer:hover {
-            background: rgba(255, 0, 0, 1);
-            transform: scale(1.1);
-        }
-
-        .nft-viewer-content {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-info {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .player-name {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .nft-position {
-            font-size: 1.2rem;
-            color: #ffc107;
-            font-weight: bold;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #ccc;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .difficulty-stats {
-            margin-bottom: 20px;
-        }
-
-        .difficulty-stats h4 {
-            color: #fff;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .difficulty-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .difficulty-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .difficulty-name {
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .difficulty-games, .difficulty-wins {
-            font-size: 0.8rem;
-            color: #ccc;
-        }
-
-        .nft-metadata {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-
-        .nft-metadata h4 {
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .metadata-content {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: #ccc;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .nft-viewer-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .share-nft-btn, .copy-stats-btn, .download-image-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .share-nft-btn {
-            background: rgba(139, 69, 255, 0.8);
-        }
-
-        .share-nft-btn:hover {
-            background: rgba(139, 69, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        .copy-stats-btn {
-            background: rgba(0, 150, 255, 0.8);
-        }
-
-        .copy-stats-btn:hover {
-            background: rgba(0, 150, 255, 1);
-            transform: translateY(-2px);
-        }
-
-        .download-image-btn {
-            background: rgba(255, 193, 7, 0.8);
-        }
-
-        .download-image-btn:hover {
-            background: rgba(255, 193, 7, 1);
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 480px) {
-            .nft-viewer-content {
-                padding: 15px;
-                margin: 10px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .difficulty-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .share-result {
             margin: 10px 0;
             padding: 10px;
@@ -658,6 +387,9 @@
             margin-top: 2px;
         }
 
+        .chain-indicator.base {
+            color: #00ff88;
+        }
 
         /* Disabled state for game elements when wallet not connected */
         .game-disabled {
@@ -782,86 +514,6 @@
         <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
         <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
         <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
-        <button class="share-btn early-adopter-btn" id="mint-early-adopter" style="display: none;">⭐ Mint NFT (2500 Limit)</button>
-        <button class="share-btn view-nft-btn" id="view-my-nft" style="display: none;">👤 View My NFT</button>
-      </div>
-      <div class="early-adopter-info" id="early-adopter-info" style="display: none;">
-        <div class="nft-stats">
-          <span id="nft-count">0/2500</span> Early Adopter NFTs
-        </div>
-      </div>
-      
-      <!-- NFT Status Viewer -->
-      <div class="nft-viewer" id="nft-viewer" style="display: none;">
-        <div class="nft-viewer-header">
-          <h3>🎮 Your Player Status</h3>
-          <button class="close-viewer" id="close-nft-viewer">✕</button>
-        </div>
-        <div class="nft-viewer-content">
-          <div class="player-info">
-            <div class="player-name" id="viewer-player-name">Player Name</div>
-            <div class="nft-position" id="viewer-nft-position">NFT #0</div>
-          </div>
-          
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Games Played</div>
-              <div class="stat-value" id="viewer-games-played">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Wins</div>
-              <div class="stat-value" id="viewer-wins">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Losses</div>
-              <div class="stat-value" id="viewer-losses">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Win Ratio</div>
-              <div class="stat-value" id="viewer-win-ratio">0%</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Best Time</div>
-              <div class="stat-value" id="viewer-best-time">N/A</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Total Play Time</div>
-              <div class="stat-value" id="viewer-total-time">0s</div>
-            </div>
-          </div>
-          
-          <div class="difficulty-stats">
-            <h4>Difficulty Breakdown</h4>
-            <div class="difficulty-grid">
-              <div class="difficulty-card">
-                <div class="difficulty-name">Easy</div>
-                <div class="difficulty-games" id="viewer-easy-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-easy-wins">0 wins</div>
-              </div>
-              <div class="difficulty-card">
-                <div class="difficulty-name">Medium</div>
-                <div class="difficulty-games" id="viewer-medium-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-medium-wins">0 wins</div>
-              </div>
-              <div class="difficulty-card">
-                <div class="difficulty-name">Hard</div>
-                <div class="difficulty-games" id="viewer-hard-games">0 games</div>
-                <div class="difficulty-wins" id="viewer-hard-wins">0 wins</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="nft-metadata" id="viewer-nft-metadata" style="display: none;">
-            <h4>NFT Details</h4>
-            <div class="metadata-content" id="viewer-metadata-content"></div>
-          </div>
-          
-          <div class="nft-viewer-actions">
-            <button class="share-nft-btn" id="share-nft-status">🟣 Share on Warpcast</button>
-            <button class="copy-stats-btn" id="copy-player-stats">📋 Copy Stats</button>
-            <button class="download-image-btn" id="download-status-card">🖼️ Download Image</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -880,37 +532,39 @@
     let provider, signer, userAddress, farcasterUser;
 
     // Connect wallet function with better error handling
-    async function connectWallet(){
+    async function connectWallet() {
       if (walletConnected) return true;
       
+      // Update button state
       const connectBtn = document.getElementById('connect-wallet');
       connectBtn.textContent = '⏳ Connecting...';
       connectBtn.disabled = true;
       
       try {
-        // First try Farcaster if SDK is available
-        if (window.farcasterSdk) {
-          console.log("Trying Farcaster connection...");
-          const success = await connectFarcasterWallet();
+        // First try MetaMask if available (more reliable)
+        if (window.ethereum) {
+          console.log("Trying MetaMask connection first...");
+          const success = await connectMetaMaskWallet();
           if (success) return true;
         }
         
-        // Then try MetaMask as fallback
-        if (window.ethereum) {
-          console.log("Trying MetaMask connection...");
-          return await connectMetaMaskWallet();
+        // Then try Farcaster if SDK is available
+        if (window.farcasterSdk) {
+          console.log("Trying Farcaster connection...");
+          return await connectFarcasterWallet();
         }
         
         throw new Error("No wallet provider available. Please install MetaMask!");
         
       } catch (err) {
-        console.error("All wallet connection attempts failed:", err);
+        console.error("❌ All wallet connection attempts failed:", err);
         
+        // Reset button
         connectBtn.textContent = '🔗 Connect Wallet';
         connectBtn.disabled = false;
         
         if (window.gameInstance) {
-          window.gameInstance.showShareResult(`Connection failed: ${err.message}`, "error");
+          window.gameInstance.showShareResult(`❌ Connection failed: ${err.message}`, "error");
         } else {
           alert(`Wallet connection failed: ${err.message}`);
         }
@@ -921,8 +575,9 @@
     // Farcaster wallet connection
     async function connectFarcasterWallet() {
       try {
-        console.log("Connecting via Farcaster...");
+        console.log("Available Farcaster SDK methods:", Object.keys(window.farcasterSdk));
         
+        // Get user context from Farcaster SDK
         const context = await window.farcasterSdk.context;
         console.log("Farcaster context:", context);
         
@@ -930,87 +585,55 @@
           throw new Error("No Farcaster user context available");
         }
         
+        // Store Farcaster user data
         farcasterUser = context.user;
         console.log("Farcaster user:", farcasterUser);
         
-        // Try Farcaster SDK wallet provider first
-        try {
-          const walletProvider = await window.farcasterSdk.wallet.request({
-            method: 'eth_requestAccounts'
-          });
+        // For Farcaster, we'll use the embedded wallet or MetaMask
+        if (window.ethereum) {
+          // Switch to Base chain if not already on it
+          await switchToBaseChain();
           
-          if (walletProvider) {
-            provider = new ethers.providers.Web3Provider(walletProvider);
-            const accounts = await provider.listAccounts();
-            
-            if (accounts.length === 0) {
-              throw new Error("No accounts available");
-            }
-            
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            // Check if on Base chain
-            const network = await provider.getNetwork();
-            if (network.chainId !== 8453) {
-              await window.farcasterSdk.wallet.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x2105' }]
-              });
-            }
-            
-            console.log("Connected via Farcaster SDK:", userAddress);
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
-            }
-            
-            return true;
-          }
-        } catch (sdkWalletError) {
-          console.log("Farcaster SDK wallet failed:", sdkWalletError);
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
           
-          // Fallback to embedded wallet
-          if (window.ethereum) {
-            console.log("Falling back to embedded wallet...");
-            
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            await switchToBaseChain();
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Connected via embedded wallet! Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
-            }
-            
-            return true;
-          } else {
-            throw new Error("No wallet provider available in Farcaster frame");
+          if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts found");
           }
+          
+          signer = provider.getSigner();
+          userAddress = await signer.getAddress();
+          
+          console.log("✅ Wallet connected via Farcaster context");
+          
+          // Request signature for authentication
+          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+          const signature = await signer.signMessage(message);
+          console.log("✅ Message signed successfully");
+          
+        walletConnected = true;
+        await updateWalletUI();
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
+          window.gameInstance.enableGame();
+        }
+          
+          return true;
+        } else {
+          throw new Error("No ethereum provider available");
         }
         
       } catch (err) {
-        console.error("Farcaster wallet connection failed:", err);
-        throw new Error(`Farcaster connection failed: ${err.message}`);
+        console.error("Farcaster connection failed:", err);
+        throw err;
       }
     }
 
     // Switch to Base chain
-async function switchToBaseChain() {
+    async function switchToBaseChain() {
       try {
-        const baseChainId = '0x2105';
+        const baseChainId = '0x2105'; // 8453 in hex
         const baseChainConfig = {
           chainId: baseChainId,
           chainName: 'Base',
@@ -1024,19 +647,21 @@ async function switchToBaseChain() {
         };
 
         try {
+          // Try to switch to Base chain
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: baseChainId }],
           });
-          console.log("Switched to Base chain");
+          console.log("✅ Switched to Base chain");
         } catch (switchError) {
+          // If the chain doesn't exist, add it
           if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [baseChainConfig],
               });
-              console.log("Added and switched to Base chain");
+              console.log("✅ Added and switched to Base chain");
             } catch (addError) {
               throw new Error("Failed to add Base chain: " + addError.message);
             }
@@ -1049,6 +674,7 @@ async function switchToBaseChain() {
         throw new Error("Please switch to Base chain manually in your wallet");
       }
     }
+
     // MetaMask connection with signature
     async function connectMetaMaskWallet() {
       try {
@@ -1058,10 +684,12 @@ async function switchToBaseChain() {
         
         console.log("Connecting to MetaMask...");
         
+        // Switch to Base chain first
         await switchToBaseChain();
         
         provider = new ethers.providers.Web3Provider(window.ethereum);
         
+        // Request account access
         const accounts = await provider.send("eth_requestAccounts", []);
         if (!accounts || accounts.length === 0) {
           throw new Error("No accounts found in MetaMask");
@@ -1072,19 +700,19 @@ async function switchToBaseChain() {
         
         console.log("MetaMask connected, address:", userAddress);
         
+        // Request signature for authentication
         const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
         
         try {
           const signature = await signer.signMessage(message);
-          console.log("MetaMask message signed successfully");
+          console.log("✅ MetaMask message signed successfully");
           
           walletConnected = true;
           await updateWalletUI();
           
           if (window.gameInstance) {
-            window.gameInstance.showShareResult(`MetaMask connected successfully on Base!`, "success");
+            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
             window.gameInstance.enableGame();
-            await window.gameInstance.updateEarlyAdopterUI();
           }
           
           return true;
@@ -1133,7 +761,7 @@ async function switchToBaseChain() {
               chainIndicator.classList.add('base');
             } else {
               chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
-              chainIndicator.classList.remove('');
+              chainIndicator.classList.remove('base');
             }
           } else {
             chainIndicator.textContent = '❓ Unknown Network';
@@ -1147,11 +775,6 @@ async function switchToBaseChain() {
           el.classList.remove('game-disabled');
         });
         document.getElementById('minefield').classList.remove('game-disabled');
-        
-        // Update early adopter UI
-        if (window.gameInstance) {
-          await window.gameInstance.updateEarlyAdopterUI();
-        }
         
       } else {
         connectBtn.textContent = '🔗 Connect Wallet';
@@ -1168,98 +791,156 @@ async function switchToBaseChain() {
       }
     }
 
-    // Early Adopter NFT minting system with player statistics
-    let earlyAdopterNFTs = {
-      totalMinted: 0,
-      maxSupply: 2500,
-      playerNFTs: new Map(), // Track NFTs per player
-      playerStats: new Map(), // Track detailed player statistics
-      isEarlyAdopter: function() {
-        return this.totalMinted < this.maxSupply;
-      },
-      canPlayerMint: function(playerAddress) {
-        // Allow one NFT per player for early adopters
-        return this.isEarlyAdopter() && !this.playerNFTs.has(playerAddress);
-      },
-      // Initialize or get player stats
-      getPlayerStats: function(playerAddress) {
-        if (!this.playerStats.has(playerAddress)) {
-          this.playerStats.set(playerAddress, {
-            gamesPlayed: 0,
-            wins: 0,
-            losses: 0,
-            winRatio: 0,
-            bestTime: null,
-            totalPlayTime: 0,
-            difficultyStats: {
-              easy: { games: 0, wins: 0 },
-              medium: { games: 0, wins: 0 },
-              hard: { games: 0, wins: 0 }
-            }
-          });
+    // NFT minting function with Farcaster integration
+    async function captureAndMint(result) {
+      try {
+        // Capture game screenshot
+        const canvas = await html2canvas(document.querySelector(".game-container"));
+        const image = canvas.toDataURL("image/png");
+
+        // Create enhanced metadata with Farcaster info
+        const metadata = {
+          name: `Minesweeper - ${result.win ? "Victory" : "Defeat"}`,
+          description: `Difficulty: ${result.difficulty}, Time: ${result.time}s, Result: ${result.win ? "Win" : "Loss"}${result.farcasterUser ? ` by @${result.farcasterUser.username || result.farcasterUser.displayName || 'Anonymous'}` : ''}`,
+          image: image,
+          attributes: [
+            { trait_type: "Difficulty", value: result.difficulty },
+            { trait_type: "Time", value: result.time },
+            { trait_type: "Result", value: result.win ? "Win" : "Lose" },
+            { trait_type: "Player", value: result.farcasterUser?.username || result.farcasterUser?.displayName || "Anonymous" },
+            { trait_type: "Platform", value: "Farcaster" }
+          ]
+        };
+
+        const tokenURI = "data:application/json;base64," + btoa(JSON.stringify(metadata));
+
+        // Check if we're on Base chain first
+        const network = await provider.getNetwork();
+        if (network.chainId !== 8453) {
+          throw new Error("Please switch to Base chain to mint NFTs");
         }
-        return this.playerStats.get(playerAddress);
-      },
-      // Update player stats after game completion
-      updatePlayerStats: function(playerAddress, gameResult) {
-        const stats = this.getPlayerStats(playerAddress);
-        stats.gamesPlayed++;
-        
-        if (gameResult.win) {
-          stats.wins++;
-          if (!stats.bestTime || gameResult.time < stats.bestTime) {
-            stats.bestTime = gameResult.time;
+
+        // TODO: Replace with your deployed contract address from Remix
+        const CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93"; // Your deployed contract address
+        const CONTRACT_ABI = [
+          {
+            "inputs": [
+              {"internalType": "string", "name": "difficulty", "type": "string"},
+              {"internalType": "uint256", "name": "time", "type": "uint256"},
+              {"internalType": "bool", "name": "win", "type": "bool"},
+              {"internalType": "string", "name": "playerName", "type": "string"},
+              {"internalType": "string", "name": "imageHash", "type": "string"}
+            ],
+            "name": "mintGameResult",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ];
+
+        // Check if contract is deployed
+        if (CONTRACT_ADDRESS === "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93") {
+          // Fallback to simple transaction if contract not deployed
+          window.gameInstance.showShareResult("⏳ Creating game result record...", "info");
+          
+          const gameResultHash = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(
+              `${userAddress}-${result.difficulty}-${result.time}-${result.win}-${Date.now()}`
+            )
+          );
+          
+          try {
+            const gasPrice = await provider.getGasPrice();
+            const gasLimit = 100000;
+            
+            const tx = await signer.sendTransaction({
+              to: userAddress,
+              value: 0,
+              gasLimit: gasLimit,
+              gasPrice: gasPrice,
+              data: ethers.utils.toUtf8Bytes(`Minesweeper Result: ${JSON.stringify({
+                hash: gameResultHash,
+                difficulty: result.difficulty,
+                time: result.time,
+                win: result.win,
+                timestamp: Date.now(),
+                player: result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous'
+              })}`)
+            });
+            
+            window.gameInstance.showShareResult("⏳ Recording result on Base chain...", "info");
+            await tx.wait();
+            
+            window.gameInstance.showShareResult("✅ Game result recorded on Base chain! 🎉", "success");
+            console.log("✅ Game result recorded:", {
+              txHash: tx.hash,
+              gameHash: gameResultHash,
+              baseScanUrl: `https://basescan.org/tx/${tx.hash}`
+            });
+            
+          } catch (txError) {
+            console.error("Transaction failed:", txError);
+            window.gameInstance.showShareResult("✅ Game result saved locally! 🎉", "success");
           }
         } else {
-          stats.losses++;
+          // Use deployed NFT contract
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          
+          window.gameInstance.showShareResult("⏳ Minting NFT on Base chain...", "info");
+          
+          const tx = await contract.mintGameResult(
+            result.difficulty,
+            result.time,
+            result.win,
+            result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous',
+            image, // Base64 encoded image
+            {
+              gasLimit: 500000
+            }
+          );
+          
+          window.gameInstance.showShareResult("⏳ Waiting for confirmation...", "info");
+          await tx.wait();
+          
+          window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
+          console.log("✅ NFT Minted:", {
+            txHash: tx.hash,
+            contractAddress: CONTRACT_ADDRESS,
+            baseScanUrl: `https://basescan.org/tx/${tx.hash}`
+          });
         }
         
-        stats.totalPlayTime += gameResult.time;
-        stats.winRatio = stats.gamesPlayed > 0 ? (stats.wins / stats.gamesPlayed * 100).toFixed(1) : 0;
-        
-        // Update difficulty stats
-        if (stats.difficultyStats[gameResult.difficulty]) {
-          stats.difficultyStats[gameResult.difficulty].games++;
-          if (gameResult.win) {
-            stats.difficultyStats[gameResult.difficulty].wins++;
+        // Share on Farcaster if SDK available
+        if (window.farcasterSdk && result.farcasterUser) {
+          try {
+            const shareText = `🎮 Just minted my Minesweeper result as an NFT!\n${result.win ? '🏆 Victory!' : '💣 Game Over'}\nDifficulty: ${result.difficulty}\nTime: ${result.time}s`;
+            
+            // Use Farcaster SDK to share (if available)
+            if (window.farcasterSdk.actions.cast) {
+              await window.farcasterSdk.actions.cast({
+                text: shareText,
+                embeds: [window.location.href]
+              });
+            }
+          } catch (shareError) {
+            console.log("Auto-share failed, but NFT was minted successfully");
           }
         }
         
-        this.playerStats.set(playerAddress, stats);
-        return stats;
+      } catch (err) {
+        console.error("❌ Mint failed:", err);
+        let errorMsg = "❌ NFT minting failed: ";
+        
+        if (err.message.includes("user rejected")) {
+          errorMsg += "Transaction was cancelled";
+        } else if (err.message.includes("insufficient funds")) {
+          errorMsg += "Insufficient funds for gas";
+        } else {
+          errorMsg += err.message || "Unknown error";
+        }
+        
+        window.gameInstance.showShareResult(errorMsg, "error");
       }
-    };
-
-    // Early adopter NFT minting function is now imported from mint.js
-    // async function mintEarlyAdopterNFT(playerAddress, playerName) {
-      // try {
-      //   // Check if player can mint
-      //   if (!earlyAdopterNFTs.canPlayerMint(playerAddress)) {
-      //     if (!earlyAdopterNFTs.isEarlyAdopter()) {
-      //       throw new Error("Early adopter period ended. All 2,500 NFTs have been minted!");
-      //     } else {
-      //       throw new Error("You already have an early adopter NFT!");
-      //     }
-      //   }
-
-      //   // Check if we're on  chain
-      //   const network = await provider.getNetwork();
-      //   if (network.chainId !== 8453) {
-      //     throw new Error("Please switch to  chain to mint NFTs");
-      //   }
-
-      // Function body removed - now using real contract from mint.js
-    
-
-    // Check if player is eligible for early adopter NFT
-    function checkEarlyAdopterEligibility(playerAddress) {
-      return {
-        isEligible: earlyAdopterNFTs.canPlayerMint(playerAddress),
-        hasNFT: earlyAdopterNFTs.playerNFTs.has(playerAddress),
-        totalMinted: earlyAdopterNFTs.totalMinted,
-        maxSupply: earlyAdopterNFTs.maxSupply,
-        remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted
-      };
     }
 
     // Minesweeper Game Class
@@ -1516,16 +1197,6 @@ async function switchToBaseChain() {
         this.gameState = won ? 'won' : 'lost';
         this.clearTimer();
 
-        // Update player statistics if wallet is connected
-        if (walletConnected && userAddress) {
-          const gameResult = {
-            difficulty: this.currentDifficulty,
-            time: this.timer,
-            win: won
-          };
-          earlyAdopterNFTs.updatePlayerStats(userAddress, gameResult);
-        }
-
         if (won) {
           this.playSound(880, 500, 'triangle');
           document.getElementById('game-message').textContent = '🎉 You won!';
@@ -1643,7 +1314,7 @@ async function switchToBaseChain() {
         shareResult.textContent = message;
         shareResult.style.display = 'block';
         
-        // Update styling d on type
+        // Update styling based on type
         shareResult.style.background = type === 'error' ? 'rgba(255, 0, 0, 0.1)' : 
                                       type === 'info' ? 'rgba(0, 100, 255, 0.1)' :
                                       'rgba(0, 255, 0, 0.1)';
@@ -1709,7 +1380,7 @@ async function switchToBaseChain() {
           this.copyGameLink();
         });
 
-        // Share result button (no minting)
+        // Share/Mint result button
         document.getElementById('share-result-btn').addEventListener('click', async () => {
           if (this.gameState === 'ready' || this.gameState === 'playing') {
             this.showShareResult('Finish the game first! 🎮', 'error');
@@ -1722,80 +1393,31 @@ async function switchToBaseChain() {
             return;
           }
 
-          // Just share the result without minting
-          this.shareResult();
-        });
-
-        // Early adopter NFT minting button
-        document.getElementById('mint-early-adopter').addEventListener('click', async () => {
-          if (!walletConnected) {
-            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          // Check if we're on Base chain
+          try {
+            const network = await provider.getNetwork();
+            if (network.chainId !== 8453) {
+              this.showShareResult('Please switch to Base chain to mint NFTs! 🔄', 'error');
+              return;
+            }
+          } catch (err) {
+            this.showShareResult('Unable to check network. Please ensure you\'re on Base chain.', 'error');
             return;
           }
 
-          try {
-            const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            
-            if (!eligibility.isEligible) {
-              if (eligibility.hasNFT) {
-                this.showShareResult('You already have an Early Adopter NFT! ⭐', 'info');
-              } else {
-                this.showShareResult('Early adopter period ended! All 2,500 NFTs have been minted. 😢', 'error');
-              }
-              return;
-            }
-
-            const confirmMint = confirm(
-              `Mint Simple NFT?\n\n` +
-              `Player: ${playerName}\n` +
-              `NFT #${eligibility.totalMinted + 1} of 2,500\n` +
-              `Remaining: ${eligibility.remaining}\n\n` +
-              `This will mint a simple NFT with 2500 total supply limit.`
-            );
-
-            if (confirmMint) {
-              const result = await mintSimpleNFT(userAddress);
-              await this.updateEarlyAdopterUI();
-              this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
-            }
-          } catch (err) {
-            console.error('Early adopter minting failed:', err);
-            this.showShareResult(`❌ ${err.message}`, 'error');
+          const doMint = confirm("Do you want to mint this game result as an NFT on Base chain? (Optional)\n\nClick OK to mint NFT\nClick Cancel to just share result");
+          
+          if (doMint) {
+            const result = {
+              difficulty: this.currentDifficulty,
+              time: this.timer,
+              win: this.gameState === 'won',
+              farcasterUser: farcasterUser // Include Farcaster user data
+            };
+            await captureAndMint(result);
+          } else {
+            this.shareResult();
           }
-        });
-
-        // View My NFT button
-        document.getElementById('view-my-nft').addEventListener('click', () => {
-          this.showNFTViewer();
-        });
-
-
-        // Close NFT viewer
-        document.getElementById('close-nft-viewer').addEventListener('click', () => {
-          this.hideNFTViewer();
-        });
-
-        // Close NFT viewer when clicking outside
-        document.getElementById('nft-viewer').addEventListener('click', (e) => {
-          if (e.target.id === 'nft-viewer') {
-            this.hideNFTViewer();
-          }
-        });
-
-        // Share NFT status on Warpcast
-        document.getElementById('share-nft-status').addEventListener('click', () => {
-          this.shareNFTStatusToWarpcast();
-        });
-
-        // Copy player stats
-        document.getElementById('copy-player-stats').addEventListener('click', () => {
-          this.copyPlayerStats();
-        });
-
-        // Download status card image
-        document.getElementById('download-status-card').addEventListener('click', () => {
-          this.downloadStatusCard();
         });
       }
 
@@ -1813,391 +1435,6 @@ async function switchToBaseChain() {
           el.classList.add('game-disabled');
         });
         document.getElementById('minefield').classList.add('game-disabled');
-      }
-
-      // Get contract data (total minted, remaining supply)
-      async getContractData() {
-        try {
-          if (!window.ethereum) {
-            throw new Error("No ethereum provider");
-          }
-          
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const network = await provider.getNetwork();
-          
-          if (network.chainId !== 84532) { //  chain
-            throw new Error("Please switch to  chain");
-          }
-          
-          const signer = provider.getSigner();
-          
-          // Contract configuration
-          const CONTRACT_ADDRESS = "0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b";
-          const CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"},{"indexed":true,"internalType":"address","name":"player","type":"address"}],"name":"NFTMinted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"playerTokenId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"remainingSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
-          
-          
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-          
-          // Test contract connection
-          try {
-            await contract.name();
-          } catch (err) {
-            console.error('Contract not found or not deployed at this address:', err);
-            throw new Error('Contract not found or not deployed at this address');
-          }
-          
-          const [totalMinted, remainingSupply, maxSupply] = await Promise.all([
-            contract.totalSupply(),
-            contract.remainingSupply(),
-            contract.MAX_SUPPLY()
-          ]);
-          
-          
-          return {
-            totalMinted: Number(totalMinted),
-            remaining: Number(remainingSupply),
-            maxSupply: Number(maxSupply)
-          };
-        } catch (err) {
-          console.error('Failed to fetch contract data:', err);
-          // Return fallback data
-          return {
-            totalMinted: earlyAdopterNFTs.totalMinted,
-            remaining: earlyAdopterNFTs.maxSupply - earlyAdopterNFTs.totalMinted,
-            maxSupply: earlyAdopterNFTs.maxSupply
-          };
-        }
-      }
-
-      // Update early adopter UI
-      async updateEarlyAdopterUI() {
-        const mintButton = document.getElementById('mint-early-adopter');
-        const viewButton = document.getElementById('view-my-nft');
-        const infoDiv = document.getElementById('early-adopter-info');
-        const nftCount = document.getElementById('nft-count');
-        
-        if (walletConnected && userAddress) {
-          try {
-            // Fetch real contract data
-            const contractData = await this.getContractData();
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            
-            // Update the local totalMinted with real contract data
-            earlyAdopterNFTs.totalMinted = contractData.totalMinted;
-            
-            // Show/hide mint button d on eligibility
-            if (eligibility.isEligible) {
-              mintButton.style.display = 'inline-flex';
-              mintButton.textContent = `⭐ Mint NFT (${contractData.remaining} left)`;
-              viewButton.style.display = 'none';
-            } else {
-              mintButton.style.display = 'none';
-              // Show view button if player has NFT or has played games
-              const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-              if (eligibility.hasNFT || playerStats.gamesPlayed > 0) {
-                viewButton.style.display = 'inline-flex';
-              } else {
-                viewButton.style.display = 'none';
-              }
-            }
-            
-            // Show NFT stats with real data
-            infoDiv.style.display = 'block';
-            nftCount.textContent = `${contractData.totalMinted}/${contractData.maxSupply}`;
-            
-            // Update button text if player already has NFT
-            if (eligibility.hasNFT) {
-              mintButton.style.display = 'inline-flex';
-              mintButton.textContent = '⭐ You have an NFT!';
-              mintButton.disabled = true;
-              viewButton.style.display = 'inline-flex';
-            }
-          } catch (err) {
-            console.error('Failed to update early adopter UI:', err);
-            // Fallback to local data
-            const eligibility = checkEarlyAdopterEligibility(userAddress);
-            infoDiv.style.display = 'block';
-            nftCount.textContent = `${eligibility.totalMinted}/${eligibility.maxSupply}`;
-          }
-        } else {
-          mintButton.style.display = 'none';
-          viewButton.style.display = 'none';
-          infoDiv.style.display = 'none';
-        }
-      }
-
-      // Show NFT viewer with player data
-      showNFTViewer() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Update player info
-        document.getElementById('viewer-player-name').textContent = playerName;
-        document.getElementById('viewer-nft-position').textContent = eligibility.hasNFT ? 
-          `NFT #${earlyAdopterNFTs.playerNFTs.get(userAddress)?.mintNumber || 'Unknown'}` : 
-          'No NFT yet';
-
-        // Update stats
-        document.getElementById('viewer-games-played').textContent = playerStats.gamesPlayed;
-        document.getElementById('viewer-wins').textContent = playerStats.wins;
-        document.getElementById('viewer-losses').textContent = playerStats.losses;
-        document.getElementById('viewer-win-ratio').textContent = `${playerStats.winRatio}%`;
-        document.getElementById('viewer-best-time').textContent = playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A';
-        document.getElementById('viewer-total-time').textContent = `${playerStats.totalPlayTime}s`;
-
-        // Update difficulty stats
-        document.getElementById('viewer-easy-games').textContent = `${playerStats.difficultyStats.easy.games} games`;
-        document.getElementById('viewer-easy-wins').textContent = `${playerStats.difficultyStats.easy.wins} wins`;
-        document.getElementById('viewer-medium-games').textContent = `${playerStats.difficultyStats.medium.games} games`;
-        document.getElementById('viewer-medium-wins').textContent = `${playerStats.difficultyStats.medium.wins} wins`;
-        document.getElementById('viewer-hard-games').textContent = `${playerStats.difficultyStats.hard.games} games`;
-        document.getElementById('viewer-hard-wins').textContent = `${playerStats.difficultyStats.hard.wins} wins`;
-
-        // Show NFT metadata if player has NFT
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          if (nftData) {
-            document.getElementById('viewer-nft-metadata').style.display = 'block';
-            document.getElementById('viewer-metadata-content').textContent = JSON.stringify({
-              mintPosition: nftData.mintNumber,
-              txHash: nftData.txHash,
-              timestamp: new Date(nftData.timestamp).toISOString(),
-              playerStats: playerStats
-            }, null, 2);
-          }
-        } else {
-          document.getElementById('viewer-nft-metadata').style.display = 'none';
-        }
-
-        // Show the viewer
-        document.getElementById('nft-viewer').style.display = 'flex';
-      }
-
-      // Hide NFT viewer
-      hideNFTViewer() {
-        document.getElementById('nft-viewer').style.display = 'none';
-      }
-
-      // Share NFT status to Warpcast
-      async shareNFTStatusToWarpcast() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        try {
-          this.showShareResult('🎨 Creating your status card...', 'info');
-          
-          // Generate the status card image
-          const imageDataUrl = await this.generatePlayerStatusCard();
-          
-          // Create share text with image
-          const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-          const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-          const eligibility = checkEarlyAdopterEligibility(userAddress);
-          
-          let shareText = `🎮 Minesweeper Player Status\n\n`;
-          shareText += `👤 Player: ${playerName}\n`;
-          
-          if (eligibility.hasNFT) {
-            const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-            shareText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
-          } else {
-            shareText += `🎯 Building my stats...\n\n`;
-          }
-          
-          shareText += `📊 Games: ${playerStats.gamesPlayed} | Wins: ${playerStats.wins} | Win Rate: ${playerStats.winRatio}%\n`;
-          shareText += `💣 Play Minesweeper on Farcaster!\n`;
-          shareText += `🔗 ${window.location.href}`;
-          
-          // Open Warpcast with the share text
-          const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
-          window.open(warpcastUrl, '_blank');
-          
-          this.showShareResult('Opening Warpcast to share your status! 🟣', 'success');
-          
-        } catch (error) {
-          console.error('Error generating status card:', error);
-          this.showShareResult('Error creating status card. Please try again.', 'error');
-        }
-      }
-
-      // Generate player status card as image
-      async generatePlayerStatusCard() {
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas size
-        canvas.width = 800;
-        canvas.height = 600;
-        
-        // Background gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, 600);
-        gradient.addColorStop(0, '#667eea');
-        gradient.addColorStop(1, '#764ba2');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 800, 600);
-        
-        // Add overlay for better text readability
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(0, 0, 800, 600);
-        
-        // Title
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('🎮 Minesweeper Player Status', 400, 60);
-        
-        // Player info
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText(`👤 ${playerName}`, 400, 100);
-        
-        // NFT status
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          ctx.fillStyle = '#ffc107';
-          ctx.font = 'bold 20px Arial';
-          ctx.fillText(`⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}`, 400, 130);
-        } else {
-          ctx.fillStyle = '#00ff88';
-          ctx.font = 'bold 20px Arial';
-          ctx.fillText('🎯 Building my stats...', 400, 130);
-        }
-        
-        // Stats section
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('📊 Game Statistics', 50, 180);
-        
-        // Stats grid
-        const stats = [
-          { label: 'Games Played', value: playerStats.gamesPlayed },
-          { label: 'Wins', value: playerStats.wins },
-          { label: 'Losses', value: playerStats.losses },
-          { label: 'Win Rate', value: `${playerStats.winRatio}%` },
-          { label: 'Best Time', value: playerStats.bestTime ? `${playerStats.bestTime}s` : 'N/A' },
-          { label: 'Total Play Time', value: `${playerStats.totalPlayTime}s` }
-        ];
-        
-        ctx.font = '16px Arial';
-        let yPos = 220;
-        stats.forEach((stat, index) => {
-          const x = 50 + (index % 2) * 350;
-          const y = yPos + Math.floor(index / 2) * 30;
-          ctx.fillText(`${stat.label}: ${stat.value}`, x, y);
-        });
-        
-        // Difficulty breakdown
-        ctx.font = 'bold 18px Arial';
-        ctx.fillText('🎯 Difficulty Breakdown', 50, 380);
-        
-        ctx.font = '16px Arial';
-        const difficulties = [
-          { name: 'Easy', stats: playerStats.difficultyStats.easy },
-          { name: 'Medium', stats: playerStats.difficultyStats.medium },
-          { name: 'Hard', stats: playerStats.difficultyStats.hard }
-        ];
-        
-        difficulties.forEach((diff, index) => {
-          const x = 50 + index * 200;
-          const y = 420;
-          ctx.fillText(`${diff.name}:`, x, y);
-          ctx.fillText(`${diff.stats.games} games`, x, y + 20);
-          ctx.fillText(`${diff.stats.wins} wins`, x, y + 40);
-        });
-        
-        // Footer
-        ctx.fillStyle = '#ffc107';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('💣 Play Minesweeper on Farcaster!', 400, 550);
-        
-        // Convert canvas to image
-        return canvas.toDataURL('image/png');
-      }
-
-      // Copy player stats to clipboard
-      copyPlayerStats() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        const playerStats = earlyAdopterNFTs.getPlayerStats(userAddress);
-        const playerName = farcasterUser?.displayName || farcasterUser?.username || 'Anonymous';
-        const eligibility = checkEarlyAdopterEligibility(userAddress);
-        
-        // Create formatted stats text
-        let statsText = `🎮 Minesweeper Player Status\n\n`;
-        statsText += `👤 Player: ${playerName}\n`;
-        
-        if (eligibility.hasNFT) {
-          const nftData = earlyAdopterNFTs.playerNFTs.get(userAddress);
-          statsText += `⭐ Early Adopter NFT #${nftData?.mintNumber || 'Unknown'}\n\n`;
-        }
-        
-        statsText += `📊 Game Statistics:\n`;
-        statsText += `• Games Played: ${playerStats.gamesPlayed}\n`;
-        statsText += `• Wins: ${playerStats.wins}\n`;
-        statsText += `• Losses: ${playerStats.losses}\n`;
-        statsText += `• Win Rate: ${playerStats.winRatio}%\n`;
-        statsText += `• Best Time: ${playerStats.bestTime ? playerStats.bestTime + 's' : 'N/A'}\n`;
-        statsText += `• Total Play Time: ${playerStats.totalPlayTime}s\n\n`;
-        
-        statsText += `🎯 Difficulty Breakdown:\n`;
-        statsText += `• Easy: ${playerStats.difficultyStats.easy.games} games (${playerStats.difficultyStats.easy.wins} wins)\n`;
-        statsText += `• Medium: ${playerStats.difficultyStats.medium.games} games (${playerStats.difficultyStats.medium.wins} wins)\n`;
-        statsText += `• Hard: ${playerStats.difficultyStats.hard.games} games (${playerStats.difficultyStats.hard.wins} wins)\n`;
-        
-        // Copy to clipboard
-        navigator.clipboard.writeText(statsText).then(() => {
-          this.showShareResult('Player stats copied to clipboard! 📋', 'success');
-        }).catch(() => {
-          this.showShareResult('Failed to copy stats. Try again!', 'error');
-        });
-      }
-
-      // Download status card as image
-      async downloadStatusCard() {
-        if (!walletConnected || !userAddress) {
-          this.showShareResult('Please connect your wallet first! 🔗', 'error');
-          return;
-        }
-
-        try {
-          this.showShareResult('🎨 Creating your status card...', 'info');
-          
-          // Generate the status card image
-          const imageDataUrl = await this.generatePlayerStatusCard();
-          
-          // Create download link
-          const link = document.createElement('a');
-          link.download = `minesweeper-status-${userAddress.slice(0,6)}.png`;
-          link.href = imageDataUrl;
-          
-          // Trigger download
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          this.showShareResult('Status card downloaded! 🖼️', 'success');
-          
-        } catch (error) {
-          console.error('Error generating status card:', error);
-          this.showShareResult('Error creating status card. Please try again.', 'error');
-        }
       }
     }
 
