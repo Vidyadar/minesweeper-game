@@ -935,70 +935,54 @@
         farcasterUser = context.user;
         console.log("Farcaster user:", farcasterUser);
 
-        // Request accounts from the Farcaster frame
-        const response = await window.farcasterSdk.wallet.request({
+        const farcasterProvider = window.farcasterSdk.wallet.getEthereumProvider();
+        if (!farcasterProvider || typeof farcasterProvider.request !== 'function') {
+          const providerError = new Error("Farcaster Ethereum provider is unavailable");
+          providerError.code = 'FARCASTER_PROVIDER_ERROR';
+          throw providerError;
+        }
+
+        const accounts = await farcasterProvider.request({
           method: 'eth_requestAccounts'
         });
 
-        if (!response || !response.accounts || response.accounts.length === 0) {
+        if (!accounts || accounts.length === 0) {
           const noAccountsError = new Error("No accounts returned by Farcaster wallet");
           noAccountsError.code = 'FARCASTER_ACCOUNT_ERROR';
           throw noAccountsError;
         }
 
-        // Farcaster returns signer data rather than an injected provider
-        const frameAccount = response.accounts[0];
-        if (!frameAccount.address) {
-          throw new Error("Farcaster account is missing an address");
+        const frameAddress = accounts[0];
+        if (!frameAddress) {
+          const addressError = new Error("Farcaster account is missing an address");
+          addressError.code = 'FARCASTER_ACCOUNT_ERROR';
+          throw addressError;
         }
 
-        // Store the address and track current chain
-        userAddress = frameAccount.address;
-        currentChainId = frameAccount.chainId || frameAccount.chain_id || null;
+        userAddress = frameAddress;
 
-        // Create a lightweight provider/signature wrapper for Farcaster frames
-        provider = {
-          async getSigner() {
-            if (!frameAccount.signer) {
-              throw new Error("Farcaster wallet does not expose a signer in this context");
-            }
-            return {
-              getAddress: async () => frameAccount.address,
-              signMessage: async (message) => {
-                return window.farcasterSdk.wallet.request({
-                  method: 'personal_sign',
-                  params: [message, frameAccount.address]
-                });
-              },
-              sendTransaction: async (tx) => {
-                return window.farcasterSdk.wallet.request({
-                  method: 'eth_sendTransaction',
-                  params: [{ from: frameAccount.address, ...tx }]
-                });
-              }
-            };
-          },
-          async getNetwork() {
-            if (!currentChainId) {
-              return { chainId: undefined };
-            }
-            // Normalize hex & decimal IDs to numeric form when possible
-            if (typeof currentChainId === 'string' && currentChainId.startsWith('0x')) {
-              return { chainId: Number(currentChainId) };
-            }
-            return { chainId: Number(currentChainId) };
+        provider = new ethers.providers.Web3Provider(farcasterProvider);
+        signer = provider.getSigner();
+        currentChainId = await farcasterProvider.request({ method: 'eth_chainId' });
+
+        if (currentChainId !== '0x2105') {
+          try {
+            await farcasterProvider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x2105' }]
+            });
+            currentChainId = '0x2105';
+          } catch (switchError) {
+            const switchErr = new Error("Please switch to Base chain in Farcaster wallet");
+            switchErr.code = 'FARCASTER_SWITCH_ERROR';
+            throw switchErr;
           }
-        };
-        signer = await provider.getSigner();
-
-        // Ensure the frame is operating on Base mainnet
-        if (currentChainId !== '0x2105' && Number(currentChainId) !== 8453) {
-          await window.farcasterSdk.wallet.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x2105' }]
-          });
-          currentChainId = 8453;
         }
+
+        const normalizedChainId = typeof currentChainId === 'string' && currentChainId.startsWith('0x')
+          ? parseInt(currentChainId, 16)
+          : Number(currentChainId);
+        currentChainId = normalizedChainId;
 
         console.log("Connected via Farcaster SDK:", userAddress);
 
@@ -1018,7 +1002,7 @@
 
         // When running inside a Farcaster frame we do not fall back automatically
         const fallbackError = new Error(`Farcaster connection failed: ${sdkWalletError.message}`);
-        fallbackError.code = 'FARCASTER_CONNECTION_FAILED';
+        fallbackError.code = sdkWalletError?.code || 'FARCASTER_CONNECTION_FAILED';
         throw fallbackError;
       }
     }
