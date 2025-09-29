@@ -62,19 +62,26 @@ export async function mintSimpleNFT(playerAddress) {
   try {
     const isMiniApp = await isRunningInMiniApp();
     if (isMiniApp) {
-      // Try to request wallet, but if not available, show a friendly message
+      // Try Farcaster wallet first
       try {
         const wallet = await requestFrameWallet();
         return { frameWallet: wallet, success: true };
       } catch (error) {
-        showGameMessage(
-          "Wallet connection is not supported in Farcaster frame. Please open this app in a browser with a wallet provider (e.g., MetaMask) to mint.",
-          "error"
-        );
-        return { success: false, error: "No wallet provider in Farcaster frame" };
+        // If Farcaster wallet fails, try browser wallet
+        if (window.ethereum) {
+          showGameMessage("Farcaster wallet unavailable, trying browser wallet...", "info");
+          // ...fall through to browser wallet logic below...
+        } else {
+          showGameMessage(
+            "No wallet provider available in Farcaster frame. Please open this app in a browser with a wallet provider (e.g., MetaMask) to mint.",
+            "error"
+          );
+          return { success: false, error: "No wallet provider in Farcaster frame" };
+        }
       }
     }
 
+    // Browser wallet logic
     const provider = await getBrowserProvider();
     await ensureBaseNetwork(provider);
     const signer = await provider.getSigner();
