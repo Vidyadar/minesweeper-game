@@ -4,8 +4,8 @@ import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.um
 function showGameMessage(msg) {
   if (window.gameInstance && window.gameInstance.showShareResult) {
     window.gameInstance.showShareResult(msg);
-  } else {
-    alert(msg);
+  } else if (typeof window !== 'undefined' && window.dispatchEvent) {
+    window.dispatchEvent(new CustomEvent('game-message', { detail: { message: msg } }));
   }
 }
 
@@ -166,4 +166,8 @@ export async function mintSimpleNFT({ playerAddress, signer: externalSigner, pro
     showGameMessage(`❌ Minting failed: ${err.message}`);
     throw err;
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.mintSimpleNFT = mintSimpleNFT;
 }
