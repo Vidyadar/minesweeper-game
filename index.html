@@ -1798,11 +1798,20 @@
             );
 
             if (confirmMint) {
-              const result = await mintSimpleNFT({
+              const mintFunction = typeof window !== 'undefined' ? window.mintSimpleNFT : null;
+
+              if (typeof mintFunction !== 'function') {
+                console.error('mintSimpleNFT unavailable on window at mint time', { mintFunction });
+                this.showShareResult('Minting module is still loading. Please try again in a moment.', 'error');
+                return;
+              }
+
+              const result = await mintFunction({
                 playerAddress: userAddress,
                 signer,
                 provider: provider?.provider || provider,
               });
+
               await this.updateEarlyAdopterUI();
               this.showShareResult(`🎉 NFT #${result.tokenId} minted! ${result.remaining} remaining.`, 'success');
             }
@@ -2255,6 +2264,7 @@
         : null;
 
       // Create game instance
+      window.GameInstanceClass = Minesweeper;
       window.gameInstance = new Minesweeper();
       
       // Initialize wallet UI
