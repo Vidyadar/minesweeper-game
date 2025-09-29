@@ -878,11 +878,111 @@
     let walletConnected = false;
     let provider, signer, userAddress, farcasterUser;
     let currentChainId = null;
+    let walletConnecting = false;
+    let spectatorModeEnabled = false;
+
+    const FARCASTER_READY_TIMEOUT_MS = 6000;
+    const FARCASTER_RETRY_INTERVAL_MS = 5000;
+    let farcasterRetryTimer = null;
+    let farcasterRetryInFlight = false;
+    let farcasterRetryNotified = false;
+
+    function showFrameStatus(message, type = 'info') {
+      if (typeof window !== 'undefined' && window.gameInstance && typeof window.gameInstance.showShareResult === 'function') {
+        window.gameInstance.showShareResult(message, type);
+      } else {
+        console.log(`[Frame status:${type}]`, message);
+      }
+    }
+
+    async function waitForFarcasterSdkReady(timeoutMs = FARCASTER_READY_TIMEOUT_MS) {
+      if (!window.farcasterSdk?.actions?.ready) {
+        return false;
+      }
+
+      try {
+        await Promise.race([
+          window.farcasterSdk.actions.ready(),
+          new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('FARCASTER_READY_TIMEOUT')), timeoutMs);
+          })
+        ]);
+        return true;
+      } catch (err) {
+        if (err.message === 'FARCASTER_READY_TIMEOUT') {
+          console.warn(`Timed out waiting for Farcaster SDK after ${timeoutMs}ms`);
+          return false;
+        }
+        throw err;
+      }
+    }
+
+    function startFarcasterReconnectLoop() {
+      if (farcasterRetryTimer) {
+        return;
+      }
+
+      farcasterRetryTimer = setInterval(async () => {
+        if (walletConnected) {
+          clearInterval(farcasterRetryTimer);
+          farcasterRetryTimer = null;
+          farcasterRetryInFlight = false;
+          farcasterRetryNotified = false;
+          return;
+        }
+
+        if (!window.farcasterSdk?.wallet) {
+          console.debug('Waiting for Farcaster SDK to expose wallet before retrying...');
+          return;
+        }
+
+        if (walletConnecting || farcasterRetryInFlight) {
+          return;
+        }
+
+        try {
+          farcasterRetryInFlight = true;
+          walletConnecting = true;
+          if (!farcasterRetryNotified) {
+            showFrameStatus('Re-trying Farcaster wallet connection…', 'info');
+            farcasterRetryNotified = true;
+          }
+          await connectFarcasterWallet();
+          clearInterval(farcasterRetryTimer);
+          farcasterRetryTimer = null;
+          farcasterRetryNotified = false;
+        } catch (retryError) {
+          console.warn('Farcaster retry attempt failed:', retryError.message || retryError);
+        } finally {
+          walletConnecting = false;
+          farcasterRetryInFlight = false;
+        }
+      }, FARCASTER_RETRY_INTERVAL_MS);
+    }
+
+    function enableSpectatorMode() {
+      if (spectatorModeEnabled) {
+        return;
+      }
+      spectatorModeEnabled = true;
+      if (window.gameInstance && typeof window.gameInstance.enableGame === 'function') {
+        window.gameInstance.enableGame();
+      }
+      showFrameStatus("Spectator mode enabled. You can play without connecting your wallet.", "info");
+    }
+
+    function handleFarcasterUnavailable(reason) {
+      console.warn(reason);
+      showFrameStatus("Farcaster wallet is still loading. You can play in spectator mode and retry the connection anytime.", "info");
+      enableSpectatorMode();
+      startFarcasterReconnectLoop();
+    }
 
     // Connect wallet function with better error handling
     async function connectWallet(){
-      if (walletConnected) return true;
+      if (walletConnected || walletConnecting) return walletConnected;
       
+      walletConnecting = true;
       const connectBtn = document.getElementById('connect-wallet');
       connectBtn.textContent = '⏳ Connecting...';
       connectBtn.disabled = true;
@@ -893,6 +993,8 @@
         if (hasFarcasterSdk) {
           console.log("Trying Farcaster connection...");
           await connectFarcasterWallet();
+          connectBtn.textContent = '✅ Connected';
+          connectBtn.disabled = false;
           return true;
         }
         
@@ -915,6 +1017,12 @@
           alert(`Wallet connection failed: ${err.message}`);
         }
         return false;
+      } finally {
+        walletConnecting = false;
+        if (!walletConnected) {
+          connectBtn.textContent = '🔗 Connect Wallet';
+          connectBtn.disabled = false;
+        }
       }
     }
 
@@ -2239,35 +2347,40 @@
       // Initialize wallet UI
       await updateWalletUI();
 
-      // Wait for Farcaster SDK to be ready
+      // Wait for Farcaster SDK to be ready with timeout
       if (window.farcasterSdk) {
-        try {
-          // Initialize Farcaster SDK
-          await window.farcasterSdk.actions.ready();
-          console.log("✅ Farcaster Mini App SDK ready");
+    const sdkReady = await waitForFarcasterSdkReady();
+          if (!sdkReady) {
+            handleFarcasterUnavailable("Timed out waiting for Farcaster SDK readiness");
+          } else {
+      try {
+                    console.log("✅ Farcaster Mini App SDK ready");
 
-          // Check if user is already authenticated in Farcaster
-          const context = await window.farcasterSdk.context;
-          if (context?.user) {
-            console.log("Farcaster user context:", context.user);
-            farcasterUser = context.user;
-            
-            // Show user info in game
-            window.gameInstance.showShareResult(`👋 Welcome ${context.user.displayName || context.user.username || 'Farcaster User'}!`, "info");
+            // Check if user is already authenticated in Farcaster
+            const context = await window.farcasterSdk.context;
+            if (context?.user) {
+              console.log("Farcaster user context:", context.user);
+              farcasterUser = context.user;
+              
+              // Show user info in game
+              window.gameInstance.showShareResult(`👋 Welcome ${context.user.displayName || context.user.username || 'Farcaster User'}!`, "info");
+            }
           }
 
         } catch (error) {
           console.error("Farcaster SDK initialization failed:", error);
+          handleFarcasterUnavailable("Farcaster SDK initialization failed");
         }
       } else {
         console.log("Farcaster SDK not available, running in fallback mode");
+        handleFarcasterUnavailable("Farcaster SDK not available at load time");
       }
 
       // Show initial connection prompt
       setTimeout(() => {
         if (!walletConnected) {
           window.gameInstance.showShareResult("Click 'Connect Wallet' to start playing! 🎮", "info");
-          window.gameInstance.disableGame();
+          enableSpectatorMode();
         }
       }, 1500);
     });
