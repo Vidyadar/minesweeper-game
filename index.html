@@ -888,14 +888,14 @@
       connectBtn.disabled = true;
       
       try {
-        // First try Farcaster if SDK is available
-        if (window.farcasterSdk) {
+        const hasFarcasterSdk = typeof window.farcasterSdk !== 'undefined' && window.farcasterSdk !== null;
+
+        if (hasFarcasterSdk) {
           console.log("Trying Farcaster connection...");
-          const success = await connectFarcasterWallet();
-          if (success) return true;
+          await connectFarcasterWallet();
+          return true;
         }
         
-        // Then try MetaMask as fallback
         if (window.ethereum) {
           console.log("Trying MetaMask connection...");
           return await connectMetaMaskWallet();
@@ -927,7 +927,9 @@
         console.log("Farcaster context:", context);
 
         if (!context || !context.user) {
-          throw new Error("No Farcaster user context available");
+          const farcasterUnavailableError = new Error("No Farcaster user context available");
+          farcasterUnavailableError.code = 'FARCASTER_NOT_AVAILABLE';
+          throw farcasterUnavailableError;
         }
 
         farcasterUser = context.user;
@@ -939,7 +941,9 @@
         });
 
         if (!response || !response.accounts || response.accounts.length === 0) {
-          throw new Error("No accounts returned by Farcaster wallet");
+          const noAccountsError = new Error("No accounts returned by Farcaster wallet");
+          noAccountsError.code = 'FARCASTER_ACCOUNT_ERROR';
+          throw noAccountsError;
         }
 
         // Farcaster returns signer data rather than an injected provider
@@ -1012,32 +1016,10 @@
       } catch (sdkWalletError) {
         console.log("Farcaster SDK wallet failed:", sdkWalletError);
 
-        // Fallback to embedded wallet if available
-        if (window.ethereum) {
-          console.log("Falling back to embedded wallet...");
-
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          signer = provider.getSigner();
-          userAddress = await signer.getAddress();
-          const metamaskNetwork = await provider.getNetwork();
-          currentChainId = metamaskNetwork.chainId;
-
-          await switchToBaseChain(provider);
-
-          walletConnected = true;
-          await updateWalletUI();
-
-          if (window.gameInstance) {
-            window.gameInstance.showShareResult(`Connected via MetaMask! Welcome ${farcasterUser?.displayName || farcasterUser?.username || userAddress.slice(0, 6) + '...' + userAddress.slice(-4)}!`, "success");
-            window.gameInstance.enableGame();
-            await window.gameInstance.updateEarlyAdopterUI();
-          }
-
-          return true;
-        }
-
-        throw new Error(`Farcaster connection failed: ${sdkWalletError.message}`);
+        // When running inside a Farcaster frame we do not fall back automatically
+        const fallbackError = new Error(`Farcaster connection failed: ${sdkWalletError.message}`);
+        fallbackError.code = 'FARCASTER_CONNECTION_FAILED';
+        throw fallbackError;
       }
     }
 
