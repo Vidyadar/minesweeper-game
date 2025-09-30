@@ -13,22 +13,61 @@ function showGameMessage(msg, type = "info") {
 // Check if we're running in a Farcaster environment
 async function isRunningInFarcaster() {
   try {
+    console.log("Checking Farcaster environment...");
+    
+    // Check for Farcaster-specific objects in window
+    const hasFarcasterObjects = !!(
+      window.farcasterSdk || 
+      window.farcaster || 
+      window.frameContext || 
+      window.parent !== window
+    );
+    
+    console.log("Has Farcaster objects:", hasFarcasterObjects);
+    
     // First check if we're in a frame
-    if (typeof sdk.isFrame === 'function') {
-      const isFrame = await sdk.isFrame();
-      if (isFrame) return { isFrame: true, isMiniApp: false };
+    let isFrame = false;
+    try {
+      if (typeof sdk !== 'undefined' && typeof sdk.isFrame === 'function') {
+        isFrame = await sdk.isFrame();
+        console.log("sdk.isFrame() result:", isFrame);
+      } else if (window.frameContext) {
+        isFrame = true;
+        console.log("Detected frameContext in window");
+      } else if (window.parent !== window) {
+        // Likely in an iframe, which could be a frame
+        isFrame = true;
+        console.log("Detected iframe (potential frame)");
+      }
+    } catch (frameError) {
+      console.warn("Error checking frame status:", frameError);
     }
     
     // Then check if we're in a mini-app
-    if (typeof sdk.isMiniApp === 'function') {
-      const isMiniApp = await sdk.isMiniApp();
-      if (isMiniApp) return { isFrame: false, isMiniApp: true };
+    let isMiniApp = false;
+    try {
+      if (typeof sdk !== 'undefined' && typeof sdk.isMiniApp === 'function') {
+        isMiniApp = await sdk.isMiniApp();
+        console.log("sdk.isMiniApp() result:", isMiniApp);
+      } else if (window.farcaster && window.farcaster.isMiniApp) {
+        isMiniApp = true;
+        console.log("Detected farcaster.isMiniApp in window");
+      }
+    } catch (miniAppError) {
+      console.warn("Error checking mini-app status:", miniAppError);
     }
     
-    return { isFrame: false, isMiniApp: false };
+    const result = { 
+      isFrame, 
+      isMiniApp,
+      isFarcaster: isFrame || isMiniApp || hasFarcasterObjects
+    };
+    
+    console.log("Farcaster environment detection result:", result);
+    return result;
   } catch (error) {
     console.warn("Failed to detect Farcaster environment:", error);
-    return { isFrame: false, isMiniApp: false };
+    return { isFrame: false, isMiniApp: false, isFarcaster: false };
   }
 }
 
@@ -36,18 +75,63 @@ async function isRunningInFarcaster() {
 async function requestWallet() {
   try {
     showGameMessage("Requesting wallet connection…", "info");
+    console.log("Starting wallet connection process...");
     
     // Check if we're in a Farcaster environment
-    const { isFrame, isMiniApp } = await isRunningInFarcaster();
+    const { isFrame, isMiniApp, isFarcaster } = await isRunningInFarcaster();
+    console.log("Environment detection:", { isFrame, isMiniApp, isFarcaster });
     
     // Collection of wallet connection methods to try in sequence
     const connectionMethods = [
-      // Method 1: Farcaster SDK wallet request (for frames and mini-apps)
+      // Method 1: Direct Frame API (for Farcaster frames)
       async () => {
-        if (isFrame || isMiniApp) {
+        if (isFrame) {
+          try {
+            console.log("Trying direct Frame API wallet connection...");
+            
+            // Check for window.frameContext which is available in Farcaster frames
+            if (window.frameContext && window.frameContext.walletAddress) {
+              console.log("Found wallet in frameContext:", window.frameContext.walletAddress);
+              return {
+                success: true,
+                address: window.frameContext.walletAddress,
+                chain: 'eip155:8453', // Base network
+                provider: 'farcaster-frame-context'
+              };
+            }
+            
+            // Check for window.farcaster which is available in some Farcaster implementations
+            if (window.farcaster && window.farcaster.walletAddress) {
+              console.log("Found wallet in farcaster object:", window.farcaster.walletAddress);
+              return {
+                success: true,
+                address: window.farcaster.walletAddress,
+                chain: 'eip155:8453', // Base network
+                provider: 'farcaster-object'
+              };
+            }
+          } catch (error) {
+            console.warn("Direct Frame API wallet connection failed:", error);
+          }
+        }
+        return null;
+      },
+      
+      // Method 2: Farcaster SDK wallet request (for frames and mini-apps)
+      async () => {
+        if (isFarcaster) {
           try {
             console.log("Trying Farcaster SDK wallet request...");
+            
+            // Check if SDK is properly loaded
+            if (typeof sdk === 'undefined') {
+              console.warn("SDK is undefined, cannot use sdk.actions.wallet");
+              return null;
+            }
+            
+            // Try the standard SDK wallet request
             if (sdk.actions && sdk.actions.wallet && typeof sdk.actions.wallet.requestWallet === 'function') {
+              console.log("Using sdk.actions.wallet.requestWallet()");
               const wallet = await sdk.actions.wallet.requestWallet();
               if (wallet && wallet.address) {
                 console.log("Farcaster SDK wallet connected:", wallet);
@@ -59,6 +143,22 @@ async function requestWallet() {
                 };
               }
             }
+            
+            // Try alternative SDK paths that might exist in different versions
+            if (sdk.wallet && typeof sdk.wallet.getEthereumProvider === 'function') {
+              console.log("Using sdk.wallet.getEthereumProvider()");
+              const provider = sdk.wallet.getEthereumProvider();
+              const accounts = await provider.request({ method: 'eth_requestAccounts' });
+              if (accounts && accounts.length > 0) {
+                console.log("Ethereum provider from SDK connected:", accounts[0]);
+                return {
+                  success: true,
+                  address: accounts[0],
+                  chain: 'eip155:8453',
+                  provider: 'farcaster-sdk-ethereum'
+                };
+              }
+            }
           } catch (error) {
             console.warn("Farcaster SDK wallet request failed:", error);
           }
@@ -66,12 +166,20 @@ async function requestWallet() {
         return null;
       },
       
-      // Method 2: Farcaster frames wallet context (for frames)
+      // Method 3: Farcaster frames wallet context (for frames)
       async () => {
         if (isFrame) {
           try {
             console.log("Trying Farcaster frames wallet context...");
+            
+            // Check if SDK is properly loaded
+            if (typeof sdk === 'undefined') {
+              console.warn("SDK is undefined, cannot use sdk.frames");
+              return null;
+            }
+            
             if (sdk.frames && typeof sdk.frames.getWalletContext === 'function') {
+              console.log("Using sdk.frames.getWalletContext()");
               const walletContext = await sdk.frames.getWalletContext();
               if (walletContext && walletContext.address) {
                 console.log("Farcaster frames wallet context found:", walletContext);
@@ -90,11 +198,13 @@ async function requestWallet() {
         return null;
       },
       
-      // Method 3: Global wallet context (set by backend)
+      // Method 4: Global wallet context (set by backend)
       async () => {
-        if (window.farcasterWalletContext) {
-          try {
-            console.log("Trying global wallet context...");
+        try {
+          console.log("Trying global wallet context...");
+          
+          // Check for window.farcasterWalletContext (custom implementation)
+          if (window.farcasterWalletContext) {
             const context = window.farcasterWalletContext;
             if (context && context.address) {
               console.log("Global wallet context found:", context);
@@ -105,44 +215,66 @@ async function requestWallet() {
                 provider: 'global-context'
               };
             }
-          } catch (error) {
-            console.warn("Global wallet context access failed:", error);
           }
+          
+          // Check for window.walletContext (alternative implementation)
+          if (window.walletContext) {
+            const context = window.walletContext;
+            if (context && context.address) {
+              console.log("Window wallet context found:", context);
+              return {
+                success: true,
+                address: context.address,
+                chain: context.chain || 'eip155:8453',
+                provider: 'window-context'
+              };
+            }
+          }
+        } catch (error) {
+          console.warn("Global wallet context access failed:", error);
         }
         return null;
       },
       
-      // Method 4: Direct Ethereum provider (works in browsers and some frames)
+      // Method 5: Direct Ethereum provider (works in browsers and some frames)
       async () => {
-        if (window.ethereum) {
-          try {
-            console.log("Trying direct Ethereum provider...");
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const accounts = await provider.send("eth_requestAccounts", []);
-            if (accounts && accounts.length > 0) {
-              const address = accounts[0];
-              console.log("Direct Ethereum provider connected:", address);
-              
-              // Try to get network info but don't fail if it doesn't work
-              let chainId = '8453';
-              try {
-                const network = await provider.getNetwork();
-                chainId = network.chainId.toString();
-              } catch (networkError) {
-                console.warn("Network detection failed:", networkError);
+        try {
+          console.log("Trying direct Ethereum provider...");
+          
+          if (window.ethereum) {
+            console.log("Found window.ethereum provider");
+            try {
+              const provider = new ethers.BrowserProvider(window.ethereum);
+              const accounts = await provider.send("eth_requestAccounts", []);
+              if (accounts && accounts.length > 0) {
+                const address = accounts[0];
+                console.log("Direct Ethereum provider connected:", address);
+                
+                // Try to get network info but don't fail if it doesn't work
+                let chainId = '8453';
+                try {
+                  const network = await provider.getNetwork();
+                  chainId = network.chainId.toString();
+                } catch (networkError) {
+                  console.warn("Network detection failed:", networkError);
+                }
+                
+                return {
+                  success: true,
+                  address: address,
+                  chain: `eip155:${chainId}`,
+                  provider: 'ethereum',
+                  ethersProvider: provider
+                };
               }
-              
-              return {
-                success: true,
-                address: address,
-                chain: `eip155:${chainId}`,
-                provider: 'ethereum',
-                ethersProvider: provider
-              };
+            } catch (error) {
+              console.warn("Direct Ethereum provider connection failed:", error);
             }
-          } catch (error) {
-            console.warn("Direct Ethereum provider connection failed:", error);
+          } else {
+            console.log("No window.ethereum provider found");
           }
+        } catch (error) {
+          console.warn("Ethereum provider check failed:", error);
         }
         return null;
       }
@@ -150,17 +282,23 @@ async function requestWallet() {
     
     // Try each connection method in sequence until one works
     for (const method of connectionMethods) {
-      const result = await method();
-      if (result) {
-        showGameMessage(`Wallet connected: ${result.address.slice(0, 6)}…`, "success");
-        return result;
+      try {
+        const result = await method();
+        if (result) {
+          showGameMessage(`Wallet connected: ${result.address.slice(0, 6)}…`, "success");
+          return result;
+        }
+      } catch (methodError) {
+        console.warn("Connection method failed with error:", methodError);
+        // Continue to next method
       }
     }
     
     // If all methods failed
-    throw new Error("No wallet provider available");
+    console.error("All wallet connection methods failed");
+    throw new Error("No wallet provider available in Farcaster frame. Please try again or use a different wallet.");
   } catch (error) {
-    console.error("All wallet connection methods failed:", error);
+    console.error("Wallet connection process failed:", error);
     showGameMessage("Unable to connect wallet. Please ensure you have an Ethereum wallet available.", "error");
     throw error;
   }
