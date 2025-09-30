@@ -22,12 +22,44 @@ async function isRunningInMiniApp() {
 async function requestFrameWallet() {
   try {
     showGameMessage("Requesting Farcaster wallet…", "info");
-    const wallet = await sdk.actions.wallet.requestWallet();
-    if (!wallet?.address) {
-      throw new Error("Wallet address missing in Farcaster response");
+    
+    // Check if we're in a Farcaster frame
+    const isFrame = await sdk.isFrame();
+    
+    if (isFrame) {
+      // Use the frame-specific wallet request method
+      try {
+        // First try the newer method for frames
+        const wallet = await sdk.actions.wallet.requestWallet();
+        if (!wallet?.address) {
+          throw new Error("Wallet address missing in Farcaster response");
+        }
+        showGameMessage(`Wallet connected: ${wallet.address.slice(0, 6)}…`, "success");
+        return wallet;
+      } catch (frameError) {
+        console.warn("Frame wallet request failed, trying fallback method:", frameError);
+        
+        // Fallback for older Farcaster SDK versions
+        if (sdk.frames && typeof sdk.frames.getWalletContext === 'function') {
+          const walletContext = await sdk.frames.getWalletContext();
+          if (walletContext && walletContext.address) {
+            showGameMessage(`Wallet connected: ${walletContext.address.slice(0, 6)}…`, "success");
+            return walletContext;
+          }
+        }
+        
+        // If we're in a frame but can't get wallet, provide clear error
+        throw new Error("Wallet connection not supported in this Farcaster frame version");
+      }
+    } else {
+      // Standard mini-app wallet request
+      const wallet = await sdk.actions.wallet.requestWallet();
+      if (!wallet?.address) {
+        throw new Error("Wallet address missing in Farcaster response");
+      }
+      showGameMessage(`Wallet connected: ${wallet.address.slice(0, 6)}…`, "success");
+      return wallet;
     }
-    showGameMessage(`Wallet connected: ${wallet.address.slice(0, 6)}…`, "success");
-    return wallet;
   } catch (error) {
     console.error("Farcaster wallet request failed", error);
     showGameMessage("Unable to connect wallet inside Farcaster frame.", "error");
@@ -60,76 +92,92 @@ function getContractConfig() {
 
 export async function mintSimpleNFT(playerAddress) {
   try {
-    const isMiniApp = await isRunningInMiniApp();
-    if (isMiniApp) {
-      // Only call Farcaster wallet logic inside Farcaster frame
+    // First check if we're in a Farcaster environment (frame or mini-app)
+    const isFarcasterEnv = await isRunningInMiniApp();
+    
+    if (isFarcasterEnv) {
       try {
-        const wallet = await requestFrameWallet();
-        return { frameWallet: wallet, success: true };
+        // Try to get wallet via Farcaster SDK
+        const farcasterWallet = await requestFrameWallet();
+        if (farcasterWallet && farcasterWallet.address) {
+          showGameMessage(`Connected via Farcaster: ${farcasterWallet.address.slice(0, 8)}...`, "success");
+          return {
+            success: true,
+            address: farcasterWallet.address,
+            chain: farcasterWallet.chain || 'eip155:1'
+          };
+        }
+      } catch (farcasterError) {
+        console.warn("Farcaster wallet connection failed, trying fallbacks:", farcasterError);
+        
+        // Check for wallet context from backend (for frames)
+        const farcasterWalletContext = window.farcasterWalletContext || null;
+        if (farcasterWalletContext && farcasterWalletContext.address) {
+          showGameMessage(`Connected via Farcaster: ${farcasterWalletContext.address.slice(0, 8)}...`, "success");
+          return {
+            success: true,
+            address: farcasterWalletContext.address,
+            chain: farcasterWalletContext.chain || 'eip155:1'
+          };
+        }
+      }
+    }
+    
+    // Fallback: Browser wallet (MetaMask, Coinbase, etc.)
+    if (window.ethereum) {
+      const provider = await getBrowserProvider();
+      await ensureBaseNetwork(provider);
+      const signer = await provider.getSigner();
+
+      const { address, abi } = getContractConfig();
+      const contract = new ethers.Contract(address, abi, signer);
+
+      showGameMessage("⏳ Minting Simple NFT…", "info");
+
+      try {
+        await contract.name();
       } catch (error) {
-        showGameMessage(
-          "Farcaster wallet connection failed. Please ensure you have a Farcaster user context or try a browser wallet if available.",
-          "error"
-        );
-        return { success: false, error: "Farcaster wallet connection failed" };
+        throw new Error("Contract not deployed or unreachable at configured address.");
       }
+
+      try {
+        const playerTokenId = await contract.playerTokenId(playerAddress);
+        if (playerTokenId > 0n) {
+          throw new Error("You already minted this NFT.");
+        }
+      } catch (error) {
+        if (error.message?.includes("already minted")) {
+          throw error;
+        }
+        console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
+      }
+
+      const remainingSupply = await contract.remainingSupply();
+      if (remainingSupply === 0n) {
+        throw new Error("All NFTs have been minted.");
+      }
+
+      const tx = await contract.mintNFT({ gasLimit: 300000 });
+      await tx.wait();
+
+      const totalSupply = await contract.totalSupply();
+      const mintedTokenId = Number(totalSupply);
+
+      showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
+
+      return {
+        success: true,
+        tokenId: mintedTokenId,
+        txHash: tx.hash,
+        remaining: Number(remainingSupply) - 1
+      };
     } else {
-      // Only use browser wallet logic outside Farcaster frame
-      if (window.ethereum) {
-        const provider = await getBrowserProvider();
-        await ensureBaseNetwork(provider);
-        const signer = await provider.getSigner();
-
-        const { address, abi } = getContractConfig();
-        const contract = new ethers.Contract(address, abi, signer);
-
-        showGameMessage("⏳ Minting Simple NFT…", "info");
-
-        try {
-          await contract.name();
-        } catch (error) {
-          throw new Error("Contract not deployed or unreachable at configured address.");
-        }
-
-        try {
-          const playerTokenId = await contract.playerTokenId(playerAddress);
-          if (playerTokenId > 0n) {
-            throw new Error("You already minted this NFT.");
-          }
-        } catch (error) {
-          if (error.message?.includes("already minted")) {
-            throw error;
-          }
-          console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
-        }
-
-        const remainingSupply = await contract.remainingSupply();
-        if (remainingSupply === 0n) {
-          throw new Error("All NFTs have been minted.");
-        }
-
-        const tx = await contract.mintNFT({ gasLimit: 300000 });
-        await tx.wait();
-
-        const totalSupply = await contract.totalSupply();
-        const mintedTokenId = Number(totalSupply);
-
-        showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
-
-        return {
-          success: true,
-          tokenId: mintedTokenId,
-          txHash: tx.hash,
-          remaining: Number(remainingSupply) - 1
-        };
-      } else {
-        // No wallet available at all
-        showGameMessage(
-          "No browser wallet detected. Please install MetaMask or use Farcaster frame with wallet support.",
-          "error"
-        );
-        return { success: false, error: "No browser wallet detected" };
-      }
+      // No wallet available at all
+      showGameMessage(
+        "No wallet detected. Please open in Warpcast (Farcaster) or use a Web3 browser like MetaMask.",
+        "error"
+      );
+      return { success: false, error: "No wallet detected" };
     }
   } catch (error) {
     console.error("Simple NFT minting failed", error);
