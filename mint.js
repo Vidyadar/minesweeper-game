@@ -78,14 +78,102 @@ async function requestWallet() {
     console.log("Starting wallet connection process...");
     
     // Check if we're in a Farcaster environment
-    const { isFrame, isMiniApp, isFarcaster } = await isRunningInFarcaster();
-    console.log("Environment detection:", { isFrame, isMiniApp, isFarcaster });
+    const { isFrame, isMiniApp, isFarcaster, hasWalletContext, hasFrameMetadata, hasWalletMetadata } = await isRunningInFarcaster();
+    console.log("Environment detection:", { isFrame, isMiniApp, isFarcaster, hasWalletContext, hasFrameMetadata, hasWalletMetadata });
     
     // Collection of wallet connection methods to try in sequence
     const connectionMethods = [
+      // Method 0: Direct MetaMask detection (prioritized for direct browser access)
+      async () => {
+        try {
+          console.log("Checking for MetaMask specifically...");
+          
+          if (window.ethereum && window.ethereum.isMetaMask) {
+            console.log("MetaMask detected, attempting direct connection");
+            try {
+              // Use legacy request method for better compatibility
+              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              if (accounts && accounts.length > 0) {
+                const address = accounts[0];
+                console.log("MetaMask connected directly:", address);
+                
+                // Get chain ID
+                let chainId = '1'; // Default to Ethereum mainnet
+                try {
+                  chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                  chainId = parseInt(chainId, 16).toString();
+                  console.log("Connected to chain ID:", chainId);
+                } catch (chainError) {
+                  console.warn("Chain ID detection failed:", chainError);
+                }
+                
+                // Try to switch to Base if not already on it
+                if (chainId !== '8453') {
+                  try {
+                    console.log("Attempting to switch to Base network (8453)");
+                    await window.ethereum.request({
+                      method: 'wallet_switchEthereumChain',
+                      params: [{ chainId: '0x2105' }], // 0x2105 is hex for 8453
+                    });
+                    chainId = '8453';
+                    console.log("Switched to Base network");
+                  } catch (switchError) {
+                    // This error code indicates the chain has not been added to MetaMask
+                    if (switchError.code === 4902) {
+                      try {
+                        await window.ethereum.request({
+                          method: 'wallet_addEthereumChain',
+                          params: [
+                            {
+                              chainId: '0x2105',
+                              chainName: 'Base',
+                              nativeCurrency: {
+                                name: 'ETH',
+                                symbol: 'ETH',
+                                decimals: 18
+                              },
+                              rpcUrls: ['https://mainnet.base.org'],
+                              blockExplorerUrls: ['https://basescan.org']
+                            }
+                          ],
+                        });
+                        chainId = '8453';
+                        console.log("Added and switched to Base network");
+                      } catch (addError) {
+                        console.warn("Failed to add Base network:", addError);
+                      }
+                    } else {
+                      console.warn("Failed to switch to Base network:", switchError);
+                    }
+                  }
+                }
+                
+                // Create ethers provider for later use
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                
+                return {
+                  success: true,
+                  address: address,
+                  chain: `eip155:${chainId}`,
+                  provider: 'metamask',
+                  ethersProvider: provider
+                };
+              }
+            } catch (error) {
+              console.warn("MetaMask connection failed:", error);
+            }
+          } else {
+            console.log("MetaMask not detected, trying other methods");
+          }
+        } catch (error) {
+          console.warn("MetaMask check failed:", error);
+        }
+        return null;
+      },
+      
       // Method 1: Direct Frame API (for Farcaster frames)
       async () => {
-        if (isFrame) {
+        if (isFrame || hasFrameMetadata) {
           try {
             console.log("Trying direct Frame API wallet connection...");
             
@@ -124,6 +212,11 @@ async function requestWallet() {
             console.log("Trying Farcaster SDK wallet request...");
             
             // Check if SDK is properly loaded
+            if (typeof sdk === 'undefined' && typeof window.farcasterSdk !== 'undefined') {
+              console.log("Using window.farcasterSdk instead of sdk");
+              sdk = window.farcasterSdk;
+            }
+            
             if (typeof sdk === 'undefined') {
               console.warn("SDK is undefined, cannot use sdk.actions.wallet");
               return null;
@@ -168,11 +261,16 @@ async function requestWallet() {
       
       // Method 3: Farcaster frames wallet context (for frames)
       async () => {
-        if (isFrame) {
+        if (isFrame || hasFrameMetadata) {
           try {
             console.log("Trying Farcaster frames wallet context...");
             
             // Check if SDK is properly loaded
+            if (typeof sdk === 'undefined' && typeof window.farcasterSdk !== 'undefined') {
+              console.log("Using window.farcasterSdk instead of sdk");
+              sdk = window.farcasterSdk;
+            }
+            
             if (typeof sdk === 'undefined') {
               console.warn("SDK is undefined, cannot use sdk.frames");
               return null;
@@ -277,6 +375,42 @@ async function requestWallet() {
           console.warn("Ethereum provider check failed:", error);
         }
         return null;
+      },
+      
+      // Method 6: Legacy Web3 provider (for older wallets)
+      async () => {
+        try {
+          console.log("Trying legacy Web3 provider...");
+          
+          // Check for window.web3 (legacy MetaMask and other wallets)
+          if (window.web3 && window.web3.currentProvider) {
+            console.log("Found window.web3 provider");
+            try {
+              // Create ethers provider from legacy web3 provider
+              const provider = new ethers.BrowserProvider(window.web3.currentProvider);
+              const accounts = await provider.send("eth_requestAccounts", []);
+              if (accounts && accounts.length > 0) {
+                const address = accounts[0];
+                console.log("Legacy Web3 provider connected:", address);
+                
+                return {
+                  success: true,
+                  address: address,
+                  chain: 'eip155:1', // Assume Ethereum mainnet
+                  provider: 'legacy-web3',
+                  ethersProvider: provider
+                };
+              }
+            } catch (error) {
+              console.warn("Legacy Web3 provider connection failed:", error);
+            }
+          } else {
+            console.log("No window.web3 provider found");
+          }
+        } catch (error) {
+          console.warn("Legacy Web3 provider check failed:", error);
+        }
+        return null;
       }
     ];
     
@@ -285,7 +419,7 @@ async function requestWallet() {
       try {
         const result = await method();
         if (result) {
-          showGameMessage(`Wallet connected: ${result.address.slice(0, 6)}…`, "success");
+          showGameMessage(`Wallet connected: ${result.address.slice(0, 6)}…${result.address.slice(-4)}`, "success");
           return result;
         }
       } catch (methodError) {
@@ -296,10 +430,18 @@ async function requestWallet() {
     
     // If all methods failed
     console.error("All wallet connection methods failed");
-    throw new Error("No wallet provider available in Farcaster frame. Please try again or use a different wallet.");
+    
+    // Check if MetaMask is installed but not connected
+    if (window.ethereum && window.ethereum.isMetaMask) {
+      throw new Error("MetaMask is installed but connection failed. Please unlock your wallet and try again.");
+    } else if (isFrame || hasFrameMetadata) {
+      throw new Error("No wallet provider available in Farcaster frame. Please try again or use a different wallet.");
+    } else {
+      throw new Error("No wallet detected. Please install MetaMask or another Ethereum wallet.");
+    }
   } catch (error) {
     console.error("Wallet connection process failed:", error);
-    showGameMessage("Unable to connect wallet. Please ensure you have an Ethereum wallet available.", "error");
+    showGameMessage("Unable to connect wallet. " + error.message, "error");
     throw error;
   }
 }
