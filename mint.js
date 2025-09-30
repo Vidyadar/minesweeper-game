@@ -25,6 +25,21 @@ async function isRunningInFarcaster() {
     
     console.log("Has Farcaster objects:", hasFarcasterObjects);
     
+    // Check for frame metadata in the document
+    let hasFrameMetadata = false;
+    let hasWalletMetadata = false;
+    try {
+      const frameMetaTag = document.querySelector('meta[property="fc:frame"]');
+      hasFrameMetadata = !!frameMetaTag;
+      
+      const walletMetaTag = document.querySelector('meta[property="fc:frame:wallet"]');
+      hasWalletMetadata = !!walletMetaTag && walletMetaTag.getAttribute('content') === 'true';
+      
+      console.log("Frame metadata detection:", { hasFrameMetadata, hasWalletMetadata });
+    } catch (metaError) {
+      console.warn("Error checking frame metadata:", metaError);
+    }
+    
     // First check if we're in a frame
     let isFrame = false;
     try {
@@ -38,9 +53,27 @@ async function isRunningInFarcaster() {
         // Likely in an iframe, which could be a frame
         isFrame = true;
         console.log("Detected iframe (potential frame)");
+      } else if (hasFrameMetadata) {
+        // If we have frame metadata, we're likely in a frame
+        isFrame = true;
+        console.log("Detected frame metadata in document");
       }
     } catch (frameError) {
       console.warn("Error checking frame status:", frameError);
+    }
+    
+    // Check for wallet context
+    let hasWalletContext = false;
+    try {
+      if (window.frameContext && window.frameContext.walletAddress) {
+        hasWalletContext = true;
+        console.log("Found wallet in frameContext:", window.frameContext.walletAddress);
+      } else if (window.farcaster && window.farcaster.walletAddress) {
+        hasWalletContext = true;
+        console.log("Found wallet in farcaster object:", window.farcaster.walletAddress);
+      }
+    } catch (walletError) {
+      console.warn("Error checking wallet context:", walletError);
     }
     
     // Then check if we're in a mini-app
@@ -60,14 +93,24 @@ async function isRunningInFarcaster() {
     const result = { 
       isFrame, 
       isMiniApp,
-      isFarcaster: isFrame || isMiniApp || hasFarcasterObjects
+      isFarcaster: isFrame || isMiniApp || hasFarcasterObjects,
+      hasWalletContext,
+      hasFrameMetadata,
+      hasWalletMetadata
     };
     
     console.log("Farcaster environment detection result:", result);
     return result;
   } catch (error) {
     console.warn("Failed to detect Farcaster environment:", error);
-    return { isFrame: false, isMiniApp: false, isFarcaster: false };
+    return { 
+      isFrame: false, 
+      isMiniApp: false, 
+      isFarcaster: false,
+      hasWalletContext: false,
+      hasFrameMetadata: false,
+      hasWalletMetadata: false
+    };
   }
 }
 
