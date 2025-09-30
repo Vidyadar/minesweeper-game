@@ -25,11 +25,13 @@
   <meta property="fc:frame" content="vNext" />
   <meta property="fc:frame:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
   <meta property="fc:frame:button:1" content="Connect Wallet" />
-  <meta property="fc:frame:button:1:action" content="post" />
+  <meta property="fc:frame:button:1:action" content="post_redirect" />
   <meta property="fc:frame:post_url" content="https://minesweeper-game-pearl.vercel.app/" />
-  <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["eth_requestAccounts","personal_sign","eth_sendTransaction"]}]' />
+  <!-- Wallet configuration -->
+  <meta property="fc:frame:wallet" content="true" />
   <meta property="fc:frame:wallet:network" content="8453" />
   <meta property="fc:frame:wallet:methods" content='["eth_requestAccounts","personal_sign","eth_sendTransaction"]' />
+  <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["eth_requestAccounts","personal_sign","eth_sendTransaction"]}]' />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -44,9 +46,39 @@
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
     import { mintSimpleNFT, captureAndMint } from './mint.js'
+    
+    // Make SDK globally available
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
     window.captureAndMint = captureAndMint;
+    
+    // Expose wallet context if available in frame
+    window.addEventListener('load', () => {
+      console.log("Window loaded, checking for wallet context...");
+      
+      // Check if we're in a frame
+      const isInIframe = window !== window.parent;
+      console.log("Is in iframe:", isInIframe);
+      
+      // Try to access frame context
+      try {
+        if (window.frameContext && window.frameContext.walletAddress) {
+          console.log("Found wallet in frameContext:", window.frameContext.walletAddress);
+          window.walletContext = {
+            address: window.frameContext.walletAddress,
+            chain: 'eip155:8453'
+          };
+        } else if (window.farcaster && window.farcaster.walletAddress) {
+          console.log("Found wallet in farcaster object:", window.farcaster.walletAddress);
+          window.walletContext = {
+            address: window.farcaster.walletAddress,
+            chain: 'eip155:8453'
+          };
+        }
+      } catch (error) {
+        console.warn("Error accessing frame context:", error);
+      }
+    });
   </script>
 
   <style>
