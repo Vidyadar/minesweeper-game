@@ -29,6 +29,7 @@
   <meta property="fc:frame:post_url" content="https://minesweeper-game-pearl.vercel.app/" />
   <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["eth_requestAccounts","personal_sign","eth_sendTransaction"]}]' />
   <meta property="fc:frame:wallet:network" content="8453" />
+  <meta property="fc:frame:wallet:methods" content='["eth_requestAccounts","personal_sign","eth_sendTransaction"]' />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -42,9 +43,10 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    import { mintSimpleNFT } from './mint.js'
+    import { mintSimpleNFT, captureAndMint } from './mint.js'
     window.farcasterSdk = sdk;
     window.mintSimpleNFT = mintSimpleNFT;
+    window.captureAndMint = captureAndMint;
   </script>
 
   <style>
