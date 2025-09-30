@@ -27,7 +27,8 @@
   <meta property="fc:frame:button:1" content="Connect Wallet" />
   <meta property="fc:frame:button:1:action" content="post" />
   <meta property="fc:frame:post_url" content="https://minesweeper-game-pearl.vercel.app/" />
-  <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["personal_sign","eth_sendTransaction"]}]' />
+  <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["eth_requestAccounts","personal_sign","eth_sendTransaction"]}]' />
+  <meta property="fc:frame:wallet:network" content="8453" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
