@@ -404,6 +404,26 @@
             background: rgba(0, 150, 255, 1);
             transform: translateY(-2px);
         }
+        
+        /* MetaMask Connect Button */
+        .metamask-btn {
+            background: rgba(246, 133, 27, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            padding: 10px 15px;
+        }
+        
+        .metamask-btn:hover {
+            background: rgba(246, 133, 27, 1);
+            transform: translateY(-2px);
+        }
+        
+        .metamask-btn img {
+            width: 20px;
+            height: 20px;
+        }
 
         /* NFT Viewer Styles */
         .nft-viewer {
@@ -802,7 +822,13 @@
 
     <!-- Wallet Connection Section -->
     <div class="wallet-section" id="wallet-section">
-      <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
+        <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
+        <button class="btn metamask-btn" id="connect-metamask">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" />
+          Connect MetaMask
+        </button>
+      </div>
       <div class="wallet-status" id="wallet-status" style="display: none;">
         <div>
           <span>👤 Connected: </span>
