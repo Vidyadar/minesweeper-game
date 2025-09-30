@@ -25,11 +25,12 @@
   <meta property="fc:frame" content="vNext" />
   <meta property="fc:frame:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
   <meta property="fc:frame:button:1" content="Connect Wallet" />
-  <meta property="fc:frame:button:1:action" content="post_redirect" />
+  <meta property="fc:frame:button:1:action" content="tx" />
   <meta property="fc:frame:post_url" content="https://minesweeper-game-pearl.vercel.app/" />
   <!-- Wallet configuration -->
   <meta property="fc:frame:wallet" content="true" />
   <meta property="fc:frame:wallet:network" content="8453" />
+  <meta property="fc:frame:wallet:address" content="required" />
   <meta property="fc:frame:wallet:methods" content='["eth_requestAccounts","personal_sign","eth_sendTransaction"]' />
   <meta property="fc:frame:wallets" content='[{"chain":"eip155:8453","methods":["eth_requestAccounts","personal_sign","eth_sendTransaction"]}]' />
 
@@ -60,8 +61,14 @@
       const isInIframe = window !== window.parent;
       console.log("Is in iframe:", isInIframe);
       
+      // Check for frame metadata
+      const hasFrameMetadata = !!document.querySelector('meta[property="fc:frame"]');
+      const hasWalletMetadata = !!document.querySelector('meta[property="fc:frame:wallet"]');
+      console.log("Frame metadata:", { hasFrameMetadata, hasWalletMetadata });
+      
       // Try to access frame context
       try {
+        // Check multiple possible wallet context locations
         if (window.frameContext && window.frameContext.walletAddress) {
           console.log("Found wallet in frameContext:", window.frameContext.walletAddress);
           window.walletContext = {
@@ -74,6 +81,26 @@
             address: window.farcaster.walletAddress,
             chain: 'eip155:8453'
           };
+        } else if (window.parent && window.parent.walletAddress) {
+          console.log("Found wallet in parent window:", window.parent.walletAddress);
+          window.walletContext = {
+            address: window.parent.walletAddress,
+            chain: 'eip155:8453'
+          };
+        }
+        
+        // If we found a wallet context, try to auto-connect
+        if (window.walletContext && window.walletContext.address) {
+          console.log("Auto-connecting with wallet context:", window.walletContext);
+          
+          // Set a timeout to allow the game to initialize first
+          setTimeout(() => {
+            if (typeof connectWallet === 'function') {
+              connectWallet().catch(err => {
+                console.warn("Auto-connect failed:", err);
+              });
+            }
+          }, 1000);
         }
       } catch (error) {
         console.warn("Error accessing frame context:", error);
@@ -988,82 +1015,138 @@
       try {
         console.log("Connecting via Farcaster...");
         
-        const context = await window.farcasterSdk.context;
-        console.log("Farcaster context:", context);
-        
-        if (!context || !context.user) {
-          throw new Error("No Farcaster user context available");
+        // First check if we have a wallet address in the frame context
+        if (window.frameContext && window.frameContext.walletAddress) {
+          console.log("Found wallet in frameContext:", window.frameContext.walletAddress);
+          userAddress = window.frameContext.walletAddress;
+          
+          // Set up a minimal provider for Base chain
+          provider = new ethers.providers.JsonRpcProvider("https://mainnet.base.org");
+          
+          walletConnected = true;
+          await updateWalletUI();
+          
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult(`Connected via Farcaster frame!`, "success");
+            window.gameInstance.enableGame();
+            await window.gameInstance.updateEarlyAdopterUI();
+          }
+          
+          return true;
         }
         
-        farcasterUser = context.user;
-        console.log("Farcaster user:", farcasterUser);
-        
-        // Try Farcaster SDK wallet provider first
+        // Try to get Farcaster context
         try {
-          const walletProvider = await window.farcasterSdk.wallet.request({
-            method: 'eth_requestAccounts'
-          });
+          const context = await window.farcasterSdk.context;
+          console.log("Farcaster context:", context);
           
-          if (walletProvider) {
-            provider = new ethers.providers.Web3Provider(walletProvider);
-            const accounts = await provider.listAccounts();
+          if (context && context.user) {
+            farcasterUser = context.user;
+            console.log("Farcaster user:", farcasterUser);
+      }
+        } catch (contextError) {
+          console.warn("Error getting Farcaster context:", contextError);
+        }
+        
+        // Try Farcaster SDK wallet provider
+        try {
+          // Check if we have the wallet method available
+          if (window.farcasterSdk && window.farcasterSdk.wallet) {
+            console.log("Using Farcaster SDK wallet...");
             
-            if (accounts.length === 0) {
-              throw new Error("No accounts available");
+                const walletProvider = await window.farcasterSdk.wallet.request({
+              method: 'eth_requestAccounts'
+            });
+            
+            if (walletProvider) {
+              provider = new ethers.providers.Web3Provider(walletProvider);
+              const accounts = await provider.listAccounts();
+              
+              if (accounts.length === 0) {
+                throw new Error("No accounts available");
+              }
+              
+              signer = provider.getSigner();
+              userAddress = await signer.getAddress();
+              
+              // Check if on Base chain
+              const network = await provider.getNetwork();
+              if (network.chainId !== 8453) {
+                await window.farcasterSdk.wallet.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{ chainId: '0x2105' }]
+                });
+              }
+              
+              console.log("Connected via Farcaster SDK:", userAddress);
+              
+              walletConnected = true;
+              await updateWalletUI();
+              
+              if (window.gameInstance) {
+                const welcomeMsg = farcasterUser ? 
+                  `Welcome ${farcasterUser.displayName || farcasterUser.username}!` : 
+                  "Connected via Farcaster!";
+                window.gameInstance.showShareResult(welcomeMsg, "success");
+                window.gameInstance.enableGame();
+                await window.gameInstance.updateEarlyAdopterUI();
+              }
+              
+              return true;
             }
-            
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            // Check if on Base chain
-            const network = await provider.getNetwork();
-            if (network.chainId !== 8453) {
-              await window.farcasterSdk.wallet.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x2105' }]
-              });
-            }
-            
-            console.log("Connected via Farcaster SDK:", userAddress);
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
-            }
-            
-            return true;
+          } else {
+            console.log("Farcaster SDK wallet not available");
           }
         } catch (sdkWalletError) {
           console.log("Farcaster SDK wallet failed:", sdkWalletError);
+        }
+        
+        // Check if we have a wallet address in the farcaster object
+        if (window.farcaster && window.farcaster.walletAddress) {
+          console.log("Found wallet in farcaster object:", window.farcaster.walletAddress);
+          userAddress = window.farcaster.walletAddress;
           
-          // Fallback to embedded wallet
-          if (window.ethereum) {
-            console.log("Falling back to embedded wallet...");
-            
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            
-            await switchToBaseChain();
-            
-            walletConnected = true;
-            await updateWalletUI();
-            
-            if (window.gameInstance) {
-              window.gameInstance.showShareResult(`Connected via embedded wallet! Welcome ${farcasterUser.displayName || farcasterUser.username}!`, "success");
-              window.gameInstance.enableGame();
-              await window.gameInstance.updateEarlyAdopterUI();
-            }
-            
-            return true;
-          } else {
-            throw new Error("No wallet provider available in Farcaster frame");
+          // Set up a minimal provider for Base chain
+          provider = new ethers.providers.JsonRpcProvider("https://mainnet.base.org");
+          
+          walletConnected = true;
+          await updateWalletUI();
+          
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult(`Connected via Farcaster!`, "success");
+            window.gameInstance.enableGame();
+            await window.gameInstance.updateEarlyAdopterUI();
           }
+          
+          return true;
+        }
+        
+        // Fallback to embedded wallet
+        if (window.ethereum) {
+          console.log("Falling back to embedded wallet...");
+          
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          signer = provider.getSigner();
+          userAddress = await signer.getAddress();
+          
+          await switchToBaseChain();
+          
+          walletConnected = true;
+          await updateWalletUI();
+          
+          if (window.gameInstance) {
+            const welcomeMsg = farcasterUser ? 
+              `Connected via embedded wallet! Welcome ${farcasterUser.displayName || farcasterUser.username}!` : 
+              "Connected via embedded wallet!";
+            window.gameInstance.showShareResult(welcomeMsg, "success");
+            window.gameInstance.enableGame();
+            await window.gameInstance.updateEarlyAdopterUI();
+          }
+          
+          return true;
+        } else {
+          throw new Error("No wallet provider available in Farcaster frame");
         }
         
       } catch (err) {
