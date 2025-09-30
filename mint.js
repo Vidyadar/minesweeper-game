@@ -21,7 +21,7 @@ async function isRunningInMiniApp() {
 
 async function requestFrameWallet() {
   try {
-    showGameMessage("Requesting Farcaster wallet…", "info");
+    showGameMessage("Requesting wallet connection…", "info");
     
     // Check if we're in a Farcaster frame
     const isFrame = await sdk.isFrame();
@@ -48,21 +48,49 @@ async function requestFrameWallet() {
           }
         }
         
+        // Try to use Ethereum provider directly if available in frame
+        if (window.ethereum) {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          if (accounts && accounts.length > 0) {
+            const address = accounts[0];
+            showGameMessage(`Ethereum wallet connected: ${address.slice(0, 6)}…`, "success");
+            return { address, chain: 'eip155:8453' };
+          }
+        }
+        
         // If we're in a frame but can't get wallet, provide clear error
-        throw new Error("Wallet connection not supported in this Farcaster frame version");
+        throw new Error("No Ethereum wallet provider available in Farcaster frame");
       }
     } else {
       // Standard mini-app wallet request
-      const wallet = await sdk.actions.wallet.requestWallet();
-      if (!wallet?.address) {
-        throw new Error("Wallet address missing in Farcaster response");
+      try {
+        const wallet = await sdk.actions.wallet.requestWallet();
+        if (!wallet?.address) {
+          throw new Error("Wallet address missing in Farcaster response");
+        }
+        showGameMessage(`Wallet connected: ${wallet.address.slice(0, 6)}…`, "success");
+        return wallet;
+      } catch (miniAppError) {
+        console.warn("Mini-app wallet request failed, trying Ethereum provider:", miniAppError);
+        
+        // Try to use Ethereum provider directly
+        if (window.ethereum) {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          if (accounts && accounts.length > 0) {
+            const address = accounts[0];
+            showGameMessage(`Ethereum wallet connected: ${address.slice(0, 6)}…`, "success");
+            return { address, chain: 'eip155:8453' };
+          }
+        }
+        
+        throw miniAppError;
       }
-      showGameMessage(`Wallet connected: ${wallet.address.slice(0, 6)}…`, "success");
-      return wallet;
     }
   } catch (error) {
-    console.error("Farcaster wallet request failed", error);
-    showGameMessage("Unable to connect wallet inside Farcaster frame.", "error");
+    console.error("Wallet connection failed", error);
+    showGameMessage("Unable to connect wallet. Please ensure you have an Ethereum wallet available.", "error");
     throw error;
   }
 }
@@ -94,97 +122,168 @@ export async function mintSimpleNFT(playerAddress) {
   try {
     // First check if we're in a Farcaster environment (frame or mini-app)
     const isFarcasterEnv = await isRunningInMiniApp();
+    let walletInfo = null;
     
-    if (isFarcasterEnv) {
-      try {
-        // Try to get wallet via Farcaster SDK
-        const farcasterWallet = await requestFrameWallet();
-        if (farcasterWallet && farcasterWallet.address) {
-          showGameMessage(`Connected via Farcaster: ${farcasterWallet.address.slice(0, 8)}...`, "success");
-          return {
-            success: true,
-            address: farcasterWallet.address,
-            chain: farcasterWallet.chain || 'eip155:1'
-          };
+    // Try multiple wallet connection methods in sequence
+    const connectionMethods = [
+      // Method 1: Farcaster SDK wallet (works in both frames and mini-apps)
+      async () => {
+        if (isFarcasterEnv) {
+          try {
+            const farcasterWallet = await requestFrameWallet();
+            if (farcasterWallet && farcasterWallet.address) {
+              showGameMessage(`Connected via Farcaster: ${farcasterWallet.address.slice(0, 8)}...`, "success");
+              return {
+                success: true,
+                address: farcasterWallet.address,
+                chain: farcasterWallet.chain || 'eip155:8453',
+                provider: 'farcaster'
+              };
+            }
+          } catch (error) {
+            console.warn("Farcaster SDK wallet connection failed:", error);
+            return null;
+          }
         }
-      } catch (farcasterError) {
-        console.warn("Farcaster wallet connection failed, trying fallbacks:", farcasterError);
-        
-        // Check for wallet context from backend (for frames)
-        const farcasterWalletContext = window.farcasterWalletContext || null;
-        if (farcasterWalletContext && farcasterWalletContext.address) {
-          showGameMessage(`Connected via Farcaster: ${farcasterWalletContext.address.slice(0, 8)}...`, "success");
-          return {
-            success: true,
-            address: farcasterWalletContext.address,
-            chain: farcasterWalletContext.chain || 'eip155:1'
-          };
+        return null;
+      },
+      
+      // Method 2: Check for wallet context from backend (for frames)
+      async () => {
+        if (isFarcasterEnv && window.farcasterWalletContext) {
+          try {
+            const context = window.farcasterWalletContext;
+            if (context && context.address) {
+              showGameMessage(`Connected via Farcaster context: ${context.address.slice(0, 8)}...`, "success");
+              return {
+                success: true,
+                address: context.address,
+                chain: context.chain || 'eip155:8453',
+                provider: 'farcaster-context'
+              };
+            }
+          } catch (error) {
+            console.warn("Farcaster wallet context access failed:", error);
+            return null;
+          }
         }
+        return null;
+      },
+      
+      // Method 3: Direct Ethereum provider (works in browsers and some frames)
+      async () => {
+        if (window.ethereum) {
+          try {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            if (accounts && accounts.length > 0) {
+              const address = accounts[0];
+              
+              // Try to ensure we're on Base network
+              try {
+                await ensureBaseNetwork(provider);
+              } catch (networkError) {
+                console.warn("Network check failed:", networkError);
+                // Continue anyway, the transaction will fail if network is wrong
+              }
+              
+              showGameMessage(`Ethereum wallet connected: ${address.slice(0, 8)}...`, "success");
+              return {
+                success: true,
+                address: address,
+                chain: 'eip155:8453',
+                provider: 'ethereum',
+                ethersProvider: provider
+              };
+            }
+          } catch (error) {
+            console.warn("Direct Ethereum provider connection failed:", error);
+            return null;
+          }
+        }
+        return null;
+      }
+    ];
+    
+    // Try each connection method in sequence until one works
+    for (const method of connectionMethods) {
+      walletInfo = await method();
+      if (walletInfo) break;
+    }
+    
+    // If we have a wallet connection, proceed with minting or return the wallet info
+    if (walletInfo) {
+      // If this is just a wallet connection request (no minting), return the wallet info
+      if (!playerAddress) {
+        return walletInfo;
+      }
+      
+      // For Ethereum provider, we can proceed with minting
+      if (walletInfo.provider === 'ethereum' && walletInfo.ethersProvider) {
+        const provider = walletInfo.ethersProvider;
+        const signer = await provider.getSigner();
+        const { address, abi } = getContractConfig();
+        const contract = new ethers.Contract(address, abi, signer);
+
+        showGameMessage("⏳ Minting Simple NFT…", "info");
+
+        try {
+          await contract.name();
+        } catch (error) {
+          throw new Error("Contract not deployed or unreachable at configured address.");
+        }
+
+        try {
+          const playerTokenId = await contract.playerTokenId(playerAddress);
+          if (playerTokenId > 0n) {
+            throw new Error("You already minted this NFT.");
+          }
+        } catch (error) {
+          if (error.message?.includes("already minted")) {
+            throw error;
+          }
+          console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
+        }
+
+        const remainingSupply = await contract.remainingSupply();
+        if (remainingSupply === 0n) {
+          throw new Error("All NFTs have been minted.");
+        }
+
+        const tx = await contract.mintNFT({ gasLimit: 300000 });
+        await tx.wait();
+
+        const totalSupply = await contract.totalSupply();
+        const mintedTokenId = Number(totalSupply);
+
+        showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
+
+        return {
+          success: true,
+          tokenId: mintedTokenId,
+          txHash: tx.hash,
+          remaining: Number(remainingSupply) - 1
+        };
+      } else {
+        // For Farcaster wallets, we just return the connection info
+        // The actual minting would happen through Farcaster's transaction system
+        return walletInfo;
       }
     }
     
-    // Fallback: Browser wallet (MetaMask, Coinbase, etc.)
-    if (window.ethereum) {
-      const provider = await getBrowserProvider();
-      await ensureBaseNetwork(provider);
-      const signer = await provider.getSigner();
-
-      const { address, abi } = getContractConfig();
-      const contract = new ethers.Contract(address, abi, signer);
-
-      showGameMessage("⏳ Minting Simple NFT…", "info");
-
-      try {
-        await contract.name();
-      } catch (error) {
-        throw new Error("Contract not deployed or unreachable at configured address.");
-      }
-
-      try {
-        const playerTokenId = await contract.playerTokenId(playerAddress);
-        if (playerTokenId > 0n) {
-          throw new Error("You already minted this NFT.");
-        }
-      } catch (error) {
-        if (error.message?.includes("already minted")) {
-          throw error;
-        }
-        console.warn("Unable to verify existing NFT. Proceeding with mint.", error);
-      }
-
-      const remainingSupply = await contract.remainingSupply();
-      if (remainingSupply === 0n) {
-        throw new Error("All NFTs have been minted.");
-      }
-
-      const tx = await contract.mintNFT({ gasLimit: 300000 });
-      await tx.wait();
-
-      const totalSupply = await contract.totalSupply();
-      const mintedTokenId = Number(totalSupply);
-
-      showGameMessage(`🎉 Simple NFT #${mintedTokenId} minted successfully!`, "success");
-
-      return {
-        success: true,
-        tokenId: mintedTokenId,
-        txHash: tx.hash,
-        remaining: Number(remainingSupply) - 1
-      };
-    } else {
-      // No wallet available at all
-      showGameMessage(
-        "No wallet detected. Please open in Warpcast (Farcaster) or use a Web3 browser like MetaMask.",
-        "error"
-      );
-      return { success: false, error: "No wallet detected" };
-    }
-  } catch (error) {
-    console.error("Simple NFT minting failed", error);
+    // If all connection methods failed
     showGameMessage(
-      error.message === "No wallet provider in Farcaster frame"
-        ? "Wallet connection is not available in Farcaster frame. Please use a browser with a wallet provider."
-        : `❌ Minting failed: ${error.message}`,
+      "No wallet could be connected. Please ensure you have an Ethereum wallet available or try in Warpcast.",
+      "error"
+    );
+    return { 
+      success: false, 
+      error: "No wallet provider available" 
+    };
+  } catch (error) {
+    console.error("Wallet connection or NFT minting failed", error);
+    showGameMessage(
+      `❌ ${error.message || "Connection failed. Please try again."}`,
       "error"
     );
     throw error;
