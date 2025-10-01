@@ -40,6 +40,10 @@
       import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
       window.farcasterSdk = sdk;
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/web3modal"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="wallet.js"></script>
     <style>
         * {
             margin: 0;
@@ -504,6 +508,7 @@
 </head>
 <body>
     <!-- Sound toggle button -->
+   
     <button class="sound-toggle" id="sound-toggle">🔊</button>
 
     <div class="game-container">
@@ -574,8 +579,9 @@
             </div>
             <p class="nft-info"><span id="nft-minted-count">0</span>/2500 NFTs minted</p>
             
-            <button class="wallet-btn" id="connect-wallet">Connect Wallet</button>
-            <p class="wallet-status" id="wallet-status"></p>
+             <button id="connectWalletBtn">Connect Wallet</button>
+             <span id="walletAddress"></span>
+             <p class="wallet-status" id="wallet-status"></p>
             
             <button class="mint-btn hidden" id="mint-nft" disabled>Mint NFT (Free + Gas)</button>
             <p class="transaction-status" id="transaction-status"></p>
@@ -1136,298 +1142,187 @@
         }
         
         // Web3 Wallet and NFT Functionality
-        class MinesweeperNFT {
-            constructor() {
-                this.provider = null;
-                this.signer = null;
-                this.address = null;
-                this.isConnected = false;
-                this.chainId = 8453; // Base chain ID
-                this.nftContract = null;
-                this.nftContractAddress = "0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b";
-                this.mintPrice = ethers.utils.parseEther("0");
-                this.maxSupply = 2500;
-                this.currentSupply = 0;
-                
-                this.connectButton = document.getElementById('connect-wallet');
-                this.walletStatus = document.getElementById('wallet-status');
-                this.mintButton = document.getElementById('mint-nft');
-                this.transactionStatus = document.getElementById('transaction-status');
-                this.nftProgressBar = document.getElementById('nft-progress-bar');
-                this.nftMintedCount = document.getElementById('nft-minted-count');
-                this.mintInfo = document.getElementById('mint-info');
-                this.mintSection = document.querySelector('.web3-container');
-                
-                this.setupEventListeners();
-                this.checkWalletConnection();
-                this.showMintInfo("Connect your wallet on Base to mint the Early Access NFT");
-            }
-            
-            setupEventListeners() {
-                this.connectButton.addEventListener('click', () => this.connectWallet());
-                this.mintButton.addEventListener('click', () => this.mintNFT());
-            }
-            
-            async checkWalletConnection() {
-                // Check if MetaMask is installed
-                if (typeof window.ethereum !== 'undefined') {
-                    try {
-                        // Check if already connected
-                        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                        if (accounts.length > 0) {
-                            this.handleAccountsChanged(accounts);
-                            await this.checkAndSwitchChain();
-                        } else {
-                            this.showMintInfo("Connect your wallet on Base to mint the Early Access NFT");
-                            await this.ensureContractInitialized();
-                        }
-                        
-                        window.ethereum.removeAllListeners('accountsChanged');
-                        window.ethereum.on('accountsChanged', (accounts) => this.handleAccountsChanged(accounts));
-                        window.ethereum.removeAllListeners('chainChanged');
-                        window.ethereum.on('chainChanged', () => this.handleChainChanged());
-                    } catch (error) {
-                        console.error("Error checking wallet connection:", error);
-                        this.showMintInfo("Wallet connection check failed");
-                    }
-                } else {
-                    this.walletStatus.textContent = "Please install MetaMask to connect";
-                }
-            }
-            
-            async connectWallet() {
-                if (typeof window.ethereum !== 'undefined') {
-                    try {
-                        this.walletStatus.textContent = "Connecting...";
-                        
-                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                        this.handleAccountsChanged(accounts);
-                        await this.checkAndSwitchChain();
-                    } catch (error) {
-                        console.error("Error connecting wallet:", error);
-                        this.walletStatus.textContent = "Connection failed. Please try again.";
-                    }
-                } else {
-                    this.walletStatus.textContent = "Please install MetaMask to connect";
-                    window.open('https://metamask.io/download.html', '_blank');
-                }
-            }
-            
-            async handleChainChanged() {
-                this.walletStatus.textContent = "Chain changed. Checking Base network...";
-                this.showMintInfo("Checking Base network...");
-                await this.checkAndSwitchChain();
-            }
-            
-            async checkAndSwitchChain() {
-                try {
-                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                    const isOnBase = parseInt(chainId, 16) === this.chainId;
-                    
-                    if (!isOnBase) {
-                        try {
-                            await window.ethereum.request({
-                                method: 'wallet_switchEthereumChain',
-                                params: [{ chainId: '0x' + this.chainId.toString(16) }],
-                            });
-                        } catch (switchError) {
-                            if (switchError.code === 4902) {
-                                await window.ethereum.request({
-                                    method: 'wallet_addEthereumChain',
-                                    params: [{
-                                        chainId: '0x' + this.chainId.toString(16),
-                                        chainName: 'Base Mainnet',
-                                        nativeCurrency: {
-                                            name: 'ETH',
-                                            symbol: 'ETH',
-                                            decimals: 18
-                                        },
-                                        rpcUrls: ['https://mainnet.base.org'],
-                                        blockExplorerUrls: ['https://basescan.org']
-                                    }],
-                                });
-                            } else {
-                                throw switchError;
-                            }
-                        }
-                    }
-                    
-                    await this.ensureContractInitialized();
-                    return true;
-                } catch (error) {
-                    console.error("Error switching chain:", error);
-                    this.walletStatus.textContent = "Please switch to Base chain manually";
-                    this.showMintInfo("Switch to Base Mainnet to mint");
-                    return false;
-                }
-            }
+// Replace the MinesweeperNFT class constructor and wallet connect logic with the following:
 
-            async ensureContractInitialized() {
-                if (!window.ethereum || !this.isConnected) {
-                    this.mintButton.disabled = true;
-                    return;
-                }
+class MinesweeperNFT {
+    constructor() {
+        this.provider = null;
+        this.signer = null;
+        this.address = null;
+        this.isConnected = false;
+        this.chainId = 8453; // Base chain ID
+        this.nftContract = null;
+        this.nftContractAddress = "0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b";
+        this.mintPrice = ethers.utils.parseEther("0");
+        this.maxSupply = 2500;
+        this.currentSupply = 0;
 
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (parseInt(chainId, 16) !== this.chainId) {
-                    this.mintButton.disabled = true;
-                    this.showMintInfo("Switch to Base Mainnet to mint");
-                    return;
-                }
+        this.connectButton = document.getElementById('connectWalletBtn');
+        this.walletStatus = document.getElementById('wallet-status');
+        this.mintButton = document.getElementById('mint-nft');
+        this.transactionStatus = document.getElementById('transaction-status');
+        this.nftProgressBar = document.getElementById('nft-progress-bar');
+        this.nftMintedCount = document.getElementById('nft-minted-count');
+        this.mintInfo = document.getElementById('mint-info');
+        this.mintSection = document.querySelector('.web3-container');
 
-                if (!this.nftContract) {
-                    this.initializeContract();
-                } else {
-                    await this.updateNFTSupply();
-                    await this.checkMintEligibility();
-                }
-            }
-            
-            handleAccountsChanged(accounts) {
-                if (accounts.length === 0) {
-                    // User disconnected
-                    this.isConnected = false;
-                    this.address = null;
-                    this.walletStatus.textContent = "Wallet disconnected";
-                    this.connectButton.textContent = "Connect Wallet";
-                    this.mintButton.classList.add('hidden');
-                    this.showMintInfo("Connect your wallet on Base to mint the Early Access NFT");
-                } else {
-                    // User connected
-                    this.isConnected = true;
-                    this.address = accounts[0];
-                    const shortAddress = this.address.slice(0, 6) + '...' + this.address.slice(-4);
-                    this.walletStatus.textContent = `Connected: ${shortAddress}`;
-                    this.connectButton.textContent = "Wallet Connected";
-                    this.mintButton.classList.remove('hidden');
-                    
-                    // Initialize provider and contract
-                    this.initializeContract();
-                }
-            }
-            
-            initializeContract() {
-                try {
-                    this.provider = new ethers.providers.Web3Provider(window.ethereum);
-                    this.signer = this.provider.getSigner();
-                    
-                    const nftAbi = [
-                        { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                        { "inputs": [], "name": "mintNFT", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-                        { "inputs": [], "name": "remainingSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                        { "inputs": [], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                        { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
-                    ];
-                    
-                    this.nftContract = new ethers.Contract(
-                        this.nftContractAddress,
-                        nftAbi,
-                        this.signer
-                    );
-                    
-                    this.updateNFTSupply();
-                    this.checkMintEligibility();
-                } catch (error) {
-                    console.error("Error initializing contract:", error);
-                }
-            }
-            
-            async updateNFTSupply() {
-                try {
-                    const remaining = await this.nftContract.remainingSupply();
-                    const remainingCount = remaining.toNumber();
-                    const minted = this.maxSupply - remainingCount;
-                    this.currentSupply = minted;
-                    
-                    this.nftMintedCount.textContent = minted;
-                    const percentage = (minted / this.maxSupply) * 100;
-                    this.nftProgressBar.style.width = `${Math.min(100, percentage)}%`;
-                    
-                    if (remainingCount <= 0) {
-                        this.mintButton.disabled = true;
-                        this.mintButton.textContent = "Sold Out";
-                        this.showMintInfo("All 2,500 NFTs are claimed");
-                    } else if (!this.isConnected) {
-                        this.mintButton.disabled = true;
-                        this.mintButton.textContent = "Mint NFT (Free + Gas)";
-                        this.showMintInfo("Connect wallet to claim your Early Access NFT");
-                    } else {
-                        this.mintButton.disabled = false;
-                        this.mintButton.textContent = "Mint NFT (Free + Gas)";
-                    }
-                } catch (error) {
-                    console.error("Error updating NFT supply:", error);
-                    this.showMintInfo("Unable to load supply. Please refresh.");
-                }
-            }
-            
-            async checkMintEligibility() {
-                if (!this.isConnected || !this.nftContract) return;
-                
-                try {
-                    // Check if user already has an NFT
-                    // In production: const balance = await this.nftContract.balanceOf(this.address);
-                    const balance = 0; // Simulate no NFTs for demo
-                    
-                    if (balance > 0) {
-                        this.mintButton.disabled = true;
-                        this.mintButton.textContent = "Already Minted";
-                    } else if (this.currentSupply < this.maxSupply) {
-                        this.mintButton.disabled = false;
-                    }
-                } catch (error) {
-                    console.error("Error checking mint eligibility:", error);
-                }
-            }
-            
-            async mintNFT() {
-                if (!this.isConnected || !this.nftContract) return;
-                
-                try {
-                    this.mintButton.disabled = true;
-                    this.transactionStatus.textContent = "Minting in progress...";
-                    
-                    // In production, this would be a real transaction:
-                    // const tx = await this.nftContract.mint({ value: this.mintPrice });
-                    // await tx.wait();
-                    
-                    // Simulate minting process for demo
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    
-                    // Update UI after successful mint
-                    this.transactionStatus.textContent = "NFT minted successfully! 🎉";
-                    this.mintButton.textContent = "Already Minted";
-                    this.currentSupply++;
-                    this.nftMintedCount.textContent = this.currentSupply;
-                    const percentage = (this.currentSupply / this.maxSupply) * 100;
-                    this.nftProgressBar.style.width = `${percentage}%`;
-                    
-                    // Reset status after 5 seconds
-                    setTimeout(() => {
-                        this.transactionStatus.textContent = "";
-                    }, 5000);
-                } catch (error) {
-                    console.error("Error minting NFT:", error);
-                    this.transactionStatus.textContent = "Minting failed. Please try again.";
-                    this.mintButton.disabled = false;
-                }
-            }
-        }
+        this.setupEventListeners();
+        this.showMintInfo("Connect your wallet on Base to mint the Early Access NFT");
+    }
 
-        // Initialize the game when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new Minesweeper();
-            new MinesweeperNFT();
-            
-            if (window.farcasterSdk &&
-              window.farcasterSdk.actions &&
-                typeof window.farcasterSdk.actions.ready === 'function') {
-              window.farcasterSdk.actions.ready();
-              console.log("✅ Mini App ready() called");
-            } else {
-              console.error("❌ Mini App SDK not available");
+    setupEventListeners() {
+        this.connectButton.addEventListener('click', async () => {
+            const result = await connectWallet();
+            if (result && result.address) {
+                this.provider = result.provider;
+                this.signer = result.signer;
+                this.address = result.address;
+                this.isConnected = true;
+                document.getElementById('walletAddress').textContent = "Connected: " + result.address;
+                this.walletStatus.textContent = "Connected: " + result.address.slice(0, 6) + '...' + result.address.slice(-4);
+                this.connectButton.textContent = "Wallet Connected";
+                this.mintButton.classList.remove('hidden');
+                this.initializeContract();
             }
         });
+        this.mintButton.addEventListener('click', () => this.mintNFT());
+    }
+
+    showMintInfo(message) {
+        if (!message) {
+            this.hideMintInfo();
+            return;
+        }
+        this.mintInfo.textContent = message;
+        this.mintInfo.classList.remove('hidden');
+    }
+
+    hideMintInfo() {
+        this.mintInfo.textContent = "";
+        this.mintInfo.classList.add('hidden');
+    }
+
+    initializeContract() {
+        try {
+            const nftAbi = [
+                { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+                { "inputs": [], "name": "mintNFT", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+                { "inputs": [], "name": "remainingSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+                { "inputs": [], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+                { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+            ];
+
+            this.nftContract = new ethers.Contract(
+                this.nftContractAddress,
+                nftAbi,
+                this.signer
+            );
+
+            this.updateNFTSupply();
+            this.checkMintEligibility();
+        } catch (error) {
+            console.error("Error initializing contract:", error);
+        }
+    }
+
+    async updateNFTSupply() {
+        try {
+            const remaining = await this.nftContract.remainingSupply();
+            const remainingCount = remaining.toNumber();
+            const minted = this.maxSupply - remainingCount;
+            this.currentSupply = minted;
+
+            this.nftMintedCount.textContent = minted;
+            const percentage = (minted / this.maxSupply) * 100;
+            this.nftProgressBar.style.width = `${Math.min(100, percentage)}%`;
+
+            if (remainingCount <= 0) {
+                this.mintButton.disabled = true;
+                this.mintButton.textContent = "Sold Out";
+                this.showMintInfo("All 2,500 NFTs are claimed");
+            } else if (!this.isConnected) {
+                this.mintButton.disabled = true;
+                this.mintButton.textContent = "Mint NFT (Free + Gas)";
+                this.showMintInfo("Connect wallet to claim your Early Access NFT");
+            } else {
+                this.mintButton.disabled = false;
+                this.mintButton.textContent = "Mint NFT (Free + Gas)";
+                this.hideMintInfo();
+            }
+        } catch (error) {
+            console.error("Error updating NFT supply:", error);
+            this.showMintInfo("Unable to load supply. Please refresh.");
+        }
+    }
+
+    async checkMintEligibility() {
+        if (!this.isConnected || !this.nftContract) return;
+
+        try {
+            // Check if user already has an NFT
+            // In production: const balance = await this.nftContract.balanceOf(this.address);
+            const balance = 0; // Simulate no NFTs for demo
+
+            if (balance > 0) {
+                this.mintButton.disabled = true;
+                this.mintButton.textContent = "Already Minted";
+            } else if (this.currentSupply < this.maxSupply) {
+                this.mintButton.disabled = false;
+            }
+        } catch (error) {
+            console.error("Error checking mint eligibility:", error);
+        }
+    }
+
+    async mintNFT() {
+        if (!this.isConnected || !this.nftContract) return;
+
+        try {
+            this.mintButton.disabled = true;
+            this.transactionStatus.textContent = "Minting in progress...";
+
+            // In production, this would be a real transaction:
+            // const tx = await this.nftContract.mint({ value: this.mintPrice });
+            // await tx.wait();
+
+            // Simulate minting process for demo
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Update UI after successful mint
+            this.transactionStatus.textContent = "NFT minted successfully! 🎉";
+            this.mintButton.textContent = "Already Minted";
+            this.currentSupply++;
+            this.nftMintedCount.textContent = this.currentSupply;
+            const percentage = (this.currentSupply / this.maxSupply) * 100;
+            this.nftProgressBar.style.width = `${percentage}%`;
+
+            // Reset status after 5 seconds
+            setTimeout(() => {
+                this.transactionStatus.textContent = "";
+            }, 5000);
+        } catch (error) {
+            console.error("Error minting NFT:", error);
+            this.transactionStatus.textContent = "Minting failed. Please try again.";
+            this.mintButton.disabled = false;
+        }
+    }
+}
+
+// ...existing code...
+document.addEventListener('DOMContentLoaded', () => {
+    new Minesweeper();
+    new MinesweeperNFT();
+
+    if (window.farcasterSdk &&
+      window.farcasterSdk.actions &&
+        typeof window.farcasterSdk.actions.ready === 'function') {
+      window.farcasterSdk.actions.ready();
+      console.log("✅ Mini App ready() called");
+    } else {
+      console.error("❌ Mini App SDK not available");
+    }
+});
     </script>
+       
 </body>
 </html>
