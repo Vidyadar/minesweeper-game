@@ -2,7 +2,7 @@ const providerOptions = {
   walletconnect: {
     package: window.WalletConnectProvider,
     options: {
-      infuraId: "YOUR_INFURA_ID" // <-- Replace with your Infura Project ID
+      infuraId: "11a36ba121684a228f62b5c26ede76b0" // <-- Replace with your Infura Project ID
     }
   }
   // You can add more providers here if needed
