@@ -27,23 +27,12 @@
     
     <!-- Additional Meta Tags -->
     <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
-    <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3, nft, base" />
+    <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
     <meta name="author" content="vidhyadar.base.eth" />
-    
-    <!-- Web3 Libraries -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
-    <script src="https://unpkg.com/@wagmi/core@1.4.7/dist/wagmi-core.umd.js"></script>
-    <script src="https://unpkg.com/@wagmi/connectors@1.1.1/dist/wagmi-connectors.umd.js"></script>
-    
-    <!-- Farcaster SDK -->
-    <script type="module">
+     <script type="module">
       import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
       window.farcasterSdk = sdk;
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/web3modal"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
-    <script src="wallet.js"></script>
     <style>
         * {
             margin: 0;
@@ -369,100 +358,6 @@
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
         }
-        
-        /* Web3 Wallet and NFT Styles */
-        .web3-container {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            text-align: center;
-        }
-        
-        .wallet-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 10px;
-            width: 100%;
-            max-width: 250px;
-        }
-        
-        .wallet-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .wallet-btn:disabled {
-            background: rgba(128, 128, 128, 0.5);
-            cursor: not-allowed;
-        }
-        
-        .wallet-status {
-            font-size: 0.9rem;
-            margin: 10px 0;
-            color: #00ff88;
-        }
-        
-        .nft-info {
-            margin: 15px 0;
-            font-size: 0.9rem;
-        }
-        
-        .nft-progress {
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        
-        .nft-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #8a2be2, #4b0082);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-        
-        .mint-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #00c853 0%, #009624 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            width: 100%;
-            max-width: 250px;
-        }
-        
-        .mint-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .mint-btn:disabled {
-            background: rgba(128, 128, 128, 0.5);
-            cursor: not-allowed;
-        }
-        
-        .transaction-status {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #00ff88;
-            min-height: 20px;
-        }
-        
-        .hidden {
-            display: none;
-        }
 
         @media (max-width: 480px) {
             .game-container {
@@ -496,11 +391,6 @@
                 height: 36px;
                 font-size: 16px;
             }
-            
-            .wallet-btn, .mint-btn {
-                font-size: 0.8rem;
-                padding: 8px 15px;
-            }
         }
         </style>
        
@@ -508,7 +398,6 @@
 </head>
 <body>
     <!-- Sound toggle button -->
-   
     <button class="sound-toggle" id="sound-toggle">🔊</button>
 
     <div class="game-container">
@@ -567,25 +456,6 @@
             • Use Flag Mode to mark mines<br>
             • Numbers show nearby mines<br>
             • Find all mines to win!
-        </div>
-        
-        <!-- Web3 Wallet and NFT Section -->
-        <div class="web3-container">
-            <h3 style="margin-bottom: 15px;">🎮 Minesweeper NFT Collection</h3>
-            <p class="nft-info">Connect your wallet to mint a limited edition Minesweeper NFT on Base chain.<br>Only 2,500 NFTs available!</p>
-            
-            <div class="nft-progress">
-                <div class="nft-progress-bar" id="nft-progress-bar"></div>
-            </div>
-            <p class="nft-info"><span id="nft-minted-count">0</span>/2500 NFTs minted</p>
-            
-             <button id="connectWalletBtn">Connect Wallet</button>
-             <span id="walletAddress"></span>
-             <p class="wallet-status" id="wallet-status"></p>
-            
-            <button class="mint-btn hidden" id="mint-nft" disabled>Mint NFT (Free + Gas)</button>
-            <p class="transaction-status" id="transaction-status"></p>
-            <p class="transaction-status" id="mint-info" aria-live="polite"></p>
         </div>
     </div>
 
@@ -1141,188 +1011,19 @@
             }
         }
         
-        // Web3 Wallet and NFT Functionality
-// Replace the MinesweeperNFT class constructor and wallet connect logic with the following:
-
-class MinesweeperNFT {
-    constructor() {
-        this.provider = null;
-        this.signer = null;
-        this.address = null;
-        this.isConnected = false;
-        this.chainId = 8453; // Base chain ID
-        this.nftContract = null;
-        this.nftContractAddress = "0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b";
-        this.mintPrice = ethers.utils.parseEther("0");
-        this.maxSupply = 2500;
-        this.currentSupply = 0;
-
-        this.connectButton = document.getElementById('connectWalletBtn');
-        this.walletStatus = document.getElementById('wallet-status');
-        this.mintButton = document.getElementById('mint-nft');
-        this.transactionStatus = document.getElementById('transaction-status');
-        this.nftProgressBar = document.getElementById('nft-progress-bar');
-        this.nftMintedCount = document.getElementById('nft-minted-count');
-        this.mintInfo = document.getElementById('mint-info');
-        this.mintSection = document.querySelector('.web3-container');
-
-        this.setupEventListeners();
-        this.showMintInfo("Connect your wallet on Base to mint the Early Access NFT");
-    }
-
-    setupEventListeners() {
-        this.connectButton.addEventListener('click', async () => {
-            const result = await connectWallet();
-            if (result && result.address) {
-                this.provider = result.provider;
-                this.signer = result.signer;
-                this.address = result.address;
-                this.isConnected = true;
-                document.getElementById('walletAddress').textContent = "Connected: " + result.address;
-                this.walletStatus.textContent = "Connected: " + result.address.slice(0, 6) + '...' + result.address.slice(-4);
-                this.connectButton.textContent = "Wallet Connected";
-                this.mintButton.classList.remove('hidden');
-                this.initializeContract();
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new Minesweeper();
+            
+            if (window.farcasterSdk &&
+              window.farcasterSdk.actions &&
+                typeof window.farcasterSdk.actions.ready === 'function') {
+              window.farcasterSdk.actions.ready();
+              console.log("✅ Mini App ready() called");
+            } else {
+              console.error("❌ Mini App SDK not available");
             }
         });
-        this.mintButton.addEventListener('click', () => this.mintNFT());
-    }
-
-    showMintInfo(message) {
-        if (!message) {
-            this.hideMintInfo();
-            return;
-        }
-        this.mintInfo.textContent = message;
-        this.mintInfo.classList.remove('hidden');
-    }
-
-    hideMintInfo() {
-        this.mintInfo.textContent = "";
-        this.mintInfo.classList.add('hidden');
-    }
-
-    initializeContract() {
-        try {
-            const nftAbi = [
-                { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                { "inputs": [], "name": "mintNFT", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-                { "inputs": [], "name": "remainingSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                { "inputs": [], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-                { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "playerTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
-            ];
-
-            this.nftContract = new ethers.Contract(
-                this.nftContractAddress,
-                nftAbi,
-                this.signer
-            );
-
-            this.updateNFTSupply();
-            this.checkMintEligibility();
-        } catch (error) {
-            console.error("Error initializing contract:", error);
-        }
-    }
-
-    async updateNFTSupply() {
-        try {
-            const remaining = await this.nftContract.remainingSupply();
-            const remainingCount = remaining.toNumber();
-            const minted = this.maxSupply - remainingCount;
-            this.currentSupply = minted;
-
-            this.nftMintedCount.textContent = minted;
-            const percentage = (minted / this.maxSupply) * 100;
-            this.nftProgressBar.style.width = `${Math.min(100, percentage)}%`;
-
-            if (remainingCount <= 0) {
-                this.mintButton.disabled = true;
-                this.mintButton.textContent = "Sold Out";
-                this.showMintInfo("All 2,500 NFTs are claimed");
-            } else if (!this.isConnected) {
-                this.mintButton.disabled = true;
-                this.mintButton.textContent = "Mint NFT (Free + Gas)";
-                this.showMintInfo("Connect wallet to claim your Early Access NFT");
-            } else {
-                this.mintButton.disabled = false;
-                this.mintButton.textContent = "Mint NFT (Free + Gas)";
-                this.hideMintInfo();
-            }
-        } catch (error) {
-            console.error("Error updating NFT supply:", error);
-            this.showMintInfo("Unable to load supply. Please refresh.");
-        }
-    }
-
-    async checkMintEligibility() {
-        if (!this.isConnected || !this.nftContract) return;
-
-        try {
-            // Check if user already has an NFT
-            // In production: const balance = await this.nftContract.balanceOf(this.address);
-            const balance = 0; // Simulate no NFTs for demo
-
-            if (balance > 0) {
-                this.mintButton.disabled = true;
-                this.mintButton.textContent = "Already Minted";
-            } else if (this.currentSupply < this.maxSupply) {
-                this.mintButton.disabled = false;
-            }
-        } catch (error) {
-            console.error("Error checking mint eligibility:", error);
-        }
-    }
-
-    async mintNFT() {
-        if (!this.isConnected || !this.nftContract) return;
-
-        try {
-            this.mintButton.disabled = true;
-            this.transactionStatus.textContent = "Minting in progress...";
-
-            // In production, this would be a real transaction:
-            // const tx = await this.nftContract.mint({ value: this.mintPrice });
-            // await tx.wait();
-
-            // Simulate minting process for demo
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Update UI after successful mint
-            this.transactionStatus.textContent = "NFT minted successfully! 🎉";
-            this.mintButton.textContent = "Already Minted";
-            this.currentSupply++;
-            this.nftMintedCount.textContent = this.currentSupply;
-            const percentage = (this.currentSupply / this.maxSupply) * 100;
-            this.nftProgressBar.style.width = `${percentage}%`;
-
-            // Reset status after 5 seconds
-            setTimeout(() => {
-                this.transactionStatus.textContent = "";
-            }, 5000);
-        } catch (error) {
-            console.error("Error minting NFT:", error);
-            this.transactionStatus.textContent = "Minting failed. Please try again.";
-            this.mintButton.disabled = false;
-        }
-    }
-}
-
-// ...existing code...
-document.addEventListener('DOMContentLoaded', () => {
-    new Minesweeper();
-    new MinesweeperNFT();
-
-    if (window.farcasterSdk &&
-      window.farcasterSdk.actions &&
-        typeof window.farcasterSdk.actions.ready === 'function') {
-      window.farcasterSdk.actions.ready();
-      console.log("✅ Mini App ready() called");
-    } else {
-      console.error("❌ Mini App SDK not available");
-    }
-});
     </script>
-       
 </body>
 </html>
