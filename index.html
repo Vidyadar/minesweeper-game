@@ -533,6 +533,7 @@
   <script>
     // Global variables for Farcaster wallet
     let walletConnected = false;
+    let farcasterConnected = false;
     let provider, signer, userAddress, farcasterUser;
 
     // Connect wallet function with better error handling
@@ -545,17 +546,27 @@
       connectBtn.disabled = true;
       
       try {
-        // First try MetaMask if available (more reliable)
+        // Require Farcaster first
+        if (window.farcasterSdk) {
+          console.log("Connecting Farcaster first...");
+          await connectFarcasterWallet();
+        } else {
+          throw new Error("Open in Farcaster to authenticate first");
+        }
+
+        // Optionally connect external wallet next if available
         if (window.ethereum) {
-          console.log("Trying MetaMask connection first...");
+          console.log("Connecting external wallet (MetaMask)...");
           const success = await connectMetaMaskWallet();
           if (success) return true;
-        }
-        
-        // Then try Farcaster if SDK is available
-        if (window.farcasterSdk) {
-          console.log("Trying Farcaster connection...");
-          return await connectFarcasterWallet();
+        } else {
+          const connectBtn = document.getElementById('connect-wallet');
+          connectBtn.textContent = '🔗 Connect External Wallet';
+          connectBtn.disabled = false;
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult('Farcaster authenticated. Connect an external wallet to mint.', 'info');
+          }
+          return true;
         }
         
         throw new Error("No wallet provider available. Please install MetaMask!");
@@ -593,40 +604,35 @@
         farcasterUser = context.user;
         console.log("Farcaster user:", farcasterUser);
         
-        // For Farcaster, we'll use the embedded wallet or MetaMask
+        // Try to link an external wallet if provider exists; otherwise Farcaster-only
         if (window.ethereum) {
-          // Switch to Base chain if not already on it
-          await switchToBaseChain();
-          
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          const accounts = await provider.send("eth_requestAccounts", []);
-          
-          if (!accounts || accounts.length === 0) {
-            throw new Error("No accounts found");
+          try {
+            await switchToBaseChain();
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            if (accounts && accounts.length > 0) {
+              signer = provider.getSigner();
+              userAddress = await signer.getAddress();
+              const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+              await signer.signMessage(message);
+              walletConnected = true;
+            }
+          } catch (e) {
+            console.log('External wallet not available inside Farcaster');
           }
-          
-          signer = provider.getSigner();
-          userAddress = await signer.getAddress();
-          
-          console.log("✅ Wallet connected via Farcaster context");
-          
-          // Request signature for authentication
-          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
-          const signature = await signer.signMessage(message);
-          console.log("✅ Message signed successfully");
-          
-        walletConnected = true;
+        }
+
+        if (!provider) {
+          provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
+        }
+
+        farcasterConnected = true;
         await updateWalletUI();
-        
         if (window.gameInstance) {
-          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
-          window.gameInstance.enableGame();
+          window.gameInstance.showShareResult(`🎉 Farcaster authenticated${walletConnected ? ' and wallet linked' : ''}!`, walletConnected ? 'success' : 'info');
+          if (walletConnected) window.gameInstance.enableGame();
         }
-          
-          return true;
-        } else {
-          throw new Error("No ethereum provider available");
-        }
+        return true;
         
       } catch (err) {
         console.error("Farcaster connection failed:", err);
@@ -787,7 +793,7 @@
         } catch (_) {}
         
       } else {
-        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.textContent = farcasterConnected ? '🔗 Connect External Wallet' : '🔗 Connect (Farcaster first)';
         connectBtn.classList.remove('connected');
         connectBtn.disabled = false;
         
@@ -1129,8 +1135,9 @@
         oscillator.frequency.value = frequency;
         oscillator.type = type;
 
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+        // Reduced volume for clicks and UI sounds
+        gainNode.gain.setValueAtTime(0.12, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.005, this.audioContext.currentTime + duration / 1000);
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + duration / 1000);
