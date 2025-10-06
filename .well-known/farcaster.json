@@ -2,6 +2,27 @@
   "miniapp": {
     "version": "1",
     "name": "Minesweeper Game",
+    "iconUrl": "/assets/icon.png",
+    "homeUrl": "/",
+    "splashImageUrl": "/assets/splash.png",
+    "splashBackgroundColor": "#667eea",
+    "primaryCategory": "games",
+    "tags": ["minesweeper", "game", "puzzle"],
+    "description": "Play the classic Minesweeper game online.",
+    "subtitle": "Minesweeper: Beat the clock",
+    "imageUrl": "/assets/preview.png"
+  },
+  "baseBuilder": {
+    "allowedAddresses": [
+      "0xded9e2ba6f705afb182b0d2568ae3468636aca1b"
+    ]
+  }
+}
+
+{
+  "miniapp": {
+    "version": "1",
+    "name": "Minesweeper Game",
     "iconUrl": "https://minesweeper-game-pearl.vercel.app/assets/icon.png",
     "homeUrl": "https://minesweeper-game-pearl.vercel.app/",
     "splashImageUrl": "https://minesweeper-game-pearl.vercel.app/assets/splash.png",
