@@ -503,6 +503,10 @@
         </div>
         <div class="chain-indicator" id="chain-indicator">Checking network...</div>
       </div>
+      <div style="margin-top:10px;">
+        <button class="share-btn" id="mint-early-btn" style="display:none;">🎟️ Mint Early Adopter NFT</button>
+        <span id="mint-status" style="display:none;font-size:0.8rem;margin-left:8px;"></span>
+      </div>
     </div>
 
     <div class="minefield" id="minefield"></div>
@@ -775,6 +779,12 @@
           el.classList.remove('game-disabled');
         });
         document.getElementById('minefield').classList.remove('game-disabled');
+
+        // Show mint button if on Base
+        try {
+          const net = await provider.getNetwork();
+          document.getElementById('mint-early-btn').style.display = (net.chainId === 8453) ? 'inline-flex' : 'none';
+        } catch (_) {}
         
       } else {
         connectBtn.textContent = '🔗 Connect Wallet';
@@ -788,6 +798,57 @@
           el.classList.add('game-disabled');
         });
         document.getElementById('minefield').classList.add('game-disabled');
+        document.getElementById('mint-early-btn').style.display = 'none';
+      }
+    }
+
+    // Early Adopter NFT config
+    const EARLY_NFT = {
+      address: '0x0000000000000000000000000000000000000000', // TODO: replace after deploy
+      abi: [
+        { "inputs": [], "name": "mint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+        { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" },
+        { "inputs": [ {"internalType":"address","name":"","type":"address"} ], "name": "hasMinted", "outputs": [ {"internalType":"bool","name":"","type":"bool"} ], "stateMutability": "view", "type": "function" }
+      ]
+    };
+
+    async function mintEarlyAdopter() {
+      try {
+        if (!walletConnected) {
+          window.gameInstance.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+        const net = await provider.getNetwork();
+        if (net.chainId !== 8453) {
+          await switchToBaseChain();
+        }
+
+        if (EARLY_NFT.address === '0x0000000000000000000000000000000000000000') {
+          window.gameInstance.showShareResult('Contract not configured yet. Please try later.', 'error');
+          return;
+        }
+
+        const contract = new ethers.Contract(EARLY_NFT.address, EARLY_NFT.abi, signer);
+        const btn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        btn.disabled = true;
+        statusEl.style.display = 'inline';
+        statusEl.textContent = '⏳ Minting...';
+
+        const tx = await contract.mint({ gasLimit: 120000 });
+        window.gameInstance.showShareResult('⏳ Waiting for confirmation...', 'info');
+        await tx.wait();
+
+        statusEl.textContent = '✅ Minted!';
+        window.gameInstance.showShareResult('✅ Early Adopter NFT minted!', 'success');
+      } catch (e) {
+        console.error(e);
+        window.gameInstance.showShareResult(e?.message || 'Mint failed', 'error');
+      } finally {
+        const btn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        btn.disabled = false;
+        setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
       }
     }
 
@@ -1378,6 +1439,11 @@
 
         document.getElementById('share-general').addEventListener('click', () => {
           this.copyGameLink();
+        });
+
+        // Early adopter mint button
+        document.getElementById('mint-early-btn').addEventListener('click', async () => {
+          await mintEarlyAdopter();
         });
 
         // Share/Mint result button
