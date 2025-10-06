@@ -802,15 +802,67 @@
       }
     }
 
-    // Early Adopter NFT config
+    // Early Adopter NFT config (deployed SimpleMinesweeperNFT)
     const EARLY_NFT = {
-      address: '0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b', // TODO: replace after deploy
+      address: '0xded9e2ba6f705afb182b0d2568ae3468636aca1b', // Deployed on Base mainnet
       abi: [
-        { "inputs": [], "name": "mint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+        { "inputs": [], "name": "mintNFT", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
         { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" },
-        { "inputs": [ {"internalType":"address","name":"","type":"address"} ], "name": "hasMinted", "outputs": [ {"internalType":"bool","name":"","type":"bool"} ], "stateMutability": "view", "type": "function" }
+        { "inputs": [], "name": "totalSupply", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" },
+        { "inputs": [], "name": "remainingSupply", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" },
+        { "inputs": [{"internalType":"address","name":"","type":"address"}], "name": "playerTokenId", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" }
       ]
     };
+
+    async function refreshMintUI() {
+      try {
+        const mintBtn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        statusEl.style.display = 'inline';
+
+        if (EARLY_NFT.address === '0x0000000000000000000000000000000000000000') {
+          mintBtn.style.display = 'none';
+          statusEl.textContent = 'Configure NFT contract address to enable mint.';
+          return;
+        }
+
+        const net = await provider.getNetwork();
+        if (net.chainId !== 8453) {
+          mintBtn.style.display = 'none';
+          statusEl.textContent = 'Switch to Base to mint.';
+          return;
+        }
+
+        const contract = new ethers.Contract(EARLY_NFT.address, EARLY_NFT.abi, provider);
+        const [remaining, tokenId] = await Promise.all([
+          contract.remainingSupply(),
+          contract.playerTokenId(userAddress)
+        ]);
+
+        if (remaining.toString() === '0') {
+          mintBtn.style.display = 'none';
+          statusEl.textContent = 'Sold out';
+          return;
+        }
+
+        if (tokenId.toString() !== '0') {
+          mintBtn.style.display = 'none';
+          statusEl.textContent = `You already minted #${tokenId.toString()}`;
+          return;
+        }
+
+        mintBtn.style.display = 'inline-flex';
+        statusEl.textContent = `${remaining.toString()} left`;
+      } catch (e) {
+        console.log('Mint UI refresh failed:', e);
+        const mintBtn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        statusEl.style.display = 'inline';
+        statusEl.textContent = '';
+        // keep button hidden on error
+        mintBtn.style.display = 'none';
+      }
+    }
 
     async function mintEarlyAdopter() {
       try {
@@ -835,12 +887,13 @@
         statusEl.style.display = 'inline';
         statusEl.textContent = '⏳ Minting...';
 
-        const tx = await contract.mint({ gasLimit: 120000 });
+        const tx = await contract.mintNFT({ gasLimit: 180000 });
         window.gameInstance.showShareResult('⏳ Waiting for confirmation...', 'info');
         await tx.wait();
 
         statusEl.textContent = '✅ Minted!';
         window.gameInstance.showShareResult('✅ Early Adopter NFT minted!', 'success');
+        await refreshMintUI();
       } catch (e) {
         console.error(e);
         window.gameInstance.showShareResult(e?.message || 'Mint failed', 'error');
@@ -1543,6 +1596,26 @@
           window.gameInstance.disableGame();
         }
       }, 1500);
+
+      // Try to show mint button/status if already connected
+      if (walletConnected) {
+        try { await refreshMintUI(); } catch (_) {}
+      }
+
+      // React to network/account changes to toggle mint button
+      if (window.ethereum) {
+        window.ethereum.on('chainChanged', async () => {
+          await updateWalletUI();
+          if (walletConnected) { try { await refreshMintUI(); } catch (_) {} }
+        });
+        window.ethereum.on('accountsChanged', async (accounts) => {
+          if (accounts && accounts.length > 0) {
+            userAddress = accounts[0];
+            await updateWalletUI();
+            if (walletConnected) { try { await refreshMintUI(); } catch (_) {} }
+          }
+        });
+      }
     });
   </script>
 </body>
