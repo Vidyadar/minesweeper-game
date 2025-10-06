@@ -885,9 +885,32 @@
         const statusEl = document.getElementById('mint-status');
         btn.disabled = true;
         statusEl.style.display = 'inline';
+        statusEl.textContent = '⏳ Checking eligibility...';
+
+        // Pre-flight checks to avoid simulation failure
+        try {
+          const [remaining, tokenId] = await Promise.all([
+            contract.remainingSupply(),
+            contract.playerTokenId(userAddress)
+          ]);
+          if (remaining.toString() === '0') {
+            window.gameInstance.showShareResult('Sold out.', 'error');
+            await refreshMintUI();
+            return;
+          }
+          if (tokenId.toString() !== '0') {
+            window.gameInstance.showShareResult(`You already minted #${tokenId.toString()}.`, 'info');
+            await refreshMintUI();
+            return;
+          }
+        } catch (preErr) {
+          console.error('Pre-check failed:', preErr);
+          // continue; some RPCs may block simulation but tx may still succeed
+        }
+
         statusEl.textContent = '⏳ Minting...';
 
-        const tx = await contract.mintNFT({ gasLimit: 180000 });
+        const tx = await contract.mintNFT({ gasLimit: 220000 });
         window.gameInstance.showShareResult('⏳ Waiting for confirmation...', 'info');
         await tx.wait();
 
