@@ -506,6 +506,7 @@
       <div style="margin-top:10px;">
         <button class="share-btn" id="mint-early-btn" style="display:none;">🎟️ Mint Early Adopter NFT</button>
         <span id="mint-status" style="display:none;font-size:0.8rem;margin-left:8px;"></span>
+        <div id="mint-remaining" style="display:none;font-size:0.78rem;margin-top:6px;color:#cde;">Remaining: --</div>
       </div>
     </div>
 
@@ -818,11 +819,13 @@
       try {
         const mintBtn = document.getElementById('mint-early-btn');
         const statusEl = document.getElementById('mint-status');
+        const remainingEl = document.getElementById('mint-remaining');
         statusEl.style.display = 'inline';
 
         if (EARLY_NFT.address === '0x0000000000000000000000000000000000000000') {
           mintBtn.style.display = 'none';
           statusEl.textContent = 'Configure NFT contract address to enable mint.';
+          remainingEl.style.display = 'none';
           return;
         }
 
@@ -830,6 +833,7 @@
         if (net.chainId !== 8453) {
           mintBtn.style.display = 'none';
           statusEl.textContent = 'Switch to Base to mint.';
+          remainingEl.style.display = 'none';
           return;
         }
 
@@ -842,25 +846,33 @@
         if (remaining.toString() === '0') {
           mintBtn.style.display = 'none';
           statusEl.textContent = 'Sold out';
+          remainingEl.style.display = 'inline';
+          remainingEl.textContent = 'Remaining: 0';
           return;
         }
 
         if (tokenId.toString() !== '0') {
           mintBtn.style.display = 'none';
           statusEl.textContent = `You already minted #${tokenId.toString()}`;
+          remainingEl.style.display = 'inline';
+          remainingEl.textContent = `Remaining: ${remaining.toString()}`;
           return;
         }
 
         mintBtn.style.display = 'inline-flex';
         statusEl.textContent = `${remaining.toString()} left`;
+        remainingEl.style.display = 'inline';
+        remainingEl.textContent = `Remaining: ${remaining.toString()}`;
       } catch (e) {
         console.log('Mint UI refresh failed:', e);
         const mintBtn = document.getElementById('mint-early-btn');
         const statusEl = document.getElementById('mint-status');
+        const remainingEl = document.getElementById('mint-remaining');
         statusEl.style.display = 'inline';
         statusEl.textContent = '';
         // keep button hidden on error
         mintBtn.style.display = 'none';
+        remainingEl.style.display = 'none';
       }
     }
 
@@ -883,6 +895,7 @@
         const contract = new ethers.Contract(EARLY_NFT.address, EARLY_NFT.abi, signer);
         const btn = document.getElementById('mint-early-btn');
         const statusEl = document.getElementById('mint-status');
+        const remainingEl = document.getElementById('mint-remaining');
         btn.disabled = true;
         statusEl.style.display = 'inline';
         statusEl.textContent = '⏳ Checking eligibility...';
@@ -923,6 +936,7 @@
       } finally {
         const btn = document.getElementById('mint-early-btn');
         const statusEl = document.getElementById('mint-status');
+        const remainingEl = document.getElementById('mint-remaining');
         btn.disabled = false;
         setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
       }
@@ -1129,8 +1143,9 @@
         oscillator.frequency.value = frequency;
         oscillator.type = type;
 
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+        // Reduced volume for a softer UX
+        gainNode.gain.setValueAtTime(0.12, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.005, this.audioContext.currentTime + duration / 1000);
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + duration / 1000);
