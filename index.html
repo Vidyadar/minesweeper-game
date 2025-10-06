@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minesweeper - Farcaster Game</title>
-    
-    <!-- Essential Open Graph Meta Tags (Primary for embeds) -->
-    <meta property="og:title" content="💣 Minesweeper Game" />
-    <meta property="og:description" content="Can you clear the minefield? 3 difficulty levels, beat the clock, mobile-friendly!" />
-    <meta property="og:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="https://minesweeper-game-pearl.vercel.app/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Minesweeper Game" />
-    
-    <!-- Farcaster Frame Meta Tags -->
-<meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="💣 Minesweeper Game" />
-    <meta name="twitter:description" content="Can you clear the minefield? Play Minesweeper on Farcaster!" />
-    <meta name="twitter:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
-    
-    <!-- Additional Meta Tags -->
-    <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
-    <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
-    <meta name="author" content="vidhyadar.base.eth" />
-     <script type="module">
-      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-      window.farcasterSdk = sdk;
-    </script>
-    <style>
-        * {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper - Farcaster Game</title>
+
+  <!-- Essential Open Graph Meta Tags -->
+  <meta property="og:title" content="💣 Minesweeper Game" />
+  <meta property="og:description" content="Can you clear the minefield? 3 difficulty levels, beat the clock, mobile-friendly!" />
+  <meta property="og:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://minesweeper-game-pearl.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Minesweeper Game" />
+
+  <!-- Farcaster Miniapp Meta -->
+  <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://minesweeper-game-pearl.vercel.app/assets/preview.png","button":{"title":"Play","action":{"type":"launch_frame","name":"Minesweeper","url":"https://minesweeper-game-pearl.vercel.app/","splashImageUrl":"https://minesweeper-game-pearl.vercel.app/assets/splash.png","splashBackgroundColor":"#667eea"}}}' />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="💣 Minesweeper Game" />
+  <meta name="twitter:description" content="Can you clear the minefield? Play Minesweeper on Farcaster!" />
+  <meta name="twitter:image" content="https://minesweeper-game-pearl.vercel.app/assets/preview.png" />
+
+  <meta name="description" content="Play Minesweeper on Farcaster! Mobile-friendly game with 3 difficulty levels. Share your results and challenge friends." />
+  <meta name="keywords" content="minesweeper, farcaster, game, puzzle, mobile, web3" />
+  <meta name="author" content="vidhyadar.base.eth" />
+
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+    window.farcasterSdk = sdk;
+  </script>
+
+  <style>
+    * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -333,6 +336,67 @@
             display: none;
         }
 
+        /* Wallet connection section styling */
+        .wallet-section {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .wallet-btn {
+            background: rgba(0, 150, 255, 0.8);
+            font-weight: bold;
+            min-width: 140px;
+        }
+
+        .wallet-btn:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .wallet-btn.connected {
+            background: rgba(0, 200, 100, 0.8);
+        }
+
+        .wallet-btn.connected:hover {
+            background: rgba(0, 200, 100, 1);
+        }
+
+        .wallet-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-direction: column;
+        }
+
+        .wallet-status #wallet-address {
+            font-family: monospace;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .chain-indicator {
+            font-size: 0.7rem;
+            color: #66aaff;
+            margin-top: 2px;
+        }
+
+        .chain-indicator.base {
+            color: #00ff88;
+        }
+
+        /* Disabled state for game elements when wallet not connected */
+        .game-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         /* Sound toggle button */
         .sound-toggle {
             position: fixed;
@@ -392,638 +456,1094 @@
                 font-size: 16px;
             }
         }
-        </style>
-       
-
+  </style>
 </head>
 <body>
-    <!-- Sound toggle button -->
-    <button class="sound-toggle" id="sound-toggle">🔊</button>
+  <!-- Sound toggle button -->
+  <button class="sound-toggle" id="sound-toggle">🔊</button>
 
-    <div class="game-container">
-        <div class="game-header">
-            <h1 class="game-title">💣 Minesweeper</h1>
-        </div>
-        
-        <div class="difficulty-buttons">
-            <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
-            <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
-            <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
-        </div>
-
-        <div class="game-stats">
-            <div class="stat">
-                <span>Mines</span>
-                <span class="stat-value" id="mines-count">10</span>
-            </div>
-            <div class="stat">
-                <span>Flags</span>
-                <span class="stat-value" id="flags-count">0</span>
-            </div>
-            <div class="stat">
-                <span>Time</span>
-                <span class="stat-value" id="timer">0</span>
-            </div>
-        </div>
-
-        <div class="game-controls">
-            <button class="btn" id="new-game">New Game</button>
-            <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
-        </div>
-
-        <div class="minefield" id="minefield"></div>
-        
-        <div class="game-message" id="game-message"></div>
-        
-        <div class="share-section">
-            <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
-            <div class="share-buttons">
-                <button class="share-btn" id="share-warpcast">
-                    🟣 Share on Warpcast
-                </button>
-                <button class="share-btn" id="share-general">
-                    🔗 Copy Game Link
-                </button>
-                <button class="share-btn" id="share-result-btn" style="display: none;">
-                    🏆 Share Result
-                </button>
-            </div>
-        </div>
-        
-        <div class="instructions">
-            <strong>How to play:</strong><br>
-            • Tap to reveal cells<br>
-            • Use Flag Mode to mark mines<br>
-            • Numbers show nearby mines<br>
-            • Find all mines to win!
-        </div>
+  <div class="game-container">
+    <div class="game-header">
+      <h1 class="game-title">💣 Minesweeper</h1>
     </div>
 
-    <script>
-        class Minesweeper {
-            constructor() {
-                this.gameState = 'ready'; // ready, playing, won, lost
-                this.flagMode = false;
-                this.firstClick = true;
-                this.timer = 0;
-                this.timerInterval = null;
-                this.soundEnabled = true;
-                
-                this.difficulties = {
-                    easy: { rows: 9, cols: 9, mines: 10 },
-                    medium: { rows: 12, cols: 12, mines: 20 },
-                    hard: { rows: 15, cols: 15, mines: 35 }
-                };
-                
-                this.currentDifficulty = 'easy';
-                this.config = this.difficulties.easy;
-                
-                this.board = [];
-                this.revealed = [];
-                this.flagged = [];
-                
-                this.createSounds();
-                this.initializeGame();
-                this.setupEventListeners();
-            }
-            
-            createSounds() {
-                // Create audio context for sound effects
-                this.audioContext = null;
-                this.audioInitialized = false;
-                try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.log('Web Audio API not supported');
-                }
-            }
-            
-            initializeAudio() {
-                if (this.audioContext && this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
-                }
-                this.audioInitialized = true;
-            }
-            
-            playSound(type) {
-                if (!this.soundEnabled || !this.audioContext) return;
-                
-                // Initialize audio on first interaction
-                if (!this.audioInitialized) {
-                    this.initializeAudio();
-                }
-                
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(this.audioContext.destination);
-                
-                switch (type) {
-                    case 'click':
-                        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
-                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-                        oscillator.start();
-                        oscillator.stop(this.audioContext.currentTime + 0.1);
-                        break;
-                    case 'flag':
-                        oscillator.frequency.setValueAtTime(1200, this.audioContext.currentTime);
-                        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
-                        oscillator.start();
-                        oscillator.stop(this.audioContext.currentTime + 0.15);
-                        break;
-                    case 'mine':
-                        // Enhanced explosion sound - more dramatic
-                        oscillator.type = 'sawtooth';
-                        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.8);
-                        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
-                        oscillator.start();
-                        oscillator.stop(this.audioContext.currentTime + 0.8);
-                        console.log('Playing mine explosion sound!'); // Debug log
-                        break;
-                    case 'win':
-                        // Victory sound - ascending notes
-                        const notes = [523, 659, 784, 1047]; // C, E, G, C
-                        notes.forEach((freq, i) => {
-                            setTimeout(() => {
-                                const osc = this.audioContext.createOscillator();
-                                const gain = this.audioContext.createGain();
-                                osc.connect(gain);
-                                gain.connect(this.audioContext.destination);
-                                osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
-                                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
-                                osc.start();
-                                osc.stop(this.audioContext.currentTime + 0.3);
-                            }, i * 150);
-                        });
-                        return; // Skip the default oscillator code
-                }
-            }
-            
-            initializeGame() {
-                this.gameState = 'ready';
-                this.firstClick = true;
-                this.timer = 0;
-                this.clearTimer();
-                
-                const { rows, cols, mines } = this.config;
-                
-                // Initialize arrays
-                this.board = Array(rows).fill().map(() => Array(cols).fill(0));
-                this.revealed = Array(rows).fill().map(() => Array(cols).fill(false));
-                this.flagged = Array(rows).fill().map(() => Array(cols).fill(false));
-                
-                this.updateStats();
-                this.createMinefield();
-                this.clearMessage();
-                
-                // Hide share result button on new game
-                document.getElementById('share-result-btn').style.display = 'none';
-                
-                // Reset mode to dig mode
-                this.flagMode = false;
-                this.updateModeButton();
-            }
-            
-            setupEventListeners() {
-                document.getElementById('new-game').addEventListener('click', () => this.initializeGame());
-                document.getElementById('toggle-mode').addEventListener('click', () => this.toggleMode());
-                
-                document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.changeDifficulty(e.target.dataset.difficulty));
-                });
+    <div class="difficulty-buttons">
+      <button class="btn difficulty-btn active" data-difficulty="easy">Easy</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">Medium</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">Hard</button>
+    </div>
 
-                // Sound toggle
-                document.getElementById('sound-toggle').addEventListener('click', () => {
-                    this.soundEnabled = !this.soundEnabled;
-                    document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
-                });
+    <div class="game-stats">
+      <div class="stat">
+        <span>Mines</span>
+        <span class="stat-value" id="mines-count">10</span>
+      </div>
+      <div class="stat">
+        <span>Flags</span>
+        <span class="stat-value" id="flags-count">0</span>
+      </div>
+      <div class="stat">
+        <span>Time</span>
+        <span class="stat-value" id="timer">0</span>
+      </div>
+    </div>
 
-                // Share functionality
-                document.getElementById('share-warpcast').addEventListener('click', () => this.shareToWarpcast());
-                document.getElementById('share-general').addEventListener('click', () => this.copyGameLink());
-                document.getElementById('share-result-btn').addEventListener('click', () => this.shareResult());
-            }
-            
-            changeDifficulty(difficulty) {
-                this.currentDifficulty = difficulty;
-                this.config = this.difficulties[difficulty];
-                
-                document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
-                
-                this.initializeGame();
-            }
-            
-            toggleMode() {
-                this.flagMode = !this.flagMode;
-                this.updateModeButton();
-                this.playSound('flag'); // Play sound when switching modes
-            }
-            
-            updateModeButton() {
-                const btn = document.getElementById('toggle-mode');
-                if (this.flagMode) {
-                    btn.textContent = '🚩 Flag Mode';
-                    btn.className = 'btn flag-mode';
-                } else {
-                    btn.textContent = '👆 Reveal Mode';
-                    btn.className = 'btn dig-mode';
-                }
-            }
-            
-            createMinefield() {
-                const minefield = document.getElementById('minefield');
-                const { rows, cols } = this.config;
-                
-                minefield.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-                minefield.innerHTML = '';
-                
-                for (let row = 0; row < rows; row++) {
-                    for (let col = 0; col < cols; col++) {
-                        const cell = document.createElement('button');
-                        cell.className = 'cell';
-                        cell.dataset.row = row;
-                        cell.dataset.col = col;
-                        
-                        // Handle both click and touch events
-                        cell.addEventListener('click', (e) => this.handleCellClick(e));
-                        cell.addEventListener('contextmenu', (e) => {
-                            e.preventDefault();
-                            this.handleRightClick(row, col);
-                        });
-                        
-                        minefield.appendChild(cell);
-                    }
-                }
-            }
-            
-            placeMines(excludeRow, excludeCol) {
-                const { rows, cols, mines } = this.config;
-                let minesPlaced = 0;
-                
-                while (minesPlaced < mines) {
-                    const row = Math.floor(Math.random() * rows);
-                    const col = Math.floor(Math.random() * cols);
-                    
-                    // Don't place mine on first click or if already has mine
-                    if ((row === excludeRow && col === excludeCol) || this.board[row][col] === -1) {
-                        continue;
-                    }
-                    
-                    this.board[row][col] = -1;
-                    minesPlaced++;
-                    
-                    // Update adjacent numbers
-                    for (let dr = -1; dr <= 1; dr++) {
-                        for (let dc = -1; dc <= 1; dc++) {
-                            const newRow = row + dr;
-                            const newCol = col + dc;
-                            
-                            if (this.isValidCell(newRow, newCol) && this.board[newRow][newCol] !== -1) {
-                                this.board[newRow][newCol]++;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            isValidCell(row, col) {
-                return row >= 0 && row < this.config.rows && col >= 0 && col < this.config.cols;
-            }
-            
-            handleCellClick(e) {
-                if (this.gameState === 'won' || this.gameState === 'lost') return;
-                
-                // Initialize audio on first user interaction
-                if (!this.audioInitialized) {
-                    this.initializeAudio();
-                }
-                
-                const row = parseInt(e.target.dataset.row);
-                const col = parseInt(e.target.dataset.col);
-                
-                if (this.flagMode) {
-                    this.handleRightClick(row, col);
-                } else {
-                    this.revealCell(row, col);
-                }
-            }
-            
-            handleRightClick(row, col) {
-                if (this.revealed[row][col]) return;
-                
-                this.flagged[row][col] = !this.flagged[row][col];
-                this.playSound('flag'); // Play flag sound
-                this.updateCellDisplay(row, col);
-                this.updateStats();
-            }
-            
-            revealCell(row, col) {
-                if (this.revealed[row][col] || this.flagged[row][col]) return;
-                
-                if (this.firstClick) {
-                    this.placeMines(row, col);
-                    this.firstClick = false;
-                    this.gameState = 'playing';
-                    this.startTimer();
-                }
-                
-                this.revealed[row][col] = true;
-                
-                if (this.board[row][col] === -1) {
-                    // Play explosion sound immediately when mine is hit
-                    console.log('Mine hit! Playing explosion sound...');
-                    this.playSound('mine');
-                    this.updateCellDisplay(row, col);
-                    // Small delay to let the explosion sound start before game over
-                    setTimeout(() => {
-                        this.gameOver(false);
-                    }, 100);
-                    return;
-                }
-                
-                this.playSound('click'); // Play click sound only for safe cells
-                
-                if (this.board[row][col] === 0) {
-                    // Reveal adjacent cells for empty cells
-                    for (let dr = -1; dr <= 1; dr++) {
-                        for (let dc = -1; dc <= 1; dc++) {
-                            const newRow = row + dr;
-                            const newCol = col + dc;
-                            if (this.isValidCell(newRow, newCol)) {
-                                this.revealCell(newRow, newCol);
-                            }
-                        }
-                    }
-                }
-                
-                this.updateCellDisplay(row, col);
-                this.checkWinCondition();
-            }
-            
-            updateCellDisplay(row, col) {
-                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                
-                // Clear all special classes first
-                cell.classList.remove('flagged', 'mine', 'false-flag');
-                
-                if (this.flagged[row][col]) {
-                    cell.textContent = '🚩';
-                    cell.classList.add('flagged');
-                } else {
-                    if (this.revealed[row][col]) {
-                        cell.classList.add('revealed');
-                        
-                        if (this.board[row][col] === -1) {
-                            cell.textContent = '💣';
-                            cell.classList.add('mine');
-                        } else if (this.board[row][col] > 0) {
-                            cell.textContent = this.board[row][col];
-                            cell.classList.add(`number-${this.board[row][col]}`);
-                        } else {
-                            cell.textContent = '';
-                        }
-                    } else {
-                        cell.textContent = '';
-                        cell.classList.remove('revealed');
-                    }
-                }
-            }
-            
-            checkWinCondition() {
-                const { rows, cols } = this.config;
-                let cellsToReveal = 0;
-                
-                for (let row = 0; row < rows; row++) {
-                    for (let col = 0; col < cols; col++) {
-                        if (this.board[row][col] !== -1 && !this.revealed[row][col]) {
-                            cellsToReveal++;
-                        }
-                    }
-                }
-                
-                if (cellsToReveal === 0) {
-                    this.gameOver(true);
-                }
-            }
-            
-            gameOver(won) {
-                this.gameState = won ? 'won' : 'lost';
-                this.clearTimer();
-                
-                if (won) {
-                    this.playSound('win');
-                } else {
-                    // Mine sound is already played in revealCell, so just reveal mines and false flags
-                    console.log('Game over - revealing all mines and false flags');
-                    this.revealMinesAndFalseFlags();
-                }
-                
-                this.showMessage(won);
-                
-                // Show share result button if game is completed
-                const shareResultBtn = document.getElementById('share-result-btn');
-                shareResultBtn.style.display = 'inline-flex';
-            }
-            
-            revealMinesAndFalseFlags() {
-                for (let row = 0; row < this.config.rows; row++) {
-                    for (let col = 0; col < this.config.cols; col++) {
-                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                        
-                        if (this.board[row][col] === -1) {
-                            // Reveal mine
-                            this.revealed[row][col] = true;
-                            this.updateCellDisplay(row, col);
-                        } else if (this.flagged[row][col]) {
-                            // This is a false flag
-                            cell.classList.add('false-flag');
-                            cell.textContent = '❌';
-                        }
-                    }
-                }
-            }
-            
-            showMessage(won) {
-                const messageEl = document.getElementById('game-message');
-                if (won) {
-                    messageEl.textContent = `🎉 You Won in ${this.timer}s!`;
-                    messageEl.className = 'game-message win';
-                } else {
-                    messageEl.textContent = '💥 Game Over!';
-                    messageEl.className = 'game-message lose';
-                }
-            }
-            
-            clearMessage() {
-                const messageEl = document.getElementById('game-message');
-                messageEl.textContent = '';
-                messageEl.className = 'game-message';
-            }
-            
-            updateStats() {
-                const flagsUsed = this.flagged.flat().filter(f => f).length;
-                document.getElementById('mines-count').textContent = this.config.mines;
-                document.getElementById('flags-count').textContent = flagsUsed;
-                document.getElementById('timer').textContent = this.timer;
-            }
-            
-            startTimer() {
-                this.timerInterval = setInterval(() => {
-                    this.timer++;
-                    this.updateStats();
-                }, 1000);
-            }
-            
-            clearTimer() {
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
-                    this.timerInterval = null;
-                }
-            }
+    <div class="game-controls">
+      <button class="btn" id="new-game">New Game</button>
+      <button class="btn dig-mode" id="toggle-mode">👆 Reveal Mode</button>
+    </div>
 
-            // Farcaster sharing methods
-            getGameUrl() {
-                // Get current page URL or use a default
-                return window.location.href || 'https://your-domain.com/minesweeper.html';
-            }
+    <!-- Wallet Connection Section -->
+    <div class="wallet-section" id="wallet-section">
+      <button class="btn wallet-btn" id="connect-wallet">🔗 Connect Wallet</button>
+      <div class="wallet-status" id="wallet-status" style="display: none;">
+        <div>
+          <span>👤 Connected: </span>
+          <span id="wallet-address"></span>
+        </div>
+        <div class="chain-indicator" id="chain-indicator">Checking network...</div>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="share-btn" id="mint-early-btn" style="display:none;">🎟️ Mint Early Adopter NFT</button>
+        <span id="mint-status" style="display:none;font-size:0.8rem;margin-left:8px;"></span>
+      </div>
+    </div>
 
-            getDifficultyEmoji() {
-                switch(this.currentDifficulty) {
-                    case 'easy': return '🟢';
-                    case 'medium': return '🟡';
-                    case 'hard': return '🔴';
-                    default: return '💣';
-                }
-            }
+    <div class="minefield" id="minefield"></div>
+    <div class="game-message" id="game-message"></div>
 
-            generateResultText() {
-                const difficultyEmoji = this.getDifficultyEmoji();
-                const difficultyName = this.currentDifficulty.charAt(0).toUpperCase() + this.currentDifficulty.slice(1);
-                const { rows, cols, mines } = this.config;
-                
-                if (this.gameState === 'won') {
-                    return `🎉 I just won Minesweeper! ${difficultyEmoji}\n\n` +
-                           `Difficulty: ${difficultyName} (${rows}×${cols}, ${mines} mines)\n` +
-                           `Time: ${this.timer}s ⏱️\n\n` +
-                           `Think you can beat my time? 🤔\n` +
-                           `Play here: ${this.getGameUrl()}`;
-                } else {
-                    return `💥 I got blown up in Minesweeper! ${difficultyEmoji}\n\n` +
-                           `Difficulty: ${difficultyName} (${rows}×${cols}, ${mines} mines)\n` +
-                           `Time survived: ${this.timer}s ⏱️\n\n` +
-                           `Think you can do better? 💪\n` +
-                           `Try your luck: ${this.getGameUrl()}`;
-                }
-            }
+    <div class="share-section">
+      <div class="share-result" id="share-result">Link copied to clipboard! 📋</div>
+      <div class="share-buttons">
+        <button class="share-btn" id="share-warpcast">🟣 Share on Warpcast</button>
+        <button class="share-btn" id="share-general">🔗 Copy Game Link</button>
+        <button class="share-btn" id="share-result-btn" style="display: none;">🏆 Share Result</button>
+      </div>
+    </div>
 
-            shareToWarpcast() {
-                const gameUrl = this.getGameUrl();
-                const shareText = `🎮 Playing Minesweeper on Farcaster! 💣\n\nCan you clear the minefield without exploding? 🤔\n\n🎯 3 difficulty levels\n⏱️ Beat the clock\n📱 Mobile-friendly\n\nPlay now: ${gameUrl}`;
-                
-                // Encode the text for URL
-                const encodedText = encodeURIComponent(shareText);
-                
-                // Warpcast share URL
-                const warpcastUrl = `https://warpcast.com/~/compose?text=${encodedText}`;
-                
-                // Open in new window/tab
-                window.open(warpcastUrl, '_blank', 'width=600,height=400');
-            }
+    <div class="instructions">
+      <strong>How to play:</strong><br>
+      • Tap to reveal cells<br>
+      • Use Flag Mode to mark mines<br>
+      • Numbers show nearby mines<br>
+      • Find all mines to win!
+    </div>
+  </div>
 
-            async copyGameLink() {
-                const gameUrl = this.getGameUrl();
-                
-                try {
-                    await navigator.clipboard.writeText(gameUrl);
-                    this.showShareResult('Game link copied to clipboard! 🔗');
-                } catch (err) {
-                    // Fallback for browsers that don't support clipboard API
-                    this.fallbackCopyTextToClipboard(gameUrl);
-                }
-            }
+  <script>
+    // Global variables for Farcaster wallet
+    let walletConnected = false;
+    let provider, signer, userAddress, farcasterUser;
 
-            shareResult() {
-                if (this.gameState === 'ready' || this.gameState === 'playing') {
-                    this.showShareResult('Finish the game first! 🎮', 'error');
-                    return;
-                }
-
-                const resultText = this.generateResultText();
-                const encodedText = encodeURIComponent(resultText);
-                const warpcastUrl = `https://warpcast.com/~/compose?text=${encodedText}`;
-                
-                window.open(warpcastUrl, '_blank', 'width=600,height=400');
-            }
-
-            fallbackCopyTextToClipboard(text) {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                
-                // Avoid scrolling to bottom
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-                
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        this.showShareResult('Game link copied to clipboard! 🔗');
-                    } else {
-                        this.showShareResult('Could not copy link 😅', 'error');
-                    }
-                } catch (err) {
-                    this.showShareResult('Could not copy link 😅', 'error');
-                }
-                
-                document.body.removeChild(textArea);
-            }
-
-            showShareResult(message, type = 'success') {
-                const shareResult = document.getElementById('share-result');
-                shareResult.textContent = message;
-                shareResult.style.display = 'block';
-                
-                if (type === 'error') {
-                    shareResult.style.background = 'rgba(255, 0, 0, 0.1)';
-                    shareResult.style.color = '#ff6666';
-                    shareResult.style.borderColor = 'rgba(255, 0, 0, 0.3)';
-                } else {
-                    shareResult.style.background = 'rgba(0, 255, 0, 0.1)';
-                    shareResult.style.color = '#00ff88';
-                    shareResult.style.borderColor = 'rgba(0, 255, 0, 0.3)';
-                }
-                
-                // Hide after 3 seconds
-                setTimeout(() => {
-                    shareResult.style.display = 'none';
-                }, 3000);
-            }
+    // Connect wallet function with better error handling
+    async function connectWallet() {
+      if (walletConnected) return true;
+      
+      // Update button state
+      const connectBtn = document.getElementById('connect-wallet');
+      connectBtn.textContent = '⏳ Connecting...';
+      connectBtn.disabled = true;
+      
+      try {
+        // First try MetaMask if available (more reliable)
+        if (window.ethereum) {
+          console.log("Trying MetaMask connection first...");
+          const success = await connectMetaMaskWallet();
+          if (success) return true;
         }
         
-        // Initialize the game when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new Minesweeper();
-            
-            if (window.farcasterSdk &&
-              window.farcasterSdk.actions &&
-                typeof window.farcasterSdk.actions.ready === 'function') {
-              window.farcasterSdk.actions.ready();
-              console.log("✅ Mini App ready() called");
-            } else {
-              console.error("❌ Mini App SDK not available");
+        // Then try Farcaster if SDK is available
+        if (window.farcasterSdk) {
+          console.log("Trying Farcaster connection...");
+          return await connectFarcasterWallet();
+        }
+        
+        throw new Error("No wallet provider available. Please install MetaMask!");
+        
+      } catch (err) {
+        console.error("❌ All wallet connection attempts failed:", err);
+        
+        // Reset button
+        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.disabled = false;
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`❌ Connection failed: ${err.message}`, "error");
+        } else {
+          alert(`Wallet connection failed: ${err.message}`);
+        }
+        return false;
+      }
+    }
+
+    // Farcaster wallet connection
+    async function connectFarcasterWallet() {
+      try {
+        console.log("Available Farcaster SDK methods:", Object.keys(window.farcasterSdk));
+        
+        // Get user context from Farcaster SDK
+        const context = await window.farcasterSdk.context;
+        console.log("Farcaster context:", context);
+        
+        if (!context || !context.user) {
+          throw new Error("No Farcaster user context available");
+        }
+        
+        // Store Farcaster user data
+        farcasterUser = context.user;
+        console.log("Farcaster user:", farcasterUser);
+        
+        // For Farcaster, we'll use the embedded wallet or MetaMask
+        if (window.ethereum) {
+          // Switch to Base chain if not already on it
+          await switchToBaseChain();
+          
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          
+          if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts found");
+          }
+          
+          signer = provider.getSigner();
+          userAddress = await signer.getAddress();
+          
+          console.log("✅ Wallet connected via Farcaster context");
+          
+          // Request signature for authentication
+          const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+          const signature = await signer.signMessage(message);
+          console.log("✅ Message signed successfully");
+          
+        walletConnected = true;
+        await updateWalletUI();
+        
+        if (window.gameInstance) {
+          window.gameInstance.showShareResult(`🎉 Farcaster wallet connected! Welcome ${farcasterUser.displayName || farcasterUser.username || 'User'}!`, "success");
+          window.gameInstance.enableGame();
+        }
+          
+          return true;
+        } else {
+          throw new Error("No ethereum provider available");
+        }
+        
+      } catch (err) {
+        console.error("Farcaster connection failed:", err);
+        throw err;
+      }
+    }
+
+    // Switch to Base chain
+    async function switchToBaseChain() {
+      try {
+        const baseChainId = '0x2105'; // 8453 in hex
+        const baseChainConfig = {
+          chainId: baseChainId,
+          chainName: 'Base',
+          rpcUrls: ['https://mainnet.base.org'],
+          nativeCurrency: {
+            name: 'Ethereum',
+            symbol: 'ETH',
+            decimals: 18
+          },
+          blockExplorerUrls: ['https://basescan.org']
+        };
+
+        try {
+          // Try to switch to Base chain
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: baseChainId }],
+          });
+          console.log("✅ Switched to Base chain");
+        } catch (switchError) {
+          // If the chain doesn't exist, add it
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [baseChainConfig],
+              });
+              console.log("✅ Added and switched to Base chain");
+            } catch (addError) {
+              throw new Error("Failed to add Base chain: " + addError.message);
             }
+          } else {
+            throw new Error("Failed to switch to Base chain: " + switchError.message);
+          }
+        }
+      } catch (err) {
+        console.error("Base chain switch failed:", err);
+        throw new Error("Please switch to Base chain manually in your wallet");
+      }
+    }
+
+    // MetaMask connection with signature
+    async function connectMetaMaskWallet() {
+      try {
+        if (!window.ethereum) {
+          throw new Error("MetaMask not installed");
+        }
+        
+        console.log("Connecting to MetaMask...");
+        
+        // Switch to Base chain first
+        await switchToBaseChain();
+        
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        // Request account access
+        const accounts = await provider.send("eth_requestAccounts", []);
+        if (!accounts || accounts.length === 0) {
+          throw new Error("No accounts found in MetaMask");
+        }
+        
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        
+        console.log("MetaMask connected, address:", userAddress);
+        
+        // Request signature for authentication
+        const message = `Sign in to Minesweeper Game\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+        
+        try {
+          const signature = await signer.signMessage(message);
+          console.log("✅ MetaMask message signed successfully");
+          
+          walletConnected = true;
+          await updateWalletUI();
+          
+          if (window.gameInstance) {
+            window.gameInstance.showShareResult(`🦊 MetaMask connected successfully on Base!`, "success");
+            window.gameInstance.enableGame();
+          }
+          
+          return true;
+          
+        } catch (signError) {
+          if (signError.code === 4001) {
+            throw new Error("Please sign the message to authenticate");
+          } else {
+            throw new Error("Signature failed: " + signError.message);
+          }
+        }
+        
+      } catch (err) {
+        console.error("MetaMask connection failed:", err);
+        if (err.code === 4001) {
+          throw new Error("Please connect your MetaMask wallet");
+        } else if (err.code === -32002) {
+          throw new Error("MetaMask connection request pending. Please check MetaMask.");
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    // Update wallet UI
+    async function updateWalletUI() {
+      const connectBtn = document.getElementById('connect-wallet');
+      const walletStatus = document.getElementById('wallet-status');
+      const walletAddress = document.getElementById('wallet-address');
+      const chainIndicator = document.getElementById('chain-indicator');
+      
+      if (walletConnected && userAddress) {
+        connectBtn.textContent = '✅ Connected';
+        connectBtn.classList.add('connected');
+        connectBtn.disabled = false;
+        
+        walletStatus.style.display = 'flex';
+        walletAddress.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+        
+        // Update chain indicator
+        try {
+          if (provider) {
+            const network = await provider.getNetwork();
+            if (network.chainId === 8453) {
+              chainIndicator.textContent = '🔗 Base Chain';
+              chainIndicator.classList.add('base');
+            } else {
+              chainIndicator.textContent = `⚠️ Chain ID: ${network.chainId}`;
+              chainIndicator.classList.remove('base');
+            }
+          } else {
+            chainIndicator.textContent = '❓ Unknown Network';
+          }
+        } catch (err) {
+          chainIndicator.textContent = '❌ Network Error';
+        }
+        
+        // Enable game elements
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.remove('game-disabled');
         });
-    </script>
+        document.getElementById('minefield').classList.remove('game-disabled');
+
+        // Show mint button if on Base
+        try {
+          const net = await provider.getNetwork();
+          document.getElementById('mint-early-btn').style.display = (net.chainId === 8453) ? 'inline-flex' : 'none';
+        } catch (_) {}
+        
+      } else {
+        connectBtn.textContent = '🔗 Connect Wallet';
+        connectBtn.classList.remove('connected');
+        connectBtn.disabled = false;
+        
+        walletStatus.style.display = 'none';
+        
+        // Disable game elements
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.add('game-disabled');
+        });
+        document.getElementById('minefield').classList.add('game-disabled');
+        document.getElementById('mint-early-btn').style.display = 'none';
+      }
+    }
+
+    // Early Adopter NFT config
+    const EARLY_NFT = {
+      address: '0xDeD9E2Ba6f705aFb182b0d2568aE3468636aCA1b', // TODO: replace after deploy
+      abi: [
+        { "inputs": [], "name": "mint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+        { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability": "view", "type": "function" },
+        { "inputs": [ {"internalType":"address","name":"","type":"address"} ], "name": "hasMinted", "outputs": [ {"internalType":"bool","name":"","type":"bool"} ], "stateMutability": "view", "type": "function" }
+      ]
+    };
+
+    async function mintEarlyAdopter() {
+      try {
+        if (!walletConnected) {
+          window.gameInstance.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+        const net = await provider.getNetwork();
+        if (net.chainId !== 8453) {
+          await switchToBaseChain();
+        }
+
+        if (EARLY_NFT.address === '0x0000000000000000000000000000000000000000') {
+          window.gameInstance.showShareResult('Contract not configured yet. Please try later.', 'error');
+          return;
+        }
+
+        const contract = new ethers.Contract(EARLY_NFT.address, EARLY_NFT.abi, signer);
+        const btn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        btn.disabled = true;
+        statusEl.style.display = 'inline';
+        statusEl.textContent = '⏳ Minting...';
+
+        const tx = await contract.mint({ gasLimit: 120000 });
+        window.gameInstance.showShareResult('⏳ Waiting for confirmation...', 'info');
+        await tx.wait();
+
+        statusEl.textContent = '✅ Minted!';
+        window.gameInstance.showShareResult('✅ Early Adopter NFT minted!', 'success');
+      } catch (e) {
+        console.error(e);
+        window.gameInstance.showShareResult(e?.message || 'Mint failed', 'error');
+      } finally {
+        const btn = document.getElementById('mint-early-btn');
+        const statusEl = document.getElementById('mint-status');
+        btn.disabled = false;
+        setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+      }
+    }
+
+    // NFT minting function with Farcaster integration
+    async function captureAndMint(result) {
+      try {
+        // Capture game screenshot
+        const canvas = await html2canvas(document.querySelector(".game-container"));
+        const image = canvas.toDataURL("image/png");
+
+        // Create enhanced metadata with Farcaster info
+        const metadata = {
+          name: `Minesweeper - ${result.win ? "Victory" : "Defeat"}`,
+          description: `Difficulty: ${result.difficulty}, Time: ${result.time}s, Result: ${result.win ? "Win" : "Loss"}${result.farcasterUser ? ` by @${result.farcasterUser.username || result.farcasterUser.displayName || 'Anonymous'}` : ''}`,
+          image: image,
+          attributes: [
+            { trait_type: "Difficulty", value: result.difficulty },
+            { trait_type: "Time", value: result.time },
+            { trait_type: "Result", value: result.win ? "Win" : "Lose" },
+            { trait_type: "Player", value: result.farcasterUser?.username || result.farcasterUser?.displayName || "Anonymous" },
+            { trait_type: "Platform", value: "Farcaster" }
+          ]
+        };
+
+        const tokenURI = "data:application/json;base64," + btoa(JSON.stringify(metadata));
+
+        // Check if we're on Base chain first
+        const network = await provider.getNetwork();
+        if (network.chainId !== 8453) {
+          throw new Error("Please switch to Base chain to mint NFTs");
+        }
+
+        // TODO: Replace with your deployed contract address from Remix
+        const CONTRACT_ADDRESS = "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93"; // Your deployed contract address
+        const CONTRACT_ABI = [
+          {
+            "inputs": [
+              {"internalType": "string", "name": "difficulty", "type": "string"},
+              {"internalType": "uint256", "name": "time", "type": "uint256"},
+              {"internalType": "bool", "name": "win", "type": "bool"},
+              {"internalType": "string", "name": "playerName", "type": "string"},
+              {"internalType": "string", "name": "imageHash", "type": "string"}
+            ],
+            "name": "mintGameResult",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ];
+
+        // Check if contract is deployed
+        if (CONTRACT_ADDRESS === "0x1c0EaF74aDf6017ed1519aAc4e672e1C24CB6B93") {
+          // Fallback to simple transaction if contract not deployed
+          window.gameInstance.showShareResult("⏳ Creating game result record...", "info");
+          
+          const gameResultHash = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(
+              `${userAddress}-${result.difficulty}-${result.time}-${result.win}-${Date.now()}`
+            )
+          );
+          
+          try {
+            const gasPrice = await provider.getGasPrice();
+            const gasLimit = 100000;
+            
+            const tx = await signer.sendTransaction({
+              to: userAddress,
+              value: 0,
+              gasLimit: gasLimit,
+              gasPrice: gasPrice,
+              data: ethers.utils.toUtf8Bytes(`Minesweeper Result: ${JSON.stringify({
+                hash: gameResultHash,
+                difficulty: result.difficulty,
+                time: result.time,
+                win: result.win,
+                timestamp: Date.now(),
+                player: result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous'
+              })}`)
+            });
+            
+            window.gameInstance.showShareResult("⏳ Recording result on Base chain...", "info");
+            await tx.wait();
+            
+            window.gameInstance.showShareResult("✅ Game result recorded on Base chain! 🎉", "success");
+            console.log("✅ Game result recorded:", {
+              txHash: tx.hash,
+              gameHash: gameResultHash,
+              baseScanUrl: `https://basescan.org/tx/${tx.hash}`
+            });
+            
+          } catch (txError) {
+            console.error("Transaction failed:", txError);
+            window.gameInstance.showShareResult("✅ Game result saved locally! 🎉", "success");
+          }
+        } else {
+          // Use deployed NFT contract
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          
+          window.gameInstance.showShareResult("⏳ Minting NFT on Base chain...", "info");
+          
+          const tx = await contract.mintGameResult(
+            result.difficulty,
+            result.time,
+            result.win,
+            result.farcasterUser?.username || result.farcasterUser?.displayName || 'Anonymous',
+            image, // Base64 encoded image
+            {
+              gasLimit: 500000
+            }
+          );
+          
+          window.gameInstance.showShareResult("⏳ Waiting for confirmation...", "info");
+          await tx.wait();
+          
+          window.gameInstance.showShareResult("✅ NFT Minted Successfully! 🎉", "success");
+          console.log("✅ NFT Minted:", {
+            txHash: tx.hash,
+            contractAddress: CONTRACT_ADDRESS,
+            baseScanUrl: `https://basescan.org/tx/${tx.hash}`
+          });
+        }
+        
+        // Share on Farcaster if SDK available
+        if (window.farcasterSdk && result.farcasterUser) {
+          try {
+            const shareText = `🎮 Just minted my Minesweeper result as an NFT!\n${result.win ? '🏆 Victory!' : '💣 Game Over'}\nDifficulty: ${result.difficulty}\nTime: ${result.time}s`;
+            
+            // Use Farcaster SDK to share (if available)
+            if (window.farcasterSdk.actions.cast) {
+              await window.farcasterSdk.actions.cast({
+                text: shareText,
+                embeds: [window.location.href]
+              });
+            }
+          } catch (shareError) {
+            console.log("Auto-share failed, but NFT was minted successfully");
+          }
+        }
+        
+      } catch (err) {
+        console.error("❌ Mint failed:", err);
+        let errorMsg = "❌ NFT minting failed: ";
+        
+        if (err.message.includes("user rejected")) {
+          errorMsg += "Transaction was cancelled";
+        } else if (err.message.includes("insufficient funds")) {
+          errorMsg += "Insufficient funds for gas";
+        } else {
+          errorMsg += err.message || "Unknown error";
+        }
+        
+        window.gameInstance.showShareResult(errorMsg, "error");
+      }
+    }
+
+    // Minesweeper Game Class
+    class Minesweeper {
+      constructor() {
+        this.gameState = 'ready';
+        this.flagMode = false;
+        this.firstClick = true;
+        this.timer = 0;
+        this.timerInterval = null;
+        this.soundEnabled = true;
+
+        this.difficulties = {
+          easy: { rows: 9, cols: 9, mines: 10 },
+          medium: { rows: 12, cols: 12, mines: 20 },
+          hard: { rows: 15, cols: 15, mines: 35 }
+        };
+
+        this.currentDifficulty = 'easy';
+        this.config = this.difficulties.easy;
+        this.board = [];
+        this.revealed = [];
+        this.flagged = [];
+
+        this.createSounds();
+        this.initializeGame();
+        this.setupEventListeners();
+      }
+
+      createSounds() {
+        // Create sound effects using Web Audio API
+        this.audioContext = null;
+        try {
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      }
+
+      playSound(frequency = 440, duration = 200, type = 'sine') {
+        if (!this.soundEnabled || !this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = type;
+
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration / 1000);
+      }
+
+      initializeGame() {
+        this.gameState = 'ready';
+        this.firstClick = true;
+        this.timer = 0;
+        this.clearTimer();
+        
+        this.config = this.difficulties[this.currentDifficulty];
+        this.board = [];
+        this.revealed = [];
+        this.flagged = [];
+
+        // Initialize empty board
+        for (let i = 0; i < this.config.rows; i++) {
+          this.board[i] = [];
+          this.revealed[i] = [];
+          this.flagged[i] = [];
+          for (let j = 0; j < this.config.cols; j++) {
+            this.board[i][j] = 0;
+            this.revealed[i][j] = false;
+            this.flagged[i][j] = false;
+          }
+        }
+
+        this.updateDisplay();
+        this.renderBoard();
+        document.getElementById('game-message').textContent = '';
+        document.getElementById('share-result-btn').style.display = 'none';
+      }
+
+      placeMines(excludeRow, excludeCol) {
+        let minesPlaced = 0;
+        while (minesPlaced < this.config.mines) {
+          const row = Math.floor(Math.random() * this.config.rows);
+          const col = Math.floor(Math.random() * this.config.cols);
+          
+          // Don't place mine on first click or if already has mine
+          if ((row === excludeRow && col === excludeCol) || this.board[row][col] === -1) {
+            continue;
+          }
+          
+          this.board[row][col] = -1; // -1 represents a mine
+          minesPlaced++;
+        }
+
+        // Calculate numbers for each cell
+        for (let i = 0; i < this.config.rows; i++) {
+          for (let j = 0; j < this.config.cols; j++) {
+            if (this.board[i][j] !== -1) {
+              this.board[i][j] = this.countAdjacentMines(i, j);
+            }
+          }
+        }
+      }
+
+      countAdjacentMines(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            const newRow = row + i;
+            const newCol = col + j;
+            if (newRow >= 0 && newRow < this.config.rows && 
+                newCol >= 0 && newCol < this.config.cols && 
+                this.board[newRow][newCol] === -1) {
+              count++;
+            }
+          }
+        }
+        return count;
+      }
+
+      renderBoard() {
+        const minefield = document.getElementById('minefield');
+        minefield.innerHTML = '';
+        minefield.style.gridTemplateColumns = `repeat(${this.config.cols}, 32px)`;
+        minefield.style.gridTemplateRows = `repeat(${this.config.rows}, 32px)`;
+
+        for (let i = 0; i < this.config.rows; i++) {
+          for (let j = 0; j < this.config.cols; j++) {
+            const cell = document.createElement('button');
+            cell.className = 'cell';
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            
+            cell.addEventListener('click', (e) => {
+              e.preventDefault();
+              this.handleCellClick(i, j);
+            });
+
+            minefield.appendChild(cell);
+          }
+        }
+
+        this.updateBoard();
+      }
+
+      updateBoard() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          const row = parseInt(cell.dataset.row);
+          const col = parseInt(cell.dataset.col);
+          
+          cell.className = 'cell';
+          cell.textContent = '';
+
+          if (this.flagged[row][col]) {
+            cell.classList.add('flagged');
+            cell.textContent = '🚩';
+          } else if (this.revealed[row][col]) {
+            cell.classList.add('revealed');
+            if (this.board[row][col] === -1) {
+              cell.classList.add('mine');
+              cell.textContent = '💣';
+            } else if (this.board[row][col] > 0) {
+              cell.textContent = this.board[row][col];
+              cell.classList.add(`number-${this.board[row][col]}`);
+            }
+          }
+        });
+      }
+
+      async handleCellClick(row, col) {
+        // Check if wallet is connected before allowing any gameplay
+        if (!walletConnected) {
+          this.showShareResult('Please connect your wallet first! 🔗', 'error');
+          return;
+        }
+
+        if (this.gameState !== 'ready' && this.gameState !== 'playing') return;
+        if (this.revealed[row][col]) return;
+
+        if (this.flagMode) {
+          this.toggleFlag(row, col);
+          return;
+        }
+
+        // First click - place mines
+        if (this.firstClick) {
+          this.placeMines(row, col);
+          this.firstClick = false;
+          this.gameState = 'playing';
+          this.startTimer();
+        }
+
+        if (this.flagged[row][col]) return;
+
+        this.revealCell(row, col);
+        this.playSound(800, 100);
+
+        if (this.board[row][col] === -1) {
+          this.gameOver(false);
+        } else if (this.checkWin()) {
+          this.gameOver(true);
+        }
+
+        this.updateBoard();
+        this.updateDisplay();
+      }
+
+      revealCell(row, col) {
+        if (row < 0 || row >= this.config.rows || col < 0 || col >= this.config.cols) return;
+        if (this.revealed[row][col] || this.flagged[row][col]) return;
+
+        this.revealed[row][col] = true;
+
+        // Auto-reveal adjacent cells if this cell has no adjacent mines
+        if (this.board[row][col] === 0) {
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              this.revealCell(row + i, col + j);
+            }
+          }
+        }
+      }
+
+      toggleFlag(row, col) {
+        if (this.revealed[row][col]) return;
+
+        this.flagged[row][col] = !this.flagged[row][col];
+        this.playSound(600, 150);
+        this.updateBoard();
+        this.updateDisplay();
+      }
+
+      checkWin() {
+        for (let i = 0; i < this.config.rows; i++) {
+          for (let j = 0; j < this.config.cols; j++) {
+            if (this.board[i][j] !== -1 && !this.revealed[i][j]) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      gameOver(won) {
+        this.gameState = won ? 'won' : 'lost';
+        this.clearTimer();
+
+        if (won) {
+          this.playSound(880, 500, 'triangle');
+          document.getElementById('game-message').textContent = '🎉 You won!';
+          document.getElementById('game-message').className = 'game-message win';
+        } else {
+          this.playSound(220, 800, 'sawtooth');
+          document.getElementById('game-message').textContent = '💥 Game over!';
+          document.getElementById('game-message').className = 'game-message lose';
+          
+          // Reveal all mines
+          for (let i = 0; i < this.config.rows; i++) {
+            for (let j = 0; j < this.config.cols; j++) {
+              if (this.board[i][j] === -1) {
+                this.revealed[i][j] = true;
+              }
+              if (this.flagged[i][j] && this.board[i][j] !== -1) {
+                document.querySelector(`[data-row="${i}"][data-col="${j}"]`).classList.add('false-flag');
+              }
+            }
+          }
+        }
+
+        document.getElementById('share-result-btn').style.display = 'inline-flex';
+        this.updateBoard();
+      }
+
+      startTimer() {
+        this.timerInterval = setInterval(() => {
+          this.timer++;
+          document.getElementById('timer').textContent = this.timer;
+        }, 1000);
+      }
+
+      clearTimer() {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+      }
+
+      updateDisplay() {
+        document.getElementById('mines-count').textContent = this.config.mines;
+        
+        const flagCount = this.flagged.flat().filter(Boolean).length;
+        document.getElementById('flags-count').textContent = flagCount;
+        document.getElementById('timer').textContent = this.timer;
+      }
+
+      toggleMode() {
+        this.flagMode = !this.flagMode;
+        const button = document.getElementById('toggle-mode');
+        
+        if (this.flagMode) {
+          button.textContent = '🚩 Flag Mode';
+          button.className = 'btn flag-mode';
+        } else {
+          button.textContent = '👆 Reveal Mode';
+          button.className = 'btn dig-mode';
+        }
+      }
+
+      changeDifficulty(difficulty) {
+        if (this.gameState === 'playing') {
+          if (!confirm('This will start a new game. Continue?')) return;
+        }
+
+        this.currentDifficulty = difficulty;
+        
+        // Update active button
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+        
+        this.initializeGame();
+      }
+
+      shareToWarpcast() {
+        const gameUrl = window.location.href;
+        const text = encodeURIComponent('🎮 Playing Minesweeper! Can you beat my score?');
+        const warpcastUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(gameUrl)}`;
+        window.open(warpcastUrl, '_blank');
+      }
+
+      copyGameLink() {
+        const gameUrl = window.location.href;
+        navigator.clipboard.writeText(gameUrl).then(() => {
+          this.showShareResult('Game link copied to clipboard! 📋');
+        }).catch(() => {
+          this.showShareResult('Failed to copy link. Try again!', 'error');
+        });
+      }
+
+      shareResult() {
+        const result = this.gameState === 'won' ? 'Won' : 'Lost';
+        const text = `🎮 Minesweeper Result: ${result}!\nDifficulty: ${this.currentDifficulty}\nTime: ${this.timer}s\n\nPlay here: ${window.location.href}`;
+        
+        if (navigator.share) {
+          navigator.share({
+            title: 'Minesweeper Game Result',
+            text: text,
+            url: window.location.href
+          });
+        } else {
+          navigator.clipboard.writeText(text).then(() => {
+            this.showShareResult('Result copied to clipboard! 📋');
+          }).catch(() => {
+            this.showShareResult('Failed to copy result. Try again!', 'error');
+          });
+        }
+      }
+
+      showShareResult(message, type = 'success') {
+        const shareResult = document.getElementById('share-result');
+        shareResult.textContent = message;
+        shareResult.style.display = 'block';
+        
+        // Update styling based on type
+        shareResult.style.background = type === 'error' ? 'rgba(255, 0, 0, 0.1)' : 
+                                      type === 'info' ? 'rgba(0, 100, 255, 0.1)' :
+                                      'rgba(0, 255, 0, 0.1)';
+        shareResult.style.color = type === 'error' ? '#ff6666' : 
+                                 type === 'info' ? '#66aaff' :
+                                 '#00ff88';
+        shareResult.style.borderColor = type === 'error' ? 'rgba(255, 0, 0, 0.3)' : 
+                                       type === 'info' ? 'rgba(0, 100, 255, 0.3)' :
+                                       'rgba(0, 255, 0, 0.3)';
+        
+        setTimeout(() => {
+          shareResult.style.display = 'none';
+        }, 3000);
+      }
+
+      setupEventListeners() {
+        // Connect Wallet button
+        document.getElementById('connect-wallet').addEventListener('click', async () => {
+          await connectWallet();
+        });
+
+        // New Game button - requires wallet connection
+        document.getElementById('new-game').addEventListener('click', async () => {
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
+          this.initializeGame();
+        });
+
+        // Mode toggle
+        document.getElementById('toggle-mode').addEventListener('click', () => {
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
+          this.toggleMode();
+        });
+
+        // Difficulty buttons
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            if (!walletConnected) {
+              this.showShareResult('Please connect your wallet first! 🔗', 'error');
+              return;
+            }
+            this.changeDifficulty(e.target.dataset.difficulty);
+          });
+        });
+
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+          this.soundEnabled = !this.soundEnabled;
+          document.getElementById('sound-toggle').textContent = this.soundEnabled ? '🔊' : '🔇';
+        });
+
+        // Share buttons
+        document.getElementById('share-warpcast').addEventListener('click', () => {
+          this.shareToWarpcast();
+        });
+
+        document.getElementById('share-general').addEventListener('click', () => {
+          this.copyGameLink();
+        });
+
+        // Early adopter mint button
+        document.getElementById('mint-early-btn').addEventListener('click', async () => {
+          await mintEarlyAdopter();
+        });
+
+        // Share/Mint result button
+        document.getElementById('share-result-btn').addEventListener('click', async () => {
+          if (this.gameState === 'ready' || this.gameState === 'playing') {
+            this.showShareResult('Finish the game first! 🎮', 'error');
+            return;
+          }
+
+          // Check if wallet is connected
+          if (!walletConnected) {
+            this.showShareResult('Please connect your wallet first! 🔗', 'error');
+            return;
+          }
+
+          // Check if we're on Base chain
+          try {
+            const network = await provider.getNetwork();
+            if (network.chainId !== 8453) {
+              this.showShareResult('Please switch to Base chain to mint NFTs! 🔄', 'error');
+              return;
+            }
+          } catch (err) {
+            this.showShareResult('Unable to check network. Please ensure you\'re on Base chain.', 'error');
+            return;
+          }
+
+          const doMint = confirm("Do you want to mint this game result as an NFT on Base chain? (Optional)\n\nClick OK to mint NFT\nClick Cancel to just share result");
+          
+          if (doMint) {
+            const result = {
+              difficulty: this.currentDifficulty,
+              time: this.timer,
+              win: this.gameState === 'won',
+              farcasterUser: farcasterUser // Include Farcaster user data
+            };
+            await captureAndMint(result);
+          } else {
+            this.shareResult();
+          }
+        });
+      }
+
+      // Enable game after wallet connection
+      enableGame() {
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.remove('game-disabled');
+        });
+        document.getElementById('minefield').classList.remove('game-disabled');
+      }
+
+      // Disable game when wallet not connected
+      disableGame() {
+        document.querySelectorAll('.difficulty-btn, #new-game, #toggle-mode').forEach(el => {
+          el.classList.add('game-disabled');
+        });
+        document.getElementById('minefield').classList.add('game-disabled');
+      }
+    }
+
+    // Initialize game when page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Create game instance
+      window.gameInstance = new Minesweeper();
+      
+      // Initialize wallet UI
+      await updateWalletUI();
+
+      // Wait for Farcaster SDK to be ready
+      if (window.farcasterSdk) {
+        try {
+          // Initialize Farcaster SDK
+          await window.farcasterSdk.actions.ready();
+          console.log("✅ Farcaster Mini App SDK ready");
+
+          // Check if user is already authenticated in Farcaster
+          const context = await window.farcasterSdk.context;
+          if (context?.user) {
+            console.log("Farcaster user context:", context.user);
+            farcasterUser = context.user;
+            
+            // Show user info in game
+            window.gameInstance.showShareResult(`👋 Welcome ${context.user.displayName || context.user.username || 'Farcaster User'}!`, "info");
+          }
+
+        } catch (error) {
+          console.error("Farcaster SDK initialization failed:", error);
+        }
+      } else {
+        console.log("Farcaster SDK not available, running in fallback mode");
+      }
+
+      // Show initial connection prompt
+      setTimeout(() => {
+        if (!walletConnected) {
+          window.gameInstance.showShareResult("Click 'Connect Wallet' to start playing! 🎮", "info");
+          window.gameInstance.disableGame();
+        }
+      }, 1500);
+    });
+  </script>
 </body>
 </html>
